@@ -54,26 +54,11 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
   -webkit-tap-highlight-color:transparent;
 }
 .ci input{
-  position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none;
+  width:18px;height:18px;margin:0;flex-shrink:0;
+  accent-color:var(--check);cursor:pointer;
 }
-.ci .mark{
-  flex-shrink:0;width:24px;height:24px;display:grid;place-items:center;
-  font:900 21px/1 "Hiragino Sans","Hiragino Maru Gothic ProN","Yu Gothic UI","Noto Sans JP",sans-serif;
-  color:transparent;user-select:none;
-}
-.ci input:checked + .mark{
-  color:#e8eef8;
-  text-shadow:0 0 6px rgba(200,220,255,.4);
-  -webkit-text-stroke:0.35px rgba(255,255,255,.2);
-}
-.ci.weekly input:checked + .mark{
-  color:#e0d4ff;
-  text-shadow:0 0 6px rgba(201,160,255,.5);
-}
-.ci.monthly input:checked + .mark{
-  color:#ffd8b0;
-  text-shadow:0 0 6px rgba(255,168,107,.45);
-}
+.ci.weekly input{accent-color:#c9a0ff}
+.ci.monthly input{accent-color:var(--month)}
 .ci.done{color:var(--muted);text-decoration:line-through}
 .ci.weekly{color:#e0c8ff}
 .ci.weekly.done{color:#6a5a7a}
@@ -107,7 +92,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.4.3</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.4.5</a>
 </div>
 <div class="now" id="now"></div>
 <div id="root"></div>
@@ -262,11 +247,11 @@ function render(forceStructure = false) {
       <div class="gbody">
         ${(g.accounts||[]).map(a => {
           const dList = (a.daily||[]).filter(c=>c.label).map((c,i)=>
-            `<label class="ci" data-ci="${g.id}|${a.id}|d|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|d|${i}"><span class="mark" aria-hidden="true">✔</span><span class="lbl">${escape(c.label)}</span></label>`).join('');
+            `<label class="ci" data-ci="${g.id}|${a.id}|d|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|d|${i}"><span class="lbl">${escape(c.label)}</span></label>`).join('');
           const wList = (a.weekly||[]).filter(c=>c.label).map((c,i)=>
-            `<label class="ci weekly" data-ci="${g.id}|${a.id}|w|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|w|${i}"><span class="mark" aria-hidden="true">✔</span><span class="lbl">${escape(c.label)}</span></label>`).join('');
+            `<label class="ci weekly" data-ci="${g.id}|${a.id}|w|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|w|${i}"><span class="lbl">${escape(c.label)}</span></label>`).join('');
           const mList = (a.monthly||[]).filter(c=>c.label).map((c,i)=>
-            `<label class="ci monthly" data-ci="${g.id}|${a.id}|m|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|m|${i}"><span class="mark" aria-hidden="true">✔</span><span class="lbl">${escape(c.label)}</span></label>`).join('');
+            `<label class="ci monthly" data-ci="${g.id}|${a.id}|m|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|m|${i}"><span class="lbl">${escape(c.label)}</span></label>`).join('');
           let checks = '';
           if (dList || wList || mList) {
             const parts = [];
@@ -357,6 +342,32 @@ function render(forceStructure = false) {
   });
 }
 
+function syncAccountUI(g, a) {
+  const root = document.getElementById('root');
+  const key = g.id + '|' + a.id;
+  const done = isDone(a);
+  const weekDone = isWeekDone(a);
+  const monthDone = isMonthDone(a);
+  const acc = root.querySelector(`[data-aid="${key}"]`);
+  if (acc) acc.classList.toggle('done', done);
+  const bd = root.querySelector(`[data-bdaily="${key}"]`);
+  const bw = root.querySelector(`[data-bweek="${key}"]`);
+  const bm = root.querySelector(`[data-bmonth="${key}"]`);
+  if (bd) bd.hidden = !done;
+  if (bw) bw.hidden = !weekDone;
+  if (bm) bm.hidden = !monthDone;
+  [['daily','d'],['weekly','w'],['monthly','m']].forEach(([field, prefix]) => {
+    (a[field]||[]).forEach((c, i) => {
+      if (!c.label) return;
+      const lab = root.querySelector(`[data-ci="${key}|${prefix}|${i}"]`);
+      if (!lab) return;
+      const inp = lab.querySelector('input');
+      if (inp && inp.checked !== !!c.done) inp.checked = !!c.done;
+      lab.classList.toggle('done', !!c.done);
+    });
+  });
+}
+
 document.getElementById('root').addEventListener('change', e => {
   const t = e.target.dataset.t; if (!t) return;
   const [gid, aid, type, idx] = t.split('|');
@@ -366,7 +377,7 @@ document.getElementById('root').addEventListener('change', e => {
   const list = a[map[type]];
   list[+idx].done = !list[+idx].done;
   save(state);
-  render(false);
+  syncAccountUI(g, a);
 });
 
 document.getElementById('root').addEventListener('click', e => {
@@ -375,7 +386,8 @@ document.getElementById('root').addEventListener('click', e => {
     const id = tog.dataset.toggle;
     state.expanded[id] = !state.expanded[id];
     save(state);
-    render(false);
+    const el = document.querySelector(`[data-gid="${id}"]`);
+    if (el) el.classList.toggle('open', !!state.expanded[id]);
     return;
   }
   const eg = e.target.closest('[data-eg]');
@@ -489,6 +501,7 @@ document.getElementById('gSave').onclick = () => {
   save(state);
   document.getElementById('gModal').classList.remove('show');
   render(true);
+  scheduleGameResets();
 };
 
 document.getElementById('aSave').onclick = () => {
@@ -511,6 +524,7 @@ document.getElementById('aSave').onclick = () => {
   save(state);
   document.getElementById('aModal').classList.remove('show');
   render(true);
+  scheduleGameResets();
 };
 
 document.getElementById('gDel').onclick = () => {
@@ -520,6 +534,7 @@ document.getElementById('gDel').onclick = () => {
   save(state);
   document.getElementById('gModal').classList.remove('show');
   render(true);
+  scheduleGameResets();
 };
 document.getElementById('aDel').onclick = () => {
   if (!confirm('このアカウントを削除する？')) return;
@@ -528,11 +543,82 @@ document.getElementById('aDel').onclick = () => {
   save(state);
   document.getElementById('aModal').classList.remove('show');
   render(true);
+  scheduleGameResets();
 };
 
-setInterval(() => render(false), 30000);
+// ---- リセット予約（ゲーム単位・次の境界に1回だけ）----
+const resetTimers = new Map();
+
+function msUntilDaily(g, now = Date.now()) {
+  const [h, m] = (g.dailyReset || '05:00').split(':').map(Number);
+  const d = new Date(now);
+  const next = new Date(d);
+  next.setHours(h || 5, m || 0, 0, 0);
+  if (next <= d) next.setDate(next.getDate() + 1);
+  return next - d;
+}
+function msUntilWeekly(g, now = Date.now()) {
+  const [h, m] = (g.weeklyReset || '05:00').split(':').map(Number);
+  const day = g.weeklyDay ?? 1;
+  const d = new Date(now);
+  const next = new Date(d);
+  next.setHours(h || 5, m || 0, 0, 0);
+  let add = (day - next.getDay() + 7) % 7;
+  if (add === 0 && next <= d) add = 7;
+  next.setDate(next.getDate() + add);
+  return next - d;
+}
+function msUntilMonthly(g, now = Date.now()) {
+  const [h, m] = (g.monthlyReset || '05:00').split(':').map(Number);
+  const dom = Math.min(28, Math.max(1, g.monthlyDay ?? 1));
+  const d = new Date(now);
+  let y = d.getFullYear(), mo = d.getMonth();
+  const last = new Date(y, mo + 1, 0).getDate();
+  let next = new Date(y, mo, Math.min(dom, last), h || 5, m || 0, 0, 0);
+  if (next <= d) {
+    mo += 1;
+    if (mo > 11) { mo = 0; y += 1; }
+    const last2 = new Date(y, mo + 1, 0).getDate();
+    next = new Date(y, mo, Math.min(dom, last2), h || 5, m || 0, 0, 0);
+  }
+  return next - d;
+}
+
+function clearResetTimers() {
+  resetTimers.forEach(id => clearTimeout(id));
+  resetTimers.clear();
+}
+
+function scheduleGameResets() {
+  clearResetTimers();
+  const MAX = 2147483647; // setTimeout上限
+  state.games.forEach(g => {
+    const arm = (kind, ms) => {
+      const wait = Math.max(500, Math.min(ms + 50, MAX));
+      const tid = setTimeout(() => {
+        if (applyResets(state)) {
+          save(state);
+          render(false);
+        }
+        scheduleGameResets(); // 次の境界を再予約
+      }, wait);
+      resetTimers.set(g.id + ':' + kind, tid);
+    };
+    arm('d', msUntilDaily(g));
+    if (gameHasWeekly(g)) arm('w', msUntilWeekly(g));
+    if (gameHasMonthly(g)) arm('m', msUntilMonthly(g));
+  });
+}
+
+// 時計だけ軽く更新（リセット判定はしない）
+setInterval(() => {
+  const nowEl = document.getElementById('now');
+  if (nowEl) nowEl.textContent = 'いま ' + fmtNow();
+}, 30000);
+
 render(true);
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v43').catch(()=>{});
+scheduleGameResets();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v45').catch(()=>{});
 </script>
 </body>
 </html>
