@@ -9,7 +9,7 @@ export function load() {
     const data = JSON.parse(raw);
     if (!Array.isArray(data.games)) return empty();
     if (!data.lastMonthly) data.lastMonthly = {};
-    if (!data.expanded) data.expanded = {};
+    data.expanded = {};
     return data;
   } catch {
     return empty();

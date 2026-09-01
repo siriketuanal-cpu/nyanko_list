@@ -30,7 +30,12 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .acc{padding:8px 10px;border-bottom:1px solid #1e1e2a}
 .acc:last-child{border-bottom:none}
 .acc.done{background:var(--done)}
-.ahead{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.ahead{display:flex;justify-content:space-between;align-items:center;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;min-height:32px;gap:6px}
+.acc.open .ahead{margin-bottom:6px}
+.abody{display:none}
+.acc.open .abody{display:block}
+.achev{color:var(--neon3);font-size:.7rem;opacity:.7;transition:transform .15s;flex-shrink:0}
+.acc.open .achev{transform:rotate(90deg)}
 .aname{font-weight:600;color:var(--neon3);font-size:.9rem;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .badge{font-size:.58rem;background:var(--neon2);color:#0d0d12;padding:1px 5px;border-radius:6px;font-weight:700}
 .badge.week{background:#c9a0ff}
@@ -91,7 +96,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.4.9</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.0</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -177,6 +182,10 @@ import { escape, gameHasWeekly, gameHasMonthly } from './core.mjs';
 import { load, save, applyResets } from './store.mjs';
 
 let state = load();
+// 展開は起動のたびに閉じる（保存しない）
+state.expanded = {};
+let gameOpen = {};
+let accOpen = {};
 let editG = null, editA = null, parentG = null, noteTarget = null;
 
 function isDone(a) {
@@ -227,9 +236,8 @@ function render(forceStructure = false) {
   if (needStructure) {
     root.dataset.sig = sig;
     root.innerHTML = state.games.map(g => {
-      const open = !!state.expanded[g.id];
       return `
-    <div class="game ${open ? 'open' : ''}" data-gid="${g.id}">
+    <div class="game" data-gid="${g.id}">
       <div class="ghead">
         <div class="gname" data-eg="${g.id}">${escape(g.name)}</div>
         <div class="gexpand" data-toggle="${g.id}">
@@ -254,7 +262,7 @@ function render(forceStructure = false) {
             checks = `<div class="checks-wrap ${colClass(a)}">${parts.join('')}</div>`;
           }
           return `<div class="acc" data-aid="${g.id}|${a.id}">
-            <div class="ahead">
+            <div class="ahead" data-atoggle="${g.id}|${a.id}">
               <div class="aname">${escape(a.name)}
                 <span class="badge" data-bdaily="${g.id}|${a.id}" hidden>今日OK</span>
                 <span class="badge week" data-bweek="${g.id}|${a.id}" hidden>週OK</span>
@@ -263,11 +271,14 @@ function render(forceStructure = false) {
               <div class="aactions">
                 <button class="ib" data-note="${g.id}|${a.id}" title="メモ">📝</button>
                 <button class="ib" data-ea="${g.id}|${a.id}" title="編集">✏️</button>
+                <span class="achev" aria-hidden="true">›</span>
               </div>
             </div>
-            ${checks}
-            <div class="note-sep" data-notesep="${g.id}|${a.id}" hidden></div>
-            <div class="note-preview" data-noteprev="${g.id}|${a.id}" hidden></div>
+            <div class="abody">
+              ${checks}
+              <div class="note-sep" data-notesep="${g.id}|${a.id}" hidden></div>
+              <div class="note-preview" data-noteprev="${g.id}|${a.id}" hidden></div>
+            </div>
           </div>`;
         }).join('')}
         <div class="gactions">
@@ -278,10 +289,15 @@ function render(forceStructure = false) {
     }).join('');
   }
 
-  // sync open state without rebuild when only expand toggled
+  // メモリ上の開閉だけ反映（保存しない）
   state.games.forEach(g => {
     const el = root.querySelector(`[data-gid="${g.id}"]`);
-    if (el) el.classList.toggle('open', !!state.expanded[g.id]);
+    if (el) el.classList.toggle('open', !!gameOpen[g.id]);
+    (g.accounts||[]).forEach(a => {
+      const key = g.id + '|' + a.id;
+      const acc = root.querySelector(`[data-aid="${key}"]`);
+      if (acc) acc.classList.toggle('open', !!accOpen[key]);
+    });
   });
 
   state.games.forEach(g => {
@@ -335,15 +351,6 @@ function render(forceStructure = false) {
   });
 }
 
-let expandedSaveTimer = null;
-function queueExpandedSave() {
-  if (expandedSaveTimer) return;
-  expandedSaveTimer = setTimeout(() => {
-    expandedSaveTimer = null;
-    save(state);
-  }, 400);
-}
-
 function syncAccountUI(g, a) {
   const root = document.getElementById('root');
   const key = g.id + '|' + a.id;
@@ -384,34 +391,24 @@ document.getElementById('root').addEventListener('change', e => {
 
 function toggleGame(id) {
   if (!id) return;
-  state.expanded[id] = !state.expanded[id];
+  gameOpen[id] = !gameOpen[id];
   const el = document.querySelector('[data-gid="' + id + '"]');
-  if (el) el.classList.toggle('open', !!state.expanded[id]);
-  queueExpandedSave();
+  if (el) el.classList.toggle('open', !!gameOpen[id]);
+}
+
+function toggleAcc(key) {
+  if (!key) return;
+  accOpen[key] = !accOpen[key];
+  const el = document.querySelector('[data-aid="' + key + '"]');
+  if (el) el.classList.toggle('open', !!accOpen[key]);
 }
 
 document.getElementById('root').addEventListener('click', e => {
-  // ゲーム名 → 編集のみ（展開と取り違えない）
-  const eg = e.target.closest('[data-eg]');
-  if (eg) {
-    e.preventDefault();
-    e.stopPropagation();
-    openG(eg.dataset.eg);
-    return;
-  }
-  const tog = e.target.closest('[data-toggle]');
-  if (tog) {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleGame(tog.dataset.toggle);
-    return;
-  }
-  const aa = e.target.closest('[data-aa]');
-  if (aa) { openA(aa.dataset.aa); return; }
-  const ea = e.target.closest('[data-ea]');
-  if (ea) { const [gid,aid] = ea.dataset.ea.split('|'); openA(gid, aid); return; }
+  // メモ・編集ボタンは先に処理（アカウント展開と分離）
   const nt = e.target.closest('[data-note]');
   if (nt) {
+    e.preventDefault();
+    e.stopPropagation();
     const [gid, aid] = nt.dataset.note.split('|');
     const g = state.games.find(x => x.id === gid);
     const a = g.accounts.find(x => x.id === aid);
@@ -419,7 +416,42 @@ document.getElementById('root').addEventListener('click', e => {
     document.getElementById('nTitle').textContent = a.name + ' のメモ';
     document.getElementById('notes').value = a.note || '';
     document.getElementById('nModal').classList.add('show');
+    return;
   }
+  const ea = e.target.closest('[data-ea]');
+  if (ea) {
+    e.preventDefault();
+    e.stopPropagation();
+    const [gid,aid] = ea.dataset.ea.split('|');
+    openA(gid, aid);
+    return;
+  }
+  // ゲーム名 → 編集
+  const eg = e.target.closest('[data-eg]');
+  if (eg) {
+    e.preventDefault();
+    e.stopPropagation();
+    openG(eg.dataset.eg);
+    return;
+  }
+  // ゲーム展開
+  const tog = e.target.closest('[data-toggle]');
+  if (tog) {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleGame(tog.dataset.toggle);
+    return;
+  }
+  // アカウント展開（バー全体）
+  const at = e.target.closest('[data-atoggle]');
+  if (at) {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleAcc(at.dataset.atoggle);
+    return;
+  }
+  const aa = e.target.closest('[data-aa]');
+  if (aa) { openA(aa.dataset.aa); return; }
 });
 
 document.getElementById('fab').onclick = () => openG();
@@ -544,7 +576,6 @@ document.getElementById('aSave').onclick = () => {
 document.getElementById('gDel').onclick = () => {
   if (!confirm('このゲームを削除する？')) return;
   state.games = state.games.filter(g => g.id !== editG);
-  delete state.expanded[editG];
   save(state);
   document.getElementById('gModal').classList.remove('show');
   render(true);
@@ -628,7 +659,7 @@ function scheduleGameResets() {
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v49').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v50').catch(()=>{});
 </script>
 </body>
 </html>
