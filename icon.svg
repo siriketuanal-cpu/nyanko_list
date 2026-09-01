@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0d0d12"/>
+  <!-- face -->
+  <circle cx="256" cy="280" r="140" fill="#1a1a24"/>
+  <!-- ears -->
+  <path d="M140 180 L100 60 L200 140 Z" fill="#1a1a24"/>
+  <path d="M372 180 L412 60 L312 140 Z" fill="#1a1a24"/>
+  <path d="M155 165 L125 90 L195 140 Z" fill="#ff2d6a"/>
+  <path d="M357 165 L387 90 L317 140 Z" fill="#ff2d6a"/>
+  <!-- eyes (smug) -->
+  <ellipse cx="200" cy="260" rx="28" ry="32" fill="#00f0ff"/>
+  <ellipse cx="312" cy="260" rx="28" ry="32" fill="#00f0ff"/>
+  <circle cx="208" cy="255" r="12" fill="#0d0d12"/>
+  <circle cx="320" cy="255" r="12" fill="#0d0d12"/>
+  <!-- mischievous mouth -->
+  <path d="M210 340 Q256 370 302 340" stroke="#ff2d6a" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <!-- blush -->
+  <ellipse cx="165" cy="310" rx="22" ry="12" fill="#ff2d6a" opacity="0.4"/>
+  <ellipse cx="347" cy="310" rx="22" ry="12" fill="#ff2d6a" opacity="0.4"/>
+  <!-- small fangs -->
+  <path d="M230 345 L235 360 L240 345" fill="#e8e8f0"/>
+  <path d="M272 345 L277 360 L282 345" fill="#e8e8f0"/>
+</svg>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0d0d12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>悪い子にゃんこチェック</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#0d0d12;--card:#16161f;--line:#2a2a3a;--neon:#ff2d6a;--neon2:#00f0ff;--neon3:#c9a0ff;--text:#e8e8f0;--muted:#8888a0;--check:#00f0ff;--done:#1a2a22;}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{overscroll-behavior:none;overscroll-behavior-y:none;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
+body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
+h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rgba(255,45,106,.45);margin-bottom:2px}
+.now{text-align:center;font-size:.72rem;color:var(--muted);margin-bottom:10px}
+.game{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.ghead{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid var(--line)}.gtap{min-width:0;flex:1}
+.gname{font-weight:700;color:var(--neon);font-size:.95rem}
+.gmeta{font-size:.65rem;color:var(--muted)}
+.gactions{display:flex;gap:2px;align-items:center}
+.acc{padding:8px 10px;border-bottom:1px solid #1e1e2a}
+.acc:last-child{border-bottom:none}
+.acc.done{background:var(--done)}
+.ahead{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.aname{font-weight:600;color:var(--neon3);font-size:.9rem;display:flex;align-items:center;gap:5px;min-width:0}
+.badge{font-size:.58rem;background:var(--neon2);color:#0d0d12;padding:1px 5px;border-radius:6px;font-weight:700;flex-shrink:0}
+.aactions{display:flex;gap:1px;flex-shrink:0}
+.checks-wrap{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-top:2px}
+@media (max-width:360px){.checks-wrap{grid-template-columns:1fr}}
+.col-label{font-size:.62rem;font-weight:700;letter-spacing:.04em;margin-bottom:3px;opacity:.9}
+.col-label.d{color:var(--neon2)}
+.col-label.w{color:#d4a8ff;text-shadow:0 0 6px rgba(201,160,255,.35)}
+.col-list{display:flex;flex-direction:column;gap:3px}
+.ci{display:flex;align-items:flex-start;gap:5px;line-height:1.25;font-size:.8rem}
+.ci input{width:15px;height:15px;margin:1px 0 0;flex-shrink:0;accent-color:var(--check)}
+.ci.done{color:var(--muted);text-decoration:line-through}
+.ci.weekly input{accent-color:#c9a0ff}
+.ci.weekly{color:#e0c8ff}
+.ci.weekly.done{color:#6a5a7a}
+.ci span{word-break:break-word}
+.empty{text-align:center;color:var(--muted);padding:40px 16px}
+.fab{position:fixed;bottom:18px;right:18px;width:52px;height:52px;border-radius:50%;background:var(--neon);color:#fff;border:none;font-size:1.6rem;box-shadow:0 0 18px rgba(255,45,106,.5);z-index:40}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:flex-end;justify-content:center}
+.modal.show{display:flex}
+.mb{background:#14141e;width:100%;max-width:480px;border-radius:14px 14px 0 0;padding:14px;max-height:90vh;overflow-y:auto;border-top:1px solid var(--neon)}
+.mb h2{color:var(--neon);font-size:1rem;margin-bottom:8px}
+input[type=text],input[type=time],select,textarea{width:100%;padding:8px;border:1px solid #2a2a3a;border-radius:8px;background:#0d0d14;color:var(--text);font-size:.9rem;margin-bottom:7px;font-family:inherit}
+textarea{min-height:160px;resize:vertical}
+label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
+.row{display:flex;gap:6px;margin-bottom:7px}.row>*{flex:1}
+.btns{display:flex;gap:6px;margin-top:10px}
+.btns button{flex:1;padding:10px;border:none;border-radius:9px;font-weight:600;font-size:.9rem}
+.save{background:var(--neon);color:#fff}.cancel{background:#222230;color:var(--text)}
+.danger-zone{margin-top:18px;padding-top:14px;border-top:1px solid #3a2030}.danger{background:#ff2d2d;color:#fff;width:100%;padding:9px;border:none;border-radius:9px;font-weight:600;opacity:.92}.danger:active{opacity:1}
+.ib{background:none;border:none;color:var(--muted);font-size:.95rem;padding:2px 4px;cursor:pointer}
+.ib:active{color:var(--neon2)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:5px}.g2 label.s{grid-column:1/-1}
+
+.col-label.w{color:#d4a8ff;text-shadow:0 0 6px rgba(201,160,255,.35)}
+.note-sep{height:1px;margin:8px 0 6px;background:linear-gradient(90deg,transparent,#c9a0ff66,transparent);border:0}
+.badge.week{background:#c9a0ff;color:#0d0d12}
+.note-preview{font-size:.72rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+</style>
+</head>
+<body>
+<h1>♡ 悪い子にゃんこチェック ♡</h1>
+<div class="now" id="now"></div>
+<div id="root"></div>
+<button class="fab" id="fab" title="ゲームを追加">＋</button>
+
+<div class="modal" id="gModal">
+  <div class="mb">
+    <h2 id="gTitle">ゲームを追加</h2>
+    <label class="s">ゲーム名</label>
+    <input type="text" id="gName" placeholder="例：原神">
+    <label class="s">日課リセット時刻</label>
+    <input type="time" id="gDaily" value="05:00">
+    <label class="s">週課リセット（曜日＋時刻）</label>
+    <div class="row">
+      <select id="gWDay">
+        <option value="1">月曜</option><option value="2">火曜</option><option value="3">水曜</option>
+        <option value="4">木曜</option><option value="5">金曜</option><option value="6">土曜</option><option value="0">日曜</option>
+      </select>
+      <input type="time" id="gWTime" value="05:00">
+    </div>
+    <div class="btns">
+      <button class="cancel" id="gCancel">キャンセル</button>
+      <button class="save" id="gSave">保存</button>
+    </div>
+    <div class="danger-zone" id="gDelZone" style="display:none">
+      <button class="danger" id="gDel">このゲームを削除</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="aModal">
+  <div class="mb">
+    <h2 id="aTitle">アカウントを追加</h2>
+    <label class="s">アカウント名</label>
+    <input type="text" id="aName" placeholder="例：本アカ">
+    <div class="g2">
+      <label class="s">デイリー（空欄は非表示・最大5）</label>
+      <input type="text" id="d1" placeholder="①"><input type="text" id="d2" placeholder="②">
+      <input type="text" id="d3" placeholder="③"><input type="text" id="d4" placeholder="④">
+      <input type="text" id="d5" placeholder="⑤">
+    </div>
+    <div class="g2">
+      <label class="s">ウィークリー（空欄は非表示・最大2）</label>
+      <input type="text" id="w1" placeholder="①"><input type="text" id="w2" placeholder="②">
+    </div>
+    <div class="btns">
+      <button class="cancel" id="aCancel">キャンセル</button>
+      <button class="save" id="aSave">保存</button>
+    </div>
+    <div class="danger-zone" id="aDelZone" style="display:none">
+      <button class="danger" id="aDel">このアカウントを削除</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="nModal">
+  <div class="mb">
+    <h2 id="nTitle">アカウントメモ</h2>
+    <textarea id="notes" placeholder="このアカウント用のメモ…"></textarea>
+    <div class="btns">
+      <button class="cancel" id="nCancel">閉じる</button>
+      <button class="save" id="nSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { escape, fmtNow } from './core.mjs';
+import { load, save, applyResets } from './store.mjs';
+
+let state = load();
+let editG = null, editA = null, parentG = null, noteTarget = null;
+
+function isDone(a) {
+  const ds = (a.daily || []).filter(c => c.label);
+  return ds.length > 0 && ds.every(c => c.done);
+}
+function isWeekDone(a) {
+  const ws = (a.weekly || []).filter(c => c.label);
+  return ws.length > 0 && ws.every(c => c.done);
+}
+
+function render(forceStructure = false) {
+  const resetHappened = applyResets(state);
+  if (resetHappened) save(state);
+
+  const nowEl = document.getElementById('now');
+  if (nowEl) nowEl.textContent = 'いま ' + fmtNow();
+
+  const root = document.getElementById('root');
+  const sig = state.games.map(g => g.id + ':' + (g.accounts||[]).map(a => a.id).join(',')).join('|')
+    + '|' + state.games.map(g => (g.accounts||[]).map(a =>
+      (a.daily||[]).filter(c=>c.label).map(c=>c.label).join(',') + '/' +
+      (a.weekly||[]).filter(c=>c.label).map(c=>c.label).join(',')
+    ).join(';')).join('#');
+  const needStructure = forceStructure || root.dataset.sig !== sig || !state.games.length;
+
+  if (!state.games.length) {
+    root.dataset.sig = '';
+    root.innerHTML = '<div class="empty">まだゲームがないよ…<br>右下の＋から追加してね♡</div>';
+    return;
+  }
+
+  if (needStructure) {
+    root.dataset.sig = sig;
+    root.innerHTML = state.games.map(g => `
+    <div class="game" data-gid="${g.id}">
+      <div class="ghead">
+        <div class="gtap" data-eg="${g.id}" style="cursor:pointer;min-width:0;flex:1">
+          <div class="gname">${escape(g.name)}</div>
+          <div class="gmeta" data-gmeta="${g.id}"></div>
+        </div>
+        <div class="gactions">
+          <button class="ib" data-aa="${g.id}" title="アカウント追加">＋</button>
+        </div>
+      </div>
+      ${(g.accounts||[]).map(a => {
+        const dList = (a.daily||[]).filter(c=>c.label).map((c,i)=>
+          `<label class="ci" data-ci="${g.id}|${a.id}|d|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|d|${i}"><span>${escape(c.label)}</span></label>`).join('');
+        const wList = (a.weekly||[]).filter(c=>c.label).map((c,i)=>
+          `<label class="ci weekly" data-ci="${g.id}|${a.id}|w|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|w|${i}"><span>${escape(c.label)}</span></label>`).join('');
+        let checks = '';
+        if (dList || wList) {
+          checks = `<div class="checks-wrap">
+            <div>${dList ? `<div class="col-label d">デイリー</div><div class="col-list">${dList}</div>` : ''}</div>
+            <div>${wList ? `<div class="col-label w">ウィークリー</div><div class="col-list">${wList}</div>` : ''}</div>
+          </div>`;
+        }
+        return `<div class="acc" data-aid="${g.id}|${a.id}">
+          <div class="ahead">
+            <div class="aname" data-aname="${g.id}|${a.id}">${escape(a.name)}<span class="badge" data-bdaily="${g.id}|${a.id}" hidden>今日OK</span><span class="badge week" data-bweek="${g.id}|${a.id}" hidden>週OK</span></div>
+            <div class="aactions">
+              <button class="ib" data-note="${g.id}|${a.id}" title="メモ">📝</button>
+              <button class="ib" data-ea="${g.id}|${a.id}" title="編集">✏️</button>
+            </div>
+          </div>
+          ${checks}<div class="note-sep" data-notesep="${g.id}|${a.id}" hidden></div>
+          <div class="note-preview" data-noteprev="${g.id}|${a.id}" hidden></div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+  }
+
+  // 差分同期
+  state.games.forEach(g => {
+    const meta = root.querySelector(`[data-gmeta="${g.id}"]`);
+    if (meta) meta.textContent = `日課 ${g.dailyReset||'05:00'} ／ 週課 ${['日','月','火','水','木','金','土'][g.weeklyDay??1]} ${g.weeklyReset||'05:00'}`;
+    (g.accounts||[]).forEach(a => {
+      const key = g.id + '|' + a.id;
+      const done = isDone(a);
+      const weekDone = isWeekDone(a);
+      const acc = root.querySelector(`[data-aid="${CSS.escape(g.id)}\\|${CSS.escape(a.id)}"]`) || root.querySelector(`[data-aid="${key}"]`);
+      if (acc) acc.classList.toggle('done', done);
+      const bd = root.querySelector(`[data-bdaily="${key}"]`);
+      const bw = root.querySelector(`[data-bweek="${key}"]`);
+      if (bd) bd.hidden = !done;
+      if (bw) bw.hidden = !weekDone;
+      (a.daily||[]).forEach((c, i) => {
+        if (!c.label) return;
+        const lab = root.querySelector(`[data-ci="${key}|d|${i}"]`);
+        if (!lab) return;
+        const inp = lab.querySelector('input');
+        if (inp && inp.checked !== !!c.done) inp.checked = !!c.done;
+        lab.classList.toggle('done', !!c.done);
+      });
+      (a.weekly||[]).forEach((c, i) => {
+        if (!c.label) return;
+        const lab = root.querySelector(`[data-ci="${key}|w|${i}"]`);
+        if (!lab) return;
+        const inp = lab.querySelector('input');
+        if (inp && inp.checked !== !!c.done) inp.checked = !!c.done;
+        lab.classList.toggle('done', !!c.done);
+      });
+      const noteLines = (a.note||'').trim().split(/\n/);
+      const noteHead = noteLines[0] || '';
+      const noteRest = noteLines.slice(1).join(' ').trim();
+      const np = root.querySelector(`[data-noteprev="${key}"]`);
+      const ns = root.querySelector(`[data-notesep="${key}"]`);
+      if (np) {
+        if (noteHead) {
+          np.hidden = false;
+          np.innerHTML = `<strong>📝 ${escape(noteHead)}</strong>${noteRest ? ' — ' + escape(noteRest.slice(0,40)) : ''}`;
+          if (ns) ns.hidden = false;
+        } else {
+          np.hidden = true;
+          np.innerHTML = '';
+          if (ns) ns.hidden = true;
+        }
+      }
+    });
+  });
+}
+
+document.getElementById('root').addEventListener('change', e => {
+  const t = e.target.dataset.t; if (!t) return;
+  const [gid, aid, type, idx] = t.split('|');
+  const g = state.games.find(x => x.id === gid);
+  const a = g.accounts.find(x => x.id === aid);
+  const list = type === 'd' ? a.daily : a.weekly;
+  list[+idx].done = !list[+idx].done;
+  save(state);
+  render(false);
+});
+
+document.getElementById('root').addEventListener('click', e => {
+  const eg = e.target.closest('[data-eg]');
+  if (eg) { openG(eg.dataset.eg); return; }
+  const aa = e.target.closest('[data-aa]');
+  if (aa) { openA(aa.dataset.aa); return; }
+  const ea = e.target.closest('[data-ea]');
+  if (ea) { const [gid,aid] = ea.dataset.ea.split('|'); openA(gid, aid); return; }
+  const nt = e.target.closest('[data-note]');
+  if (nt) {
+    const [gid, aid] = nt.dataset.note.split('|');
+    const g = state.games.find(x => x.id === gid);
+    const a = g.accounts.find(x => x.id === aid);
+    noteTarget = { gid, aid };
+    document.getElementById('nTitle').textContent = a.name + ' のメモ';
+    document.getElementById('notes').value = a.note || '';
+    document.getElementById('nModal').classList.add('show');
+  }
+});
+
+document.getElementById('fab').onclick = () => openG();
+document.getElementById('nCancel').onclick = () => document.getElementById('nModal').classList.remove('show');
+document.getElementById('nSave').onclick = () => {
+  if (!noteTarget) return;
+  const g = state.games.find(x => x.id === noteTarget.gid);
+  const a = g.accounts.find(x => x.id === noteTarget.aid);
+  a.note = document.getElementById('notes').value;
+  save(state);
+  document.getElementById('nModal').classList.remove('show');
+  render(false);
+};
+
+function openG(id = null) {
+  editG = id;
+  document.getElementById('gTitle').textContent = id ? 'ゲームを編集' : 'ゲームを追加';
+  document.getElementById('gDelZone').style.display = id ? 'block' : 'none';
+  if (id) {
+    const g = state.games.find(x => x.id === id);
+    document.getElementById('gName').value = g.name;
+    document.getElementById('gDaily').value = g.dailyReset || '05:00';
+    document.getElementById('gWDay').value = g.weeklyDay ?? 1;
+    document.getElementById('gWTime').value = g.weeklyReset || '05:00';
+  } else {
+    document.getElementById('gName').value = '';
+    document.getElementById('gDaily').value = '05:00';
+    document.getElementById('gWDay').value = '1';
+    document.getElementById('gWTime').value = '05:00';
+  }
+  document.getElementById('gModal').classList.add('show');
+}
+
+function openA(gid, aid = null) {
+  parentG = gid; editA = aid;
+  document.getElementById('aTitle').textContent = aid ? 'アカウントを編集' : 'アカウントを追加';
+  document.getElementById('aDelZone').style.display = aid ? 'block' : 'none';
+  if (aid) {
+    const g = state.games.find(x => x.id === gid);
+    const a = g.accounts.find(x => x.id === aid);
+    document.getElementById('aName').value = a.name;
+    for (let i = 0; i < 5; i++) document.getElementById('d'+(i+1)).value = (a.daily||[])[i]?.label || '';
+    for (let i = 0; i < 2; i++) document.getElementById('w'+(i+1)).value = (a.weekly||[])[i]?.label || '';
+  } else {
+    document.getElementById('aName').value = '';
+    for (let i = 1; i <= 5; i++) document.getElementById('d'+i).value = '';
+    for (let i = 1; i <= 2; i++) document.getElementById('w'+i).value = '';
+  }
+  document.getElementById('aModal').classList.add('show');
+}
+
+document.getElementById('gCancel').onclick = () => document.getElementById('gModal').classList.remove('show');
+document.getElementById('aCancel').onclick = () => document.getElementById('aModal').classList.remove('show');
+
+document.getElementById('gSave').onclick = () => {
+  const name = document.getElementById('gName').value.trim();
+  if (!name) return alert('ゲーム名を入れてね');
+  const dailyReset = document.getElementById('gDaily').value;
+  const weeklyDay = +document.getElementById('gWDay').value;
+  const weeklyReset = document.getElementById('gWTime').value;
+  if (editG) {
+    const g = state.games.find(x => x.id === editG);
+    g.name = name; g.dailyReset = dailyReset; g.weeklyDay = weeklyDay; g.weeklyReset = weeklyReset;
+  } else {
+    state.games.push({ id: 'g'+Date.now(), name, dailyReset, weeklyDay, weeklyReset, accounts: [] });
+  }
+  save(state);
+  document.getElementById('gModal').classList.remove('show');
+  render(true);
+};
+
+document.getElementById('aSave').onclick = () => {
+  const name = document.getElementById('aName').value.trim();
+  if (!name) return alert('アカウント名を入れてね');
+  const daily = [], weekly = [];
+  for (let i = 1; i <= 5; i++) daily.push({ label: document.getElementById('d'+i).value.trim(), done: false });
+  for (let i = 1; i <= 2; i++) weekly.push({ label: document.getElementById('w'+i).value.trim(), done: false });
+  const g = state.games.find(x => x.id === parentG);
+  if (editA) {
+    const a = g.accounts.find(x => x.id === editA);
+    a.name = name;
+    a.daily = daily.map((c,i) => { const o = (a.daily||[])[i]; return { label: c.label, done: (o && o.label === c.label) ? o.done : false }; });
+    a.weekly = weekly.map((c,i) => { const o = (a.weekly||[])[i]; return { label: c.label, done: (o && o.label === c.label) ? o.done : false }; });
+  } else {
+    g.accounts.push({ id: 'a'+Date.now(), name, daily, weekly, note: '' });
+  }
+  save(state);
+  document.getElementById('aModal').classList.remove('show');
+  render(true);
+};
+
+document.getElementById('gDel').onclick = () => {
+  if (!confirm('このゲームを削除する？')) return;
+  state.games = state.games.filter(g => g.id !== editG);
+  save(state);
+  document.getElementById('gModal').classList.remove('show');
+  render(true);
+};
+document.getElementById('aDel').onclick = () => {
+  if (!confirm('このアカウントを削除する？')) return;
+  const g = state.games.find(x => x.id === parentG);
+  g.accounts = g.accounts.filter(a => a.id !== editA);
+  save(state);
+  document.getElementById('aModal').classList.remove('show');
+  render(true);
+};
+
+setInterval(() => render(false), 30000);
+render(true);
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body>
+</html>
