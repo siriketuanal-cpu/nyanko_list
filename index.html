@@ -14,8 +14,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{overscroll-behavior:none;overscroll-behavior-y:none;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
 body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
-h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rgba(255,45,106,.45);margin-bottom:2px}.title-row{display:flex;align-items:baseline;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:2px}.title-row h1{margin:0}.ver{font:700 0.65rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.85;letter-spacing:.04em;padding:2px 6px;border:1px solid #3a2a4a;border-radius:6px}.ver:active{color:var(--neon2);border-color:var(--neon2)}
-.now{text-align:center;font-size:.72rem;color:var(--muted);margin-bottom:10px}
+h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rgba(255,45,106,.45);margin-bottom:2px}.title-row{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:8px;min-height:1.6em}.title-row h1{margin:0;text-align:center}.ver{position:absolute;right:0;top:50%;transform:translateY(-50%);font:700 0.6rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.75;letter-spacing:.03em;padding:2px 5px;border:1px solid #3a2a4a;border-radius:5px}.ver:active{color:var(--neon2);border-color:var(--neon2)}
 .game{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
 .ghead{display:flex;align-items:center;gap:6px;padding:8px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid transparent}
 .game.open .ghead{border-bottom-color:var(--line)}
@@ -40,9 +39,9 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .checks-wrap{display:grid;gap:6px 10px;margin-top:2px}
 .checks-wrap.cols-1{grid-template-columns:1fr}
 .checks-wrap.cols-2{grid-template-columns:1fr 1fr}
-.checks-wrap.cols-3{grid-template-columns:1fr 1fr 1fr}
+.checks-wrap.cols-3{grid-template-columns:1fr 1fr 1fr;gap:6px 8px}
 @media (max-width:380px){.checks-wrap.cols-3{grid-template-columns:1fr 1fr}.checks-wrap.cols-3 .col.m{grid-column:1/-1}}
-.col-label{font-size:.62rem;font-weight:700;letter-spacing:.04em;margin-bottom:3px;opacity:.9}
+.col-label{font-size:.62rem;font-weight:700;letter-spacing:.04em;margin-bottom:4px;opacity:.9;padding-left:26px}
 .col-label.d{color:var(--neon2)}
 .col-label.w{color:#d4a8ff;text-shadow:0 0 6px rgba(201,160,255,.35)}
 .col-label.m{color:var(--month);text-shadow:0 0 6px rgba(255,168,107,.35)}
@@ -92,9 +91,8 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.4.5</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.4.8</a>
 </div>
-<div class="now" id="now"></div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
 
@@ -175,7 +173,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 </div>
 
 <script type="module">
-import { escape, fmtNow, gameHasWeekly, gameHasMonthly } from './core.mjs';
+import { escape, gameHasWeekly, gameHasMonthly } from './core.mjs';
 import { load, save, applyResets } from './store.mjs';
 
 let state = load();
@@ -212,11 +210,6 @@ function colClass(a) {
 }
 
 function render(forceStructure = false) {
-  const resetHappened = applyResets(state);
-  if (resetHappened) save(state);
-
-  const nowEl = document.getElementById('now');
-  if (nowEl) nowEl.textContent = 'いま ' + fmtNow();
 
   const root = document.getElementById('root');
   const sig = state.games.map(g => g.id + ':' + (g.accounts||[]).map(a => a.id).join(',')).join('|')
@@ -342,6 +335,15 @@ function render(forceStructure = false) {
   });
 }
 
+let expandedSaveTimer = null;
+function queueExpandedSave() {
+  if (expandedSaveTimer) return;
+  expandedSaveTimer = setTimeout(() => {
+    expandedSaveTimer = null;
+    save(state);
+  }, 400);
+}
+
 function syncAccountUI(g, a) {
   const root = document.getElementById('root');
   const key = g.id + '|' + a.id;
@@ -385,9 +387,10 @@ document.getElementById('root').addEventListener('click', e => {
   if (tog) {
     const id = tog.dataset.toggle;
     state.expanded[id] = !state.expanded[id];
-    save(state);
     const el = document.querySelector(`[data-gid="${id}"]`);
     if (el) el.classList.toggle('open', !!state.expanded[id]);
+    // localStorage は裏でまとめて書く（展開の体感を優先）
+    queueExpandedSave();
     return;
   }
   const eg = e.target.closest('[data-eg]');
@@ -610,15 +613,11 @@ function scheduleGameResets() {
   });
 }
 
-// 時計だけ軽く更新（リセット判定はしない）
-setInterval(() => {
-  const nowEl = document.getElementById('now');
-  if (nowEl) nowEl.textContent = 'いま ' + fmtNow();
-}, 30000);
-
+// 起動時だけ：閉じてる間に過ぎた境界を反映
+if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v45').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v48').catch(()=>{});
 </script>
 </body>
 </html>
