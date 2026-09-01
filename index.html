@@ -15,7 +15,6 @@
 html,body{overscroll-behavior:none;overscroll-behavior-y:none;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
 body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rgba(255,45,106,.45);margin-bottom:2px}.title-row{display:flex;align-items:baseline;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:2px}.title-row h1{margin:0}.ver{font:700 0.65rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.85;letter-spacing:.04em;padding:2px 6px;border:1px solid #3a2a4a;border-radius:6px}.ver:active{color:var(--neon2);border-color:var(--neon2)}
-.now{text-align:center;font-size:.72rem;color:var(--muted);margin-bottom:10px}
 .game{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
 .ghead{display:flex;align-items:center;gap:6px;padding:8px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid transparent}
 .game.open .ghead{border-bottom-color:var(--line)}
@@ -92,9 +91,8 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.4.5</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.4.7</a>
 </div>
-<div class="now" id="now"></div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
 
@@ -175,7 +173,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 </div>
 
 <script type="module">
-import { escape, fmtNow, gameHasWeekly, gameHasMonthly } from './core.mjs';
+import { escape, gameHasWeekly, gameHasMonthly } from './core.mjs';
 import { load, save, applyResets } from './store.mjs';
 
 let state = load();
@@ -212,11 +210,6 @@ function colClass(a) {
 }
 
 function render(forceStructure = false) {
-  const resetHappened = applyResets(state);
-  if (resetHappened) save(state);
-
-  const nowEl = document.getElementById('now');
-  if (nowEl) nowEl.textContent = 'いま ' + fmtNow();
 
   const root = document.getElementById('root');
   const sig = state.games.map(g => g.id + ':' + (g.accounts||[]).map(a => a.id).join(',')).join('|')
@@ -342,6 +335,15 @@ function render(forceStructure = false) {
   });
 }
 
+let expandedSaveTimer = null;
+function queueExpandedSave() {
+  if (expandedSaveTimer) return;
+  expandedSaveTimer = setTimeout(() => {
+    expandedSaveTimer = null;
+    save(state);
+  }, 400);
+}
+
 function syncAccountUI(g, a) {
   const root = document.getElementById('root');
   const key = g.id + '|' + a.id;
@@ -385,9 +387,10 @@ document.getElementById('root').addEventListener('click', e => {
   if (tog) {
     const id = tog.dataset.toggle;
     state.expanded[id] = !state.expanded[id];
-    save(state);
     const el = document.querySelector(`[data-gid="${id}"]`);
     if (el) el.classList.toggle('open', !!state.expanded[id]);
+    // localStorage は裏でまとめて書く（展開の体感を優先）
+    queueExpandedSave();
     return;
   }
   const eg = e.target.closest('[data-eg]');
@@ -610,15 +613,11 @@ function scheduleGameResets() {
   });
 }
 
-// 時計だけ軽く更新（リセット判定はしない）
-setInterval(() => {
-  const nowEl = document.getElementById('now');
-  if (nowEl) nowEl.textContent = 'いま ' + fmtNow();
-}, 30000);
-
+// 起動時だけ：閉じてる間に過ぎた境界を反映
+if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v45').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v47').catch(()=>{});
 </script>
 </body>
 </html>
