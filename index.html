@@ -16,11 +16,11 @@ html,body{overscroll-behavior:none;overscroll-behavior-y:none;height:100%;backgr
 body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rgba(255,45,106,.45);margin-bottom:2px}.title-row{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:8px;min-height:1.6em}.title-row h1{margin:0;text-align:center}.ver{position:absolute;right:0;top:50%;transform:translateY(-50%);font:700 0.6rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.75;letter-spacing:.03em;padding:2px 5px;border:1px solid #3a2a4a;border-radius:5px}.ver:active{color:var(--neon2);border-color:var(--neon2)}
 .game{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
-.ghead{display:flex;align-items:center;gap:6px;padding:8px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid transparent}
+.ghead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid transparent;touch-action:manipulation}
 .game.open .ghead{border-bottom-color:var(--line)}
-.gname{font-weight:700;color:var(--neon);font-size:.95rem;cursor:pointer;flex-shrink:0;max-width:55%}
+.gname{font-weight:700;color:var(--neon);font-size:.95rem;cursor:pointer;flex-shrink:0;max-width:48%;padding:6px 4px 6px 0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .gname:active{opacity:.8}
-.gexpand{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:28px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.gexpand{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:40px;min-width:48px;padding:6px 2px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none}
 .gmeta{font-size:.62rem;color:var(--muted);text-align:right}
 .chev{color:var(--neon3);font-size:.75rem;transition:transform .2s;opacity:.85}
 .game.open .chev{transform:rotate(180deg)}
@@ -91,7 +91,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.4.8</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.4.9</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -382,19 +382,30 @@ document.getElementById('root').addEventListener('change', e => {
   syncAccountUI(g, a);
 });
 
+function toggleGame(id) {
+  if (!id) return;
+  state.expanded[id] = !state.expanded[id];
+  const el = document.querySelector('[data-gid="' + id + '"]');
+  if (el) el.classList.toggle('open', !!state.expanded[id]);
+  queueExpandedSave();
+}
+
 document.getElementById('root').addEventListener('click', e => {
-  const tog = e.target.closest('[data-toggle]');
-  if (tog) {
-    const id = tog.dataset.toggle;
-    state.expanded[id] = !state.expanded[id];
-    const el = document.querySelector(`[data-gid="${id}"]`);
-    if (el) el.classList.toggle('open', !!state.expanded[id]);
-    // localStorage は裏でまとめて書く（展開の体感を優先）
-    queueExpandedSave();
+  // ゲーム名 → 編集のみ（展開と取り違えない）
+  const eg = e.target.closest('[data-eg]');
+  if (eg) {
+    e.preventDefault();
+    e.stopPropagation();
+    openG(eg.dataset.eg);
     return;
   }
-  const eg = e.target.closest('[data-eg]');
-  if (eg) { openG(eg.dataset.eg); return; }
+  const tog = e.target.closest('[data-toggle]');
+  if (tog) {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleGame(tog.dataset.toggle);
+    return;
+  }
   const aa = e.target.closest('[data-aa]');
   if (aa) { openA(aa.dataset.aa); return; }
   const ea = e.target.closest('[data-ea]');
@@ -617,7 +628,7 @@ function scheduleGameResets() {
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v48').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v49').catch(()=>{});
 </script>
 </body>
 </html>
