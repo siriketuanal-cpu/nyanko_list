@@ -47,16 +47,37 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .col-label.w{color:#d4a8ff;text-shadow:0 0 6px rgba(201,160,255,.35)}
 .col-label.m{color:var(--month);text-shadow:0 0 6px rgba(255,168,107,.35)}
 .col-list{display:flex;flex-direction:column;gap:3px}
-.ci{display:flex;align-items:flex-start;gap:5px;line-height:1.25;font-size:.8rem}
-.ci input{width:15px;height:15px;margin:1px 0 0;flex-shrink:0;accent-color:var(--check)}
+.ci{display:flex;align-items:flex-start;gap:6px;line-height:1.25;font-size:.8rem;cursor:pointer}
+.ci input{
+  appearance:none;-webkit-appearance:none;
+  width:20px;height:20px;margin:0;flex-shrink:0;
+  border:0;background:transparent;position:relative;
+  cursor:pointer;
+}
+.ci input::after{
+  content:"";
+  position:absolute;inset:0;
+  display:grid;place-items:center;
+  font:900 22px/1 "Hiragino Sans","Hiragino Maru Gothic ProN","Yu Gothic UI","Noto Sans JP",sans-serif;
+  color:transparent;
+  text-shadow:none;
+  transform:translateY(-1px);
+}
+.ci input:checked::after{
+  content:"✔";
+  color:#e8eef8;
+  text-shadow:0 0 6px rgba(200,220,255,.35);
+  font-weight:900;
+  -webkit-text-stroke:0.4px rgba(255,255,255,.25);
+}
+.ci.weekly input:checked::after{color:#e0d4ff;text-shadow:0 0 6px rgba(201,160,255,.45)}
+.ci.monthly input:checked::after{color:#ffd8b0;text-shadow:0 0 6px rgba(255,168,107,.4)}
 .ci.done{color:var(--muted);text-decoration:line-through}
-.ci.weekly input{accent-color:#c9a0ff}
 .ci.weekly{color:#e0c8ff}
 .ci.weekly.done{color:#6a5a7a}
-.ci.monthly input{accent-color:var(--month)}
 .ci.monthly{color:#ffd0a8}
 .ci.monthly.done{color:#7a5a40}
-.ci span{word-break:break-word}
+.ci span{word-break:break-word;padding-top:2px}
 .note-sep{height:1px;margin:8px 0 6px;background:linear-gradient(90deg,transparent,#c9a0ff66,transparent);border:0}
 .note-preview{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .empty{text-align:center;color:var(--muted);padding:40px 16px}
@@ -84,7 +105,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.4.0</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.4.1</a>
 </div>
 <div class="now" id="now"></div>
 <div id="root"></div>
@@ -509,7 +530,7 @@ document.getElementById('aDel').onclick = () => {
 
 setInterval(() => render(false), 30000);
 render(true);
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v4').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v41').catch(()=>{});
 </script>
 </body>
 </html>
