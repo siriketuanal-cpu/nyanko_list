@@ -1,14 +1,15 @@
-import { dailyKey, weeklyKey } from './core.mjs';
+import { dailyKey, weeklyKey, monthlyKey, gameHasWeekly, gameHasMonthly } from './core.mjs';
 
-const KEY = 'nyanko_split_v2';
+const KEY = 'nyanko_split_v3';
 
 export function load() {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(KEY) || localStorage.getItem('nyanko_split_v2');
     if (!raw) return empty();
     const data = JSON.parse(raw);
     if (!Array.isArray(data.games)) return empty();
-    // migrate old global notes if any
+    if (!data.lastMonthly) data.lastMonthly = {};
+    if (!data.expanded) data.expanded = {};
     return data;
   } catch {
     return empty();
@@ -23,7 +24,9 @@ function empty() {
   return {
     games: [],
     lastDaily: {},
-    lastWeekly: {}
+    lastWeekly: {},
+    lastMonthly: {},
+    expanded: {}
   };
 }
 
@@ -41,14 +44,28 @@ export function applyResets(state) {
       changed = true;
     }
 
-    const [wh, wm] = (g.weeklyReset || '05:00').split(':').map(Number);
-    const wKey = weeklyKey(now, g.weeklyDay ?? 1, wh || 5, wm || 0);
-    if (state.lastWeekly[g.id] !== wKey) {
-      (g.accounts || []).forEach(a => {
-        (a.weekly || []).forEach(c => { c.done = false; });
-      });
-      state.lastWeekly[g.id] = wKey;
-      changed = true;
+    if (gameHasWeekly(g)) {
+      const [wh, wm] = (g.weeklyReset || '05:00').split(':').map(Number);
+      const wKey = weeklyKey(now, g.weeklyDay ?? 1, wh || 5, wm || 0);
+      if (state.lastWeekly[g.id] !== wKey) {
+        (g.accounts || []).forEach(a => {
+          (a.weekly || []).forEach(c => { c.done = false; });
+        });
+        state.lastWeekly[g.id] = wKey;
+        changed = true;
+      }
+    }
+
+    if (gameHasMonthly(g)) {
+      const [mh, mm] = (g.monthlyReset || '05:00').split(':').map(Number);
+      const mKey = monthlyKey(now, g.monthlyDay ?? 1, mh || 5, mm || 0);
+      if (state.lastMonthly[g.id] !== mKey) {
+        (g.accounts || []).forEach(a => {
+          (a.monthly || []).forEach(c => { c.done = false; });
+        });
+        state.lastMonthly[g.id] = mKey;
+        changed = true;
+      }
     }
   });
   return changed;

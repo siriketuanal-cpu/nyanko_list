@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0d0d12">
+<title>更新 — 悪い子にゃんこチェック</title>
+<style>
+html,body{margin:0;min-height:100%;background:#0d0d12;color:#e8e8f0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;display:flex;align-items:center;justify-content:center}
+.box{text-align:center;padding:24px 20px;max-width:320px}
+h1{font-size:1rem;color:#ff2d6a;margin:0 0 12px}
+p{font-size:.85rem;color:#8888a0;line-height:1.5;margin:0 0 10px}
+.status{font-size:.8rem;color:#00f0ff;min-height:1.4em;margin:12px 0}
+a{color:#c9a0ff}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>♡ 更新中… ♡</h1>
+  <p>キャッシュを消して最新版を取りにいきます。<br>データ（チェック・メモ）は消えません。</p>
+  <p class="status" id="st">準備中…</p>
+  <p><a href="./index.html">戻る</a></p>
+</div>
+<script>
+const APP = 'nyanko-split-v4';
+const st = document.getElementById('st');
+(async () => {
+  try {
+    st.textContent = 'Service Worker を解除中…';
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    st.textContent = 'キャッシュ削除中…';
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    st.textContent = '最新版へ移動します…';
+    // hard reload target
+    location.replace('./index.html?rev=' + APP + '&t=' + Date.now());
+  } catch (e) {
+    st.textContent = '失敗したかも…「戻る」から開き直してね';
+  }
+})();
+</script>
+</body>
+</html>
