@@ -27,13 +27,14 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .gbody{display:none;padding-bottom:4px}
 .game.open .gbody{display:block}
 .gactions{display:flex;gap:2px;padding:0 8px 6px;justify-content:flex-end}
-.acc{padding:8px 10px;border-bottom:1px solid #1e1e2a}
+.acc{padding:8px 10px;border-bottom:2px solid #2a2a3a}
 .acc:last-child{border-bottom:none}
 .acc.done{background:var(--done)}
 .ahead{display:flex;justify-content:space-between;align-items:center;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;min-height:32px;gap:6px}
 .acc.open .ahead{margin-bottom:6px}
-.abody{display:none}
+.abody{display:none;contain:layout style}
 .acc.open .abody{display:block}
+.gbody{contain:content}
 .achev{color:var(--neon3);font-size:.7rem;opacity:.7;transition:transform .15s;flex-shrink:0}
 .acc.open .achev{transform:rotate(90deg)}
 .aname{font-weight:600;color:var(--neon3);font-size:.9rem;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
@@ -96,7 +97,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.0</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.1</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -210,6 +211,42 @@ function accHasDaily(a) {
   return (a.daily || []).some(c => c.label);
 }
 
+const SEP_COLORS = ['#ff2d6a66','#00f0ff66','#c9a0ff66','#ffa86b66','#5ce1e666','#ff6bcb66','#a0ff9e66','#ffd16666'];
+
+function buildChecksHtml(g, a) {
+  const dList = (a.daily||[]).filter(c=>c.label).map((c,i)=>
+    `<label class="ci" data-ci="${g.id}|${a.id}|d|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|d|${i}" ${c.done?'checked':''}><span class="lbl">${escape(c.label)}</span></label>`).join('');
+  const wList = (a.weekly||[]).filter(c=>c.label).map((c,i)=>
+    `<label class="ci weekly" data-ci="${g.id}|${a.id}|w|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|w|${i}" ${c.done?'checked':''}><span class="lbl">${escape(c.label)}</span></label>`).join('');
+  const mList = (a.monthly||[]).filter(c=>c.label).map((c,i)=>
+    `<label class="ci monthly" data-ci="${g.id}|${a.id}|m|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|m|${i}" ${c.done?'checked':''}><span class="lbl">${escape(c.label)}</span></label>`).join('');
+  let checks = '';
+  if (dList || wList || mList) {
+    const parts = [];
+    if (dList) parts.push(`<div class="col d"><div class="col-label d">デイリー</div><div class="col-list">${dList}</div></div>`);
+    if (wList) parts.push(`<div class="col w"><div class="col-label w">ウィークリー</div><div class="col-list">${wList}</div></div>`);
+    if (mList) parts.push(`<div class="col m"><div class="col-label m">マンスリー</div><div class="col-list">${mList}</div></div>`);
+    checks = `<div class="checks-wrap ${colClass(a)}">${parts.join('')}</div>`;
+  }
+  const noteLines = (a.note||'').trim().split(/\n/);
+  const noteHead = noteLines[0] || '';
+  const noteRest = noteLines.slice(1).join(' ').trim();
+  const noteSep = noteHead ? '' : ' hidden';
+  const notePrev = noteHead
+    ? `<div class="note-preview" data-noteprev="${g.id}|${a.id}"><strong>📝 ${escape(noteHead)}</strong>${noteRest ? ' — ' + escape(noteRest.slice(0,40)) : ''}</div>`
+    : `<div class="note-preview" data-noteprev="${g.id}|${a.id}" hidden></div>`;
+  return `${checks}<div class="note-sep" data-notesep="${g.id}|${a.id}"${noteSep}></div>${notePrev}`;
+}
+
+function ensureAccBody(g, a) {
+  const key = g.id + '|' + a.id;
+  const box = document.querySelector('[data-abody="' + key + '"]');
+  if (!box || box.dataset.ready === '1') return box;
+  box.innerHTML = buildChecksHtml(g, a);
+  box.dataset.ready = '1';
+  return box;
+}
+
 function colClass(a) {
   const hasM = accHasMonthly(a);
   const hasW = accHasWeekly(a);
@@ -246,22 +283,9 @@ function render(forceStructure = false) {
         </div>
       </div>
       <div class="gbody">
-        ${(g.accounts||[]).map(a => {
-          const dList = (a.daily||[]).filter(c=>c.label).map((c,i)=>
-            `<label class="ci" data-ci="${g.id}|${a.id}|d|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|d|${i}"><span class="lbl">${escape(c.label)}</span></label>`).join('');
-          const wList = (a.weekly||[]).filter(c=>c.label).map((c,i)=>
-            `<label class="ci weekly" data-ci="${g.id}|${a.id}|w|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|w|${i}"><span class="lbl">${escape(c.label)}</span></label>`).join('');
-          const mList = (a.monthly||[]).filter(c=>c.label).map((c,i)=>
-            `<label class="ci monthly" data-ci="${g.id}|${a.id}|m|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|m|${i}"><span class="lbl">${escape(c.label)}</span></label>`).join('');
-          let checks = '';
-          if (dList || wList || mList) {
-            const parts = [];
-            if (dList) parts.push(`<div class="col d"><div class="col-label d">デイリー</div><div class="col-list">${dList}</div></div>`);
-            if (wList) parts.push(`<div class="col w"><div class="col-label w">ウィークリー</div><div class="col-list">${wList}</div></div>`);
-            if (mList) parts.push(`<div class="col m"><div class="col-label m">マンスリー</div><div class="col-list">${mList}</div></div>`);
-            checks = `<div class="checks-wrap ${colClass(a)}">${parts.join('')}</div>`;
-          }
-          return `<div class="acc" data-aid="${g.id}|${a.id}">
+        ${(g.accounts||[]).map((a, ai) => {
+          const sep = SEP_COLORS[ai % SEP_COLORS.length];
+          return `<div class="acc" data-aid="${g.id}|${a.id}" style="border-bottom-color:${sep}">
             <div class="ahead" data-atoggle="${g.id}|${a.id}">
               <div class="aname">${escape(a.name)}
                 <span class="badge" data-bdaily="${g.id}|${a.id}" hidden>今日OK</span>
@@ -274,11 +298,7 @@ function render(forceStructure = false) {
                 <span class="achev" aria-hidden="true">›</span>
               </div>
             </div>
-            <div class="abody">
-              ${checks}
-              <div class="note-sep" data-notesep="${g.id}|${a.id}" hidden></div>
-              <div class="note-preview" data-noteprev="${g.id}|${a.id}" hidden></div>
-            </div>
+            <div class="abody" data-abody="${g.id}|${a.id}"></div>
           </div>`;
         }).join('')}
         <div class="gactions">
@@ -398,9 +418,16 @@ function toggleGame(id) {
 
 function toggleAcc(key) {
   if (!key) return;
-  accOpen[key] = !accOpen[key];
+  const willOpen = !accOpen[key];
+  accOpen[key] = willOpen;
+  if (willOpen) {
+    const [gid, aid] = key.split('|');
+    const g = state.games.find(x => x.id === gid);
+    const a = g && g.accounts.find(x => x.id === aid);
+    if (g && a) ensureAccBody(g, a);
+  }
   const el = document.querySelector('[data-aid="' + key + '"]');
-  if (el) el.classList.toggle('open', !!accOpen[key]);
+  if (el) el.classList.toggle('open', willOpen);
 }
 
 document.getElementById('root').addEventListener('click', e => {
@@ -659,7 +686,7 @@ function scheduleGameResets() {
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v50').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v51').catch(()=>{});
 </script>
 </body>
 </html>
