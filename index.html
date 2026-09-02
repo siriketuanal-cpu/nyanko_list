@@ -23,11 +23,12 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .gexpand{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:40px;min-width:48px;padding:6px 2px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none}
 .gmeta{font-size:.62rem;color:var(--muted);text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap}
 .gmeta .badge{font-size:.55rem}
-.gactions{display:flex;align-items:center;gap:6px;padding:6px 8px 10px;justify-content:space-between}
-.greset{font-size:.58rem;color:var(--muted);line-height:1.3;min-width:3.5em;flex-shrink:0}
-.gexpandall{font-size:.62rem;padding:4px 10px;border-radius:8px;border:1px solid #2a2a3a;background:#12121a;color:var(--neon3);cursor:pointer;-webkit-tap-highlight-color:transparent;flex:0 0 auto}
-.gexpandall:active{border-color:var(--neon3);opacity:.9}
-.gactions .ib{flex-shrink:0}
+.gactions{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding:6px 8px 10px}
+.gactions .ggear{justify-self:start}
+.gactions .gexpandall{justify-self:center;font-size:.62rem;padding:4px 12px;border-radius:8px;border:1px solid #2a2a3a;background:#12121a;color:var(--neon3);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.gactions .gexpandall:active{border-color:var(--neon3);opacity:.9}
+.gactions .gaa{justify-self:end;font-size:.75rem;color:var(--muted);background:none;border:none;cursor:pointer;padding:4px 2px;-webkit-tap-highlight-color:transparent}
+.gactions .gaa:active{color:var(--neon2)}
 .chev{color:var(--neon3);font-size:.75rem;transition:transform .2s;opacity:.85}
 .game.open .chev{transform:rotate(180deg)}
 .gbody{display:none;padding-bottom:4px}
@@ -112,7 +113,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.8</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.9</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -231,9 +232,6 @@ function gameMonthlyAllOk(g) {
   const list = (g.accounts || []).filter(accHasMonthly);
   return list.length > 0 && list.every(isMonthDone);
 }
-function resetSummary(g) {
-  return (g.dailyReset || '05:00');
-}
 function syncGameHeader(g) {
   const root = document.getElementById('root');
   const meta = root.querySelector('[data-gmeta="' + g.id + '"]');
@@ -244,11 +242,6 @@ function syncGameHeader(g) {
     if (gameMonthlyAllOk(g)) bits.push('<span class="badge month">月課OK</span>');
     const html = bits.join('');
     if (meta.innerHTML !== html) meta.innerHTML = html;
-  }
-  const gr = root.querySelector('[data-greset="' + g.id + '"]');
-  if (gr) {
-    const s = resetSummary(g);
-    if (gr.textContent !== s) gr.textContent = s;
   }
 }
 function accHasMonthly(a) {
@@ -354,10 +347,9 @@ function render(forceStructure = false) {
           </div>`;
         }).join('')}
         <div class="gactions">
-          <span class="greset" data-greset="${g.id}"></span>
-          <button type="button" class="gexpandall" data-eall="${g.id}">全展開</button>
-          <button class="ib" data-aa="${g.id}" title="アカウント追加">＋ アカウント</button>
           <button type="button" class="ib ggear" data-eg="${g.id}" title="ゲーム設定">⚙️</button>
+          <button type="button" class="gexpandall" data-eall="${g.id}">全展開</button>
+          <button type="button" class="gaa" data-aa="${g.id}" title="アカウント追加">＋ アカウント</button>
         </div>
       </div>
     </div>`;
@@ -813,7 +805,7 @@ function scheduleGameResets() {
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v58').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v59').catch(()=>{});
 </script>
 </body>
 </html>

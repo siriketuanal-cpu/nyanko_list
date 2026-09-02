@@ -1,4 +1,4 @@
-const C = 'nyanko-split-v58';
+const C = 'nyanko-split-v59';
 const A = [
   './', './index.html', './update.html', './core.mjs', './store.mjs',
   './manifest.json', './icon.svg',
