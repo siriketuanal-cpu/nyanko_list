@@ -50,6 +50,7 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .anote{font-size:.68rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:1px 0}
 .anote:not([hidden]){cursor:pointer}
 .anote:active{color:var(--neon3)}
+.acc.open .anote{display:none}
 .badge{font-size:.58rem;background:var(--neon2);color:#0d0d12;padding:1px 5px;border-radius:6px;font-weight:700}
 .badge.week{background:#c9a0ff}
 .badge.month{background:var(--month);color:#1a1008}
@@ -113,7 +114,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.10</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.11</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -336,7 +337,7 @@ function render(forceStructure = false) {
                   <span class="badge week" data-bweek="${g.id}|${a.id}" hidden>週OK</span>
                   <span class="badge month" data-bmonth="${g.id}|${a.id}" hidden>月OK</span>
                 </div>
-                <div class="anote" data-anote="${g.id}|${a.id}" data-note="${g.id}|${a.id}" hidden></div>
+                <div class="anote" data-anote="${g.id}|${a.id}" hidden></div>
               </div>
               <div class="aactions">
                 <button class="ib" data-note="${g.id}|${a.id}" title="メモ">📝</button>
@@ -573,8 +574,6 @@ document.getElementById('root').addEventListener('click', e => {
 document.getElementById('fab').onclick = () => openG();
 document.getElementById('nCancel').onclick = () => document.getElementById('nModal').classList.remove('show');
 document.getElementById('nClear').onclick = () => {
-  if (!document.getElementById('notes').value.trim()) return;
-  if (!confirm('メモをすべて消す？\n（まだ保存前。保存を押すまで確定しないよ）')) return;
   document.getElementById('notes').value = '';
   document.getElementById('notes').focus();
 };
@@ -806,7 +805,7 @@ function scheduleGameResets() {
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v510').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v511').catch(()=>{});
 </script>
 </body>
 </html>
