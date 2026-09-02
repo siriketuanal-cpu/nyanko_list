@@ -113,7 +113,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.9</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.10</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -339,6 +339,7 @@ function render(forceStructure = false) {
                 <div class="anote" data-anote="${g.id}|${a.id}" data-note="${g.id}|${a.id}" hidden></div>
               </div>
               <div class="aactions">
+                <button class="ib" data-note="${g.id}|${a.id}" title="メモ">📝</button>
                 <button class="ib" data-ea="${g.id}|${a.id}" title="編集">✏️</button>
                 <span class="achev" aria-hidden="true">›</span>
               </div>
@@ -805,7 +806,7 @@ function scheduleGameResets() {
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v59').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v510').catch(()=>{});
 </script>
 </body>
 </html>
