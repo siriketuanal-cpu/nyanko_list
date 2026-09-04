@@ -23,7 +23,12 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .gexpand{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:40px;min-width:48px;padding:6px 2px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none}
 .gmeta{font-size:.62rem;color:var(--muted);text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap}
 .gmeta .badge{font-size:.55rem}
-.gactions{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding:6px 8px 10px}
+.gtools{padding:2px 8px 8px}
+.gtools-toggle{display:block;width:100%;padding:4px 0;border:none;background:transparent;color:var(--muted);font-size:.7rem;letter-spacing:.2em;cursor:pointer;-webkit-tap-highlight-color:transparent;opacity:.5}
+.gtools-toggle:active{opacity:.9;color:var(--neon3)}
+.gactions{display:none;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding:4px 0 2px}
+.gtools.open .gactions{display:grid}
+.gtools.open .gtools-toggle{opacity:.85;color:var(--neon3)}
 .gactions .ggear{justify-self:start}
 .gactions .gexpandall{justify-self:center;font-size:.62rem;padding:4px 12px;border-radius:8px;border:1px solid #2a2a3a;background:#12121a;color:var(--neon3);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .gactions .gexpandall:active{border-color:var(--neon3);opacity:.9}
@@ -88,7 +93,8 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .note-sep{height:1px;margin:8px 0 6px;background:linear-gradient(90deg,transparent,#c9a0ff66,transparent);border:0}
 .note-preview{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .empty{text-align:center;color:var(--muted);padding:40px 16px}
-.fab{position:fixed;bottom:18px;right:18px;width:52px;height:52px;border-radius:50%;background:var(--neon);color:#fff;border:none;font-size:1.6rem;box-shadow:0 0 18px rgba(255,45,106,.5);z-index:40}
+.fab{position:fixed;right:12px;bottom:14px;width:36px;height:36px;border-radius:50%;border:1px solid #3a2a3a;background:#16161f;color:var(--muted);font-size:1.15rem;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.35);z-index:50;cursor:pointer;opacity:.55}
+.fab:active{transform:scale(.94);opacity:.9;color:var(--neon);border-color:var(--neon)}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:flex-end;justify-content:center}
 .modal.show{display:flex}
 .mb{background:#14141e;width:100%;max-width:480px;border-radius:14px 14px 0 0;padding:14px;max-height:90vh;overflow-y:auto;border-top:1px solid var(--neon)}
@@ -116,7 +122,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.14</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.15</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -209,6 +215,7 @@ let state = load();
 state.expanded = {};
 let gameOpen = {};
 let accOpen = {};
+let toolsOpen = {};
 let editG = null, editA = null, parentG = null, noteTarget = null;
 
 function isDone(a) {
@@ -356,10 +363,13 @@ function render(forceStructure = false) {
             <div class="abody" data-abody="${g.id}|${a.id}"></div>
           </div>`;
         }).join('')}
-        <div class="gactions">
-          <button type="button" class="ib ggear" data-eg="${g.id}" title="ゲーム設定">⚙️</button>
-          <button type="button" class="gexpandall" data-eall="${g.id}">全展開</button>
-          <button type="button" class="gaa" data-aa="${g.id}" title="アカウント追加">＋ アカウント</button>
+        <div class="gtools" data-gtools-wrap="${g.id}">
+          <button type="button" class="gtools-toggle" data-gtools="${g.id}" title="操作">···</button>
+          <div class="gactions">
+            <button type="button" class="ib ggear" data-eg="${g.id}" title="ゲーム設定">⚙️</button>
+            <button type="button" class="gexpandall" data-eall="${g.id}">全展開</button>
+            <button type="button" class="gaa" data-aa="${g.id}" title="アカウント追加">＋ アカウント</button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -372,6 +382,11 @@ function render(forceStructure = false) {
     if (el) {
       const want = !!gameOpen[g.id];
       if (el.classList.contains('open') !== want) el.classList.toggle('open', want);
+    }
+    const tw = root.querySelector(`[data-gtools-wrap="${g.id}"]`);
+    if (tw) {
+      const wantT = !!toolsOpen[g.id];
+      if (tw.classList.contains('open') !== wantT) tw.classList.toggle('open', wantT);
     }
     (g.accounts||[]).forEach(a => {
       const key = g.id + '|' + a.id;
@@ -577,6 +592,16 @@ document.getElementById('root').addEventListener('click', e => {
       }
     });
     eall.textContent = allOpen ? '全展開' : '全閉じて';
+    return;
+  }
+  const gt = e.target.closest('[data-gtools]');
+  if (gt) {
+    e.preventDefault();
+    e.stopPropagation();
+    const id = gt.dataset.gtools;
+    toolsOpen[id] = !toolsOpen[id];
+    const wrap = document.querySelector('[data-gtools-wrap="' + id + '"]');
+    if (wrap) wrap.classList.toggle('open', !!toolsOpen[id]);
     return;
   }
   const aa = e.target.closest('[data-aa]');
@@ -823,7 +848,7 @@ window.addEventListener('pagehide', () => save(state));
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v514').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v515').catch(()=>{});
 </script>
 </body>
 </html>
