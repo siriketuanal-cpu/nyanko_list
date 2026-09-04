@@ -46,7 +46,9 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .achev{color:var(--neon3);font-size:.7rem;opacity:.7;transition:transform .15s;flex-shrink:0}
 .acc.open .achev{transform:rotate(90deg)}
 .ainfo{min-width:0;flex:1}
-.aname{font-weight:600;color:var(--neon3);font-size:.9rem;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.aname{font-weight:600;color:var(--neon3);font-size:.9rem;display:flex;align-items:center;gap:8px;min-width:0}
+.aname-text{flex:0 0 5.2em;width:5.2em;max-width:5.2em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.abadges{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}
 .anote{font-size:.68rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:1px 0}
 .anote:not([hidden]){cursor:pointer}
 .anote:active{color:var(--neon3)}
@@ -114,7 +116,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.11</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.14</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -258,12 +260,15 @@ function accHasDaily(a) {
 const SEP_COLORS = ['#ff2d6a66','#00f0ff66','#c9a0ff66','#ffa86b66','#5ce1e666','#ff6bcb66','#a0ff9e66','#ffd16666'];
 
 function buildChecksHtml(g, a) {
-  const dList = (a.daily||[]).filter(c=>c.label).map((c,i)=>
-    `<label class="ci" data-ci="${g.id}|${a.id}|d|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|d|${i}" ${c.done?'checked':''}><span class="lbl">${escape(c.label)}</span></label>`).join('');
-  const wList = (a.weekly||[]).filter(c=>c.label).map((c,i)=>
-    `<label class="ci weekly" data-ci="${g.id}|${a.id}|w|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|w|${i}" ${c.done?'checked':''}><span class="lbl">${escape(c.label)}</span></label>`).join('');
-  const mList = (a.monthly||[]).filter(c=>c.label).map((c,i)=>
-    `<label class="ci monthly" data-ci="${g.id}|${a.id}|m|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|m|${i}" ${c.done?'checked':''}><span class="lbl">${escape(c.label)}</span></label>`).join('');
+  const dList = (a.daily||[]).map((c,i) => c.label
+    ? `<label class="ci" data-ci="${g.id}|${a.id}|d|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|d|${i}" ${c.done?'checked':''}><span class="lbl">${escape(c.label)}</span></label>`
+    : '').filter(Boolean).join('');
+  const wList = (a.weekly||[]).map((c,i) => c.label
+    ? `<label class="ci weekly" data-ci="${g.id}|${a.id}|w|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|w|${i}" ${c.done?'checked':''}><span class="lbl">${escape(c.label)}</span></label>`
+    : '').filter(Boolean).join('');
+  const mList = (a.monthly||[]).map((c,i) => c.label
+    ? `<label class="ci monthly" data-ci="${g.id}|${a.id}|m|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|m|${i}" ${c.done?'checked':''}><span class="lbl">${escape(c.label)}</span></label>`
+    : '').filter(Boolean).join('');
   let checks = '';
   if (dList || wList || mList) {
     const parts = [];
@@ -332,10 +337,13 @@ function render(forceStructure = false) {
           return `<div class="acc" data-aid="${g.id}|${a.id}" style="border-bottom-color:${sep}">
             <div class="ahead" data-atoggle="${g.id}|${a.id}">
               <div class="ainfo">
-                <div class="aname">${escape(a.name)}
-                  <span class="badge" data-bdaily="${g.id}|${a.id}" hidden>今日OK</span>
-                  <span class="badge week" data-bweek="${g.id}|${a.id}" hidden>週OK</span>
-                  <span class="badge month" data-bmonth="${g.id}|${a.id}" hidden>月OK</span>
+                <div class="aname">
+                  <span class="aname-text">${escape(a.name)}</span>
+                  <span class="abadges">
+                    <span class="badge" data-bdaily="${g.id}|${a.id}" hidden>今日OK</span>
+                    <span class="badge week" data-bweek="${g.id}|${a.id}" hidden>週OK</span>
+                    <span class="badge month" data-bmonth="${g.id}|${a.id}" hidden>月OK</span>
+                  </span>
                 </div>
                 <div class="anote" data-anote="${g.id}|${a.id}" hidden></div>
               </div>
@@ -465,10 +473,14 @@ document.getElementById('root').addEventListener('change', e => {
   const t = e.target.dataset.t; if (!t) return;
   const [gid, aid, type, idx] = t.split('|');
   const g = state.games.find(x => x.id === gid);
+  if (!g) return;
   const a = g.accounts.find(x => x.id === aid);
+  if (!a) return;
   const map = { d: 'daily', w: 'weekly', m: 'monthly' };
   const list = a[map[type]];
-  list[+idx].done = !list[+idx].done;
+  if (!list || !list[+idx]) return;
+  // 画面のチェック状態をそのまま保存（トグル計算のズレ防止）
+  list[+idx].done = !!e.target.checked;
   save(state);
   syncAccountUI(g, a);
   syncGameHeader(g);
@@ -801,11 +813,17 @@ function scheduleGameResets() {
   });
 }
 
+// 画面オフ・裏に回るときに念のため保存
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') save(state);
+});
+window.addEventListener('pagehide', () => save(state));
+
 // 起動時だけ：閉じてる間に過ぎた境界を反映
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v511').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v514').catch(()=>{});
 </script>
 </body>
 </html>
