@@ -38,7 +38,7 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .game.open .chev{transform:rotate(180deg)}
 .gbody{display:none;padding-bottom:4px}
 .game.open .gbody{display:block}
-.acc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px 8px 4px}
+.acc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px 8px 4px;align-items:start}
 .acc{
   background:#12121a;border:1px solid #2a2a3a;border-radius:12px;
   padding:8px;min-width:0;display:flex;flex-direction:column;gap:4px;
@@ -46,17 +46,15 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 }
 .acc.done{background:var(--done);border-color:#1e3a2e}
 .acc.open{
-  grid-column:1 / -1;
   border-color:#3a3a55;
-  box-shadow:0 0 0 1px #2a2a40, inset 0 0 12px rgba(0,0,0,.25);
-  padding:10px;
+  box-shadow:0 0 0 1px #2a2a40, inset 0 0 10px rgba(0,0,0,.2);
 }
 .ahead{
   display:flex;justify-content:space-between;align-items:flex-start;gap:4px;
   cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
   min-height:28px;
 }
-.acc.open .ahead{margin-bottom:4px;padding-bottom:6px;border-bottom:1px dashed #2a2a3a}
+.acc.open .ahead{margin-bottom:3px;padding-bottom:4px;border-bottom:1px dashed #2a2a3a}
 .ainfo{min-width:0;flex:1}
 .aname{font-weight:600;color:var(--neon3);font-size:.82rem;display:flex;flex-direction:column;gap:3px;min-width:0}
 .aname-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
@@ -71,19 +69,20 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .badge{font-size:.52rem;background:var(--neon2);color:#0d0d12;padding:1px 4px;border-radius:5px;font-weight:700}
 .badge.week{background:#c9a0ff}
 .badge.month{background:var(--month);color:#1a1008}
-.chip-sec{margin-bottom:8px}
-.chip-sec:last-of-type{margin-bottom:4px}
-.chip-label{font-size:.58rem;font-weight:700;letter-spacing:.04em;margin-bottom:5px;opacity:.9}
+.chip-sec{margin-bottom:6px}
+.chip-sec:last-of-type{margin-bottom:2px}
+.chip-label{font-size:.52rem;font-weight:700;letter-spacing:.03em;margin-bottom:3px;opacity:.9}
 .chip-label.d{color:var(--neon2)}
 .chip-label.w{color:#c9a0ff}
 .chip-label.m{color:var(--month)}
-.chip-row{display:flex;flex-direction:column;gap:5px}
+.chip-row{display:flex;flex-direction:column;gap:3px}
 .chip{
   display:block;width:100%;text-align:left;
   border:1px solid #2e2e42;background:#0e0e16;color:var(--text);
-  border-radius:10px;padding:8px 10px;font-size:.78rem;line-height:1.3;
+  border-radius:8px;padding:5px 6px;font-size:.65rem;line-height:1.25;
   cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
   transition:background .12s, border-color .12s, color .12s;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .chip:active{transform:scale(.98)}
 .chip.on{
@@ -126,7 +125,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.16</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.17</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -851,7 +850,7 @@ window.addEventListener('pagehide', () => save(state));
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v516').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v517').catch(()=>{});
 </script>
 </body>
 </html>
