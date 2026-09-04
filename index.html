@@ -38,58 +38,62 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .game.open .chev{transform:rotate(180deg)}
 .gbody{display:none;padding-bottom:4px}
 .game.open .gbody{display:block}
-.acc{padding:8px 10px;border-bottom:2px solid #2a2a3a;margin:0}
-.acc:last-child{border-bottom:none}
-.acc.done{background:var(--done)}
-.acc.open{background:#12121c;border-radius:10px;margin:6px 0;border:1px solid #2e2e42;border-bottom:1px solid #2e2e42;box-shadow:inset 0 0 0 1px #1a1a28}
-.acc.open + .acc{margin-top:4px}
-.ahead{display:flex;justify-content:space-between;align-items:center;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;min-height:32px;gap:6px}
-.acc.open .ahead{margin-bottom:6px;padding-bottom:4px;border-bottom:1px dashed #2a2a3a}
-.abody{display:none;contain:layout style;padding-top:2px}
-.acc.open .abody{display:block}
-.gbody{contain:content}
-.achev{color:var(--neon3);font-size:.7rem;opacity:.7;transition:transform .15s;flex-shrink:0}
-.acc.open .achev{transform:rotate(90deg)}
+.acc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px 8px 4px}
+.acc{
+  background:#12121a;border:1px solid #2a2a3a;border-radius:12px;
+  padding:8px;min-width:0;display:flex;flex-direction:column;gap:4px;
+  transition:border-color .15s, box-shadow .15s;
+}
+.acc.done{background:var(--done);border-color:#1e3a2e}
+.acc.open{
+  grid-column:1 / -1;
+  border-color:#3a3a55;
+  box-shadow:0 0 0 1px #2a2a40, inset 0 0 12px rgba(0,0,0,.25);
+  padding:10px;
+}
+.ahead{
+  display:flex;justify-content:space-between;align-items:flex-start;gap:4px;
+  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  min-height:28px;
+}
+.acc.open .ahead{margin-bottom:4px;padding-bottom:6px;border-bottom:1px dashed #2a2a3a}
 .ainfo{min-width:0;flex:1}
-.aname{font-weight:600;color:var(--neon3);font-size:.9rem;display:flex;align-items:center;gap:8px;min-width:0}
-.aname-text{flex:0 0 5.2em;width:5.2em;max-width:5.2em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.abadges{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}
-.anote{font-size:.68rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:1px 0}
-.anote:not([hidden]){cursor:pointer}
-.anote:active{color:var(--neon3)}
+.aname{font-weight:600;color:var(--neon3);font-size:.82rem;display:flex;flex-direction:column;gap:3px;min-width:0}
+.aname-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.abadges{display:flex;flex-wrap:wrap;align-items:center;gap:3px;min-width:0}
+.anote{font-size:.62rem;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .acc.open .anote{display:none}
-.badge{font-size:.58rem;background:var(--neon2);color:#0d0d12;padding:1px 5px;border-radius:6px;font-weight:700}
+.aactions{display:flex;gap:0;flex-shrink:0;align-items:center}
+.abody{display:none;contain:layout style;padding-top:4px}
+.acc.open .abody{display:block}
+.achev{color:var(--neon3);font-size:.65rem;opacity:.55;transition:transform .15s;flex-shrink:0}
+.acc.open .achev{transform:rotate(90deg)}
+.badge{font-size:.52rem;background:var(--neon2);color:#0d0d12;padding:1px 4px;border-radius:5px;font-weight:700}
 .badge.week{background:#c9a0ff}
 .badge.month{background:var(--month);color:#1a1008}
-.aactions{display:flex;gap:1px;flex-shrink:0}
-.checks-wrap{display:grid;gap:6px 10px;margin-top:2px}
-.checks-wrap.cols-1{grid-template-columns:1fr}
-.checks-wrap.cols-2{grid-template-columns:1fr 1fr}
-.checks-wrap.cols-3{grid-template-columns:1fr 1fr 1fr;gap:6px 8px}
-@media (max-width:380px){.checks-wrap.cols-3{grid-template-columns:1fr 1fr}.checks-wrap.cols-3 .col.m{grid-column:1/-1}}
-.col-label{font-size:.62rem;font-weight:700;letter-spacing:.04em;margin-bottom:4px;opacity:.9;padding-left:26px}
-.col-label.d{color:var(--neon2)}
-.col-label.w{color:#d4a8ff;text-shadow:0 0 6px rgba(201,160,255,.35)}
-.col-label.m{color:var(--month);text-shadow:0 0 6px rgba(255,168,107,.35)}
-.col-list{display:flex;flex-direction:column;gap:8px}
-.ci{
-  display:flex;align-items:center;gap:8px;
-  min-height:28px;padding:3px 0;
-  line-height:1.3;font-size:.8rem;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
+.chip-sec{margin-bottom:8px}
+.chip-sec:last-of-type{margin-bottom:4px}
+.chip-label{font-size:.58rem;font-weight:700;letter-spacing:.04em;margin-bottom:5px;opacity:.9}
+.chip-label.d{color:var(--neon2)}
+.chip-label.w{color:#c9a0ff}
+.chip-label.m{color:var(--month)}
+.chip-row{display:flex;flex-direction:column;gap:5px}
+.chip{
+  display:block;width:100%;text-align:left;
+  border:1px solid #2e2e42;background:#0e0e16;color:var(--text);
+  border-radius:10px;padding:8px 10px;font-size:.78rem;line-height:1.3;
+  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  transition:background .12s, border-color .12s, color .12s;
 }
-.ci input{
-  width:18px;height:18px;margin:0;flex-shrink:0;
-  accent-color:var(--check);cursor:pointer;
+.chip:active{transform:scale(.98)}
+.chip.on{
+  background:rgba(0,240,255,.12);border-color:rgba(0,240,255,.45);color:var(--neon2);
+  text-decoration:line-through;opacity:.85;
 }
-.ci.weekly input{accent-color:#c9a0ff}
-.ci.monthly input{accent-color:var(--month)}
-.ci.done{color:var(--muted);text-decoration:line-through}
-.ci.weekly{color:#e0c8ff}
-.ci.weekly.done{color:#6a5a7a}
-.ci.monthly{color:#ffd0a8}
-.ci.monthly.done{color:#7a5a40}
-.ci .lbl{word-break:break-word;flex:1;min-width:0;line-height:1.35}
+.chip.w.on{background:rgba(201,160,255,.12);border-color:rgba(201,160,255,.45);color:#e0c8ff}
+.chip.m.on{background:rgba(255,168,107,.12);border-color:rgba(255,168,107,.45);color:#ffd0a8}
+.note-sep{height:1px;margin:8px 0 6px;background:linear-gradient(90deg,transparent,#c9a0ff66,transparent);border:0}
+.note-preview{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .note-sep{height:1px;margin:8px 0 6px;background:linear-gradient(90deg,transparent,#c9a0ff66,transparent);border:0}
 .note-preview{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .empty{text-align:center;color:var(--muted);padding:40px 16px}
@@ -122,7 +126,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.15</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.16</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -267,29 +271,22 @@ function accHasDaily(a) {
 const SEP_COLORS = ['#ff2d6a66','#00f0ff66','#c9a0ff66','#ffa86b66','#5ce1e666','#ff6bcb66','#a0ff9e66','#ffd16666'];
 
 function buildChecksHtml(g, a) {
-  const dList = (a.daily||[]).map((c,i) => c.label
-    ? `<label class="ci" data-ci="${g.id}|${a.id}|d|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|d|${i}" ${c.done?'checked':''}><span class="lbl">${escape(c.label)}</span></label>`
-    : '').filter(Boolean).join('');
-  const wList = (a.weekly||[]).map((c,i) => c.label
-    ? `<label class="ci weekly" data-ci="${g.id}|${a.id}|w|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|w|${i}" ${c.done?'checked':''}><span class="lbl">${escape(c.label)}</span></label>`
-    : '').filter(Boolean).join('');
-  const mList = (a.monthly||[]).map((c,i) => c.label
-    ? `<label class="ci monthly" data-ci="${g.id}|${a.id}|m|${i}"><input type="checkbox" data-t="${g.id}|${a.id}|m|${i}" ${c.done?'checked':''}><span class="lbl">${escape(c.label)}</span></label>`
-    : '').filter(Boolean).join('');
+  const chip = (c, i, type, cls) => c.label
+    ? `<button type="button" class="chip ${cls}${c.done ? ' on' : ''}" data-t="${g.id}|${a.id}|${type}|${i}" aria-pressed="${c.done ? 'true' : 'false'}">${escape(c.label)}</button>`
+    : '';
+  const dChips = (a.daily || []).map((c, i) => chip(c, i, 'd', '')).filter(Boolean).join('');
+  const wChips = (a.weekly || []).map((c, i) => chip(c, i, 'w', 'w')).filter(Boolean).join('');
+  const mChips = (a.monthly || []).map((c, i) => chip(c, i, 'm', 'm')).filter(Boolean).join('');
   let checks = '';
-  if (dList || wList || mList) {
-    const parts = [];
-    if (dList) parts.push(`<div class="col d"><div class="col-label d">デイリー</div><div class="col-list">${dList}</div></div>`);
-    if (wList) parts.push(`<div class="col w"><div class="col-label w">ウィークリー</div><div class="col-list">${wList}</div></div>`);
-    if (mList) parts.push(`<div class="col m"><div class="col-label m">マンスリー</div><div class="col-list">${mList}</div></div>`);
-    checks = `<div class="checks-wrap ${colClass(a)}">${parts.join('')}</div>`;
-  }
-  const noteLines = (a.note||'').trim().split(/\n/);
+  if (dChips) checks += `<div class="chip-sec"><div class="chip-label d">デイリー</div><div class="chip-row">${dChips}</div></div>`;
+  if (wChips) checks += `<div class="chip-sec"><div class="chip-label w">ウィークリー</div><div class="chip-row">${wChips}</div></div>`;
+  if (mChips) checks += `<div class="chip-sec"><div class="chip-label m">マンスリー</div><div class="chip-row">${mChips}</div></div>`;
+  const noteLines = (a.note || '').trim().split(/\n/);
   const noteHead = noteLines[0] || '';
   const noteRest = noteLines.slice(1).join(' ').trim();
   const noteSep = noteHead ? '' : ' hidden';
   const notePrev = noteHead
-    ? `<div class="note-preview" data-noteprev="${g.id}|${a.id}"><strong>📝 ${escape(noteHead)}</strong>${noteRest ? ' — ' + escape(noteRest.slice(0,40)) : ''}</div>`
+    ? `<div class="note-preview" data-noteprev="${g.id}|${a.id}"><strong>📝 ${escape(noteHead)}</strong>${noteRest ? ' — ' + escape(noteRest.slice(0, 40)) : ''}</div>`
     : `<div class="note-preview" data-noteprev="${g.id}|${a.id}" hidden></div>`;
   return `${checks}<div class="note-sep" data-notesep="${g.id}|${a.id}"${noteSep}></div>${notePrev}`;
 }
@@ -339,9 +336,8 @@ function render(forceStructure = false) {
         </div>
       </div>
       <div class="gbody">
-        ${(g.accounts||[]).map((a, ai) => {
-          const sep = SEP_COLORS[ai % SEP_COLORS.length];
-          return `<div class="acc" data-aid="${g.id}|${a.id}" style="border-bottom-color:${sep}">
+        ${(g.accounts||[]).length ? `<div class="acc-grid">${(g.accounts||[]).map((a, ai) => {
+          return `<div class="acc" data-aid="${g.id}|${a.id}">
             <div class="ahead" data-atoggle="${g.id}|${a.id}">
               <div class="ainfo">
                 <div class="aname">
@@ -362,7 +358,7 @@ function render(forceStructure = false) {
             </div>
             <div class="abody" data-abody="${g.id}|${a.id}"></div>
           </div>`;
-        }).join('')}
+        }).join('')}</div>` : ''}
         <div class="gtools" data-gtools-wrap="${g.id}">
           <button type="button" class="gtools-toggle" data-gtools="${g.id}" title="操作">···</button>
           <div class="gactions">
@@ -434,11 +430,11 @@ function render(forceStructure = false) {
       [['daily','d'],['weekly','w'],['monthly','m']].forEach(([field, prefix]) => {
         (a[field]||[]).forEach((c, i) => {
           if (!c.label) return;
-          const lab = root.querySelector(`[data-ci="${key}|${prefix}|${i}"]`);
-          if (!lab) return;
-          const inp = lab.querySelector('input');
-          if (inp && inp.checked !== !!c.done) inp.checked = !!c.done;
-          lab.classList.toggle('done', !!c.done);
+          const chip = root.querySelector(`[data-t="${key}|${prefix}|${i}"]`);
+          if (!chip) return;
+          const on = !!c.done;
+          chip.classList.toggle('on', on);
+          chip.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
       });
       const np = root.querySelector(`[data-noteprev="${key}"]`);
@@ -464,28 +460,28 @@ function syncAccountUI(g, a) {
   const done = isDone(a);
   const weekDone = isWeekDone(a);
   const monthDone = isMonthDone(a);
-  const acc = root.querySelector(`[data-aid="${key}"]`);
+  const acc = root.querySelector('[data-aid="' + key + '"]');
   if (acc) acc.classList.toggle('done', done);
-  const bd = root.querySelector(`[data-bdaily="${key}"]`);
-  const bw = root.querySelector(`[data-bweek="${key}"]`);
-  const bm = root.querySelector(`[data-bmonth="${key}"]`);
+  const bd = root.querySelector('[data-bdaily="' + key + '"]');
+  const bw = root.querySelector('[data-bweek="' + key + '"]');
+  const bm = root.querySelector('[data-bmonth="' + key + '"]');
   if (bd) bd.hidden = !done;
   if (bw) bw.hidden = !weekDone;
   if (bm) bm.hidden = !monthDone;
-  [['daily','d'],['weekly','w'],['monthly','m']].forEach(([field, prefix]) => {
-    (a[field]||[]).forEach((c, i) => {
+  [['daily', 'd'], ['weekly', 'w'], ['monthly', 'm']].forEach(([field, prefix]) => {
+    (a[field] || []).forEach((c, i) => {
       if (!c.label) return;
-      const lab = root.querySelector(`[data-ci="${key}|${prefix}|${i}"]`);
-      if (!lab) return;
-      const inp = lab.querySelector('input');
-      if (inp && inp.checked !== !!c.done) inp.checked = !!c.done;
-      lab.classList.toggle('done', !!c.done);
+      const chip = root.querySelector('[data-t="' + key + '|' + prefix + '|' + i + '"]');
+      if (!chip) return;
+      const on = !!c.done;
+      chip.classList.toggle('on', on);
+      chip.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
   });
 }
 
-document.getElementById('root').addEventListener('change', e => {
-  const t = e.target.dataset.t; if (!t) return;
+function toggleChip(el) {
+  const t = el.dataset.t; if (!t) return;
   const [gid, aid, type, idx] = t.split('|');
   const g = state.games.find(x => x.id === gid);
   if (!g) return;
@@ -494,12 +490,12 @@ document.getElementById('root').addEventListener('change', e => {
   const map = { d: 'daily', w: 'weekly', m: 'monthly' };
   const list = a[map[type]];
   if (!list || !list[+idx]) return;
-  // 画面のチェック状態をそのまま保存（トグル計算のズレ防止）
-  list[+idx].done = !!e.target.checked;
+  list[+idx].done = !list[+idx].done;
   save(state);
   syncAccountUI(g, a);
   syncGameHeader(g);
-});
+}
+
 
 function toggleGame(id) {
   if (!id) return;
@@ -523,6 +519,13 @@ function toggleAcc(key) {
 }
 
 document.getElementById('root').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (chip) {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleChip(chip);
+    return;
+  }
   // メモ・編集ボタンは先に処理（アカウント展開と分離）
   const nt = e.target.closest('[data-note]');
   if (nt) {
@@ -848,7 +851,7 @@ window.addEventListener('pagehide', () => save(state));
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v515').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v516').catch(()=>{});
 </script>
 </body>
 </html>
