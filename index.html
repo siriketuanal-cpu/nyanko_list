@@ -10,80 +10,53 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root{--bg:#0d0d12;--card:#16161f;--line:#2a2a3a;--neon:#ff2d6a;--neon2:#00f0ff;--neon3:#c9a0ff;--week:#5ee0a0;--text:#e8e8f0;--muted:#8888a0;--check:#00f0ff;--done:#1a2a22;--month:#ffa86b;}
+:root{--bg:#0d0d12;--card:#16161f;--line:#6a6a7a;--neon:#ff2d6a;--neon2:#00f0ff;--neon3:#c9a0ff;--week:#5ee0a0;--text:#e8e8f0;--muted:#8888a0;--month:#ffa86b}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{overscroll-behavior:none;overscroll-behavior-y:none;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
+html,body{overscroll-behavior:none;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
 body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
-h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rgba(255,45,106,.45);margin-bottom:2px}.title-row{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:8px;min-height:1.6em}.title-row h1{margin:0;text-align:center}.ver{position:absolute;right:0;top:50%;transform:translateY(-50%);font:700 0.6rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.75;letter-spacing:.03em;padding:2px 5px;border:1px solid #3a2a4a;border-radius:5px}.ver:active{color:var(--neon2);border-color:var(--neon2)}
+.title-row{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:8px;min-height:1.6em}
+.title-row h1{margin:0;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rgba(255,45,106,.45)}
+.ver{position:absolute;right:0;top:50%;transform:translateY(-50%);font:700 .6rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.75;padding:2px 5px;border:1px solid #3a2a4a;border-radius:5px}
+.ver:active{color:var(--neon2);border-color:var(--neon2)}
 .game{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:visible}
 .ghead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid transparent;touch-action:manipulation}
 .game.open .ghead{border-bottom-color:var(--line)}
-.gname{font-weight:700;color:var(--neon);font-size:.95rem;cursor:pointer;flex-shrink:0;max-width:48%;padding:6px 4px 6px 0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.gname{font-weight:700;color:var(--neon);font-size:.95rem;cursor:pointer;flex-shrink:0;max-width:48%;padding:6px 4px 6px 0;-webkit-tap-highlight-color:transparent}
 .gname:active{opacity:.8}
-.gexpand{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:40px;min-width:48px;padding:6px 2px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none}
+.gexpand{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:40px;min-width:48px;padding:6px 2px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
 .gmeta{font-size:.62rem;color:var(--muted);text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap}
 .gmeta .badge{font-size:.55rem}
+.chev{color:var(--neon3);font-size:.75rem;transition:transform .2s;opacity:.85}
+.game.open .chev{transform:rotate(180deg)}
+.gbody{display:none;padding-bottom:4px;overflow:visible}
+.game.open .gbody{display:block}
 .gtools{padding:2px 8px 8px}
-.gtools-toggle{display:block;width:100%;padding:4px 0;border:none;background:transparent;color:var(--muted);font-size:.7rem;letter-spacing:.2em;cursor:pointer;-webkit-tap-highlight-color:transparent;opacity:.5}
+.gtools-toggle{display:block;width:100%;padding:4px 0;border:none;background:transparent;color:var(--muted);font-size:.7rem;letter-spacing:.2em;cursor:pointer;opacity:.5;-webkit-tap-highlight-color:transparent}
 .gtools-toggle:active{opacity:.9;color:var(--neon3)}
 .gactions{display:none;grid-template-columns:1fr 1fr;align-items:center;gap:6px;padding:4px 0 2px}
 .gtools.open .gactions{display:grid}
 .gtools.open .gtools-toggle{opacity:.85;color:var(--neon3)}
 .gactions .ggear{justify-self:start}
-.gactions .gaa{justify-self:end}
-.gactions .gaa{justify-self:end;font-size:.75rem;color:var(--muted);background:none;border:none;cursor:pointer;padding:4px 2px;-webkit-tap-highlight-color:transparent}
+.gactions .gaa{justify-self:end;font-size:.75rem;color:var(--muted);background:none;border:none;cursor:pointer;padding:4px 2px}
 .gactions .gaa:active{color:var(--neon2)}
-.chev{color:var(--neon3);font-size:.75rem;transition:transform .2s;opacity:.85}
-.game.open .chev{transform:rotate(180deg)}
-.gbody{display:none;padding-bottom:4px;overflow:visible}
-.game.open .gbody{display:block}
+.ib{background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;padding:4px}
+.ib:active{color:var(--neon2)}
 .acc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px 8px 4px;align-items:start;overflow:visible}
-.acc{
-  position:relative;z-index:1;
-  background:#12121a;border:1px solid #6a6a7a;border-radius:12px;
-  padding:0;min-width:0;
-  box-shadow:0 0 0 1px rgba(255,255,255,.04);
-}
+.acc{background:#12121a;border:1px solid #6a6a7a;border-radius:12px;padding:0;min-width:0;box-shadow:0 0 0 1px rgba(255,255,255,.04)}
 .acc.done{background:#1a3d48;border-color:#4a8a9a}
-.acc.open{z-index:30;border-color:#9a9aac}
-.ahead{
-  display:flex;justify-content:space-between;align-items:flex-start;gap:4px;
-  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-  padding:8px;
-  border-radius:11px;
-  background:transparent;
-}
-.acc.done .ahead{background:#1a3d48}
-.acc.open .ahead{border-radius:11px 11px 0 0}
-.acc.open.done .ahead{background:#1a3d48;border-radius:11px 11px 0 0;box-shadow:none}
+.acc.open{border-color:#9a9aac}
+.ahead{display:flex;align-items:flex-start;gap:4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:8px}
 .ainfo{min-width:0;flex:1;overflow:hidden}
-.aname{
-  font-weight:600;color:var(--neon3);font-size:.85rem;
-  display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;width:100%;
-}
-.aname-text{
-  flex:1 1 auto;min-width:0;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
+.aname{font-weight:600;color:var(--neon3);font-size:.85rem;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;width:100%}
+.aname-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .abadges{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:2px;flex:0 0 auto;margin-left:auto;min-height:1.15em}
 .abadges .badge[hidden]{display:inline-block!important;visibility:hidden;pointer-events:none;width:0;min-width:0;padding:0;margin:0;overflow:hidden;border:0}
-.anote{
-  font-size:.62rem;color:var(--muted);margin-top:3px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
-  min-height:1.15em;line-height:1.15em;
-}
+.anote{font-size:.62rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-height:1.15em;line-height:1.15em}
 .anote:empty::before{content:"\00a0"}
-.aactions{display:flex;gap:0;flex-shrink:0;align-items:center;min-width:10px}
-.abody{
-  display:none;position:absolute;left:-1px;right:-1px;top:100%;
-  padding:8px;border-radius:0 0 11px 11px;
-  background:#14141e;border:1px solid #9a9aac;border-top:none;
-  box-shadow:0 12px 32px rgba(0,0,0,.55);
-  z-index:40;contain:layout style;
-}
-.acc.done .abody{border-color:#4a8a9a}
-.acc.open.done .ahead{border-bottom:1px solid rgba(255,255,255,.06)}
+.abody{display:none;padding:0 8px 8px;border-top:1px solid rgba(255,255,255,.08)}
 .acc.open .abody{display:block}
+.acc-grid:has(.acc.open) .acc:not(.open){opacity:.42;filter:brightness(.72);transition:opacity .15s,filter .15s}
+.acc-grid:has(.acc.open) .acc.open{opacity:1;filter:none}
 .abody-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding-top:4px}
 .abody-edit{border:none;background:transparent;color:var(--muted);font-size:.65rem;text-align:left;cursor:pointer;padding:4px 0}
 .abody-foot .memo{font-size:.85rem;padding:4px 6px;opacity:.85;background:transparent;border:none;cursor:pointer;line-height:1}
@@ -98,13 +71,7 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .chip-label.w{color:var(--week)}
 .chip-label.m{color:var(--month)}
 .chip-row{display:flex;flex-direction:column;gap:4px}
-.chip{
-  display:block;width:100%;text-align:left;
-  border:1px solid #2e2e42;background:#0e0e16;color:var(--text);
-  border-radius:8px;padding:7px 8px;font-size:.72rem;line-height:1.3;
-  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
+.chip{display:block;width:100%;text-align:left;border:1px solid #2e2e42;background:#0e0e16;color:var(--text);border-radius:8px;padding:7px 8px;font-size:.72rem;line-height:1.3;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip:active{transform:scale(.98)}
 .chip.on{background:#1a3d48;border-color:#2a5a68;color:var(--neon2);text-decoration:line-through}
 .chip.w.on{background:#163528;border-color:#2a5a40;color:var(--week)}
@@ -122,24 +89,23 @@ textarea{min-height:160px;resize:vertical}
 label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 .row{display:flex;gap:6px;margin-bottom:7px}.row>*{flex:1}
 .btns{display:flex;gap:6px;margin-top:10px}
-.btns button{flex:1;padding:10px;border:none;border-radius:9px;font-weight:600;font-size:.9rem}
+button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font-size:.9rem;cursor:pointer}
 .save{background:var(--neon);color:#fff}.cancel{background:#222230;color:var(--text)}
-.danger-zone{margin-top:18px;padding-top:14px;border-top:1px solid #3a2030}
-.danger{background:#ff2d2d;color:#fff;width:100%;padding:9px;border:none;border-radius:9px;font-weight:600;opacity:.92}
-.ib{background:none;border:none;color:var(--muted);font-size:.95rem;padding:2px 4px;cursor:pointer}
-.ib:active{color:var(--neon2)}
+.danger-zone{margin-top:12px;padding-top:12px;border-top:1px solid #3a2030}
+.danger{background:#3a1520;color:#ff6b8a;width:100%;padding:10px;border:1px solid #5a2030;border-radius:8px;cursor:pointer}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:5px}.g2 label.s{grid-column:1/-1}
 .hint{font-size:.65rem;color:var(--muted);margin:-4px 0 8px}
 .nhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .nhead h2{margin:0;flex:1;min-width:0}
-.nclear{flex-shrink:0;font-size:.62rem;padding:4px 8px;border-radius:6px;border:1px solid #3a2030;background:#1a1018;color:#ff8aa8;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nclear{flex-shrink:0;font-size:.62rem;padding:4px 8px;border-radius:6px;border:1px solid #3a2030;background:#1a1018;color:#ff8aa8;cursor:pointer}
 .nclear:active{background:#2a1520}
 </style>
 </head>
 <body>
+
 <div class="title-row">
   <h1>♡ にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.26</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.27</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -223,593 +189,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
   </div>
 </div>
 
-<script type="module">
-import { escape, gameHasWeekly, gameHasMonthly } from './core.mjs';
-import { load, save, applyResets } from './store.mjs';
+<script type="module" src="./app.mjs"></script>
 
-let state = load();
-// 展開は起動のたびに閉じる（保存しない）
-state.expanded = {};
-let gameOpen = {};
-let accOpen = {};
-let toolsOpen = {};
-let editG = null, editA = null, parentG = null, noteTarget = null;
-
-function isDone(a) {
-  const ds = (a.daily || []).filter(c => c.label);
-  return ds.length > 0 && ds.every(c => c.done);
-}
-function isWeekDone(a) {
-  const ws = (a.weekly || []).filter(c => c.label);
-  return ws.length > 0 && ws.every(c => c.done);
-}
-function isMonthDone(a) {
-  const ms = (a.monthly || []).filter(c => c.label);
-  return ms.length > 0 && ms.every(c => c.done);
-}
-function gameDailyAllOk(g) {
-  const list = (g.accounts || []).filter(accHasDaily);
-  return list.length > 0 && list.every(isDone);
-}
-function gameWeeklyAllOk(g) {
-  const list = (g.accounts || []).filter(accHasWeekly);
-  return list.length > 0 && list.every(isWeekDone);
-}
-function gameMonthlyAllOk(g) {
-  const list = (g.accounts || []).filter(accHasMonthly);
-  return list.length > 0 && list.every(isMonthDone);
-}
-function syncGameHeader(g) {
-  const root = document.getElementById('root');
-  const meta = root.querySelector('[data-gmeta="' + g.id + '"]');
-  if (meta) {
-    const bits = [];
-    if (gameDailyAllOk(g)) bits.push('<span class="badge">日課OK</span>');
-    if (gameWeeklyAllOk(g)) bits.push('<span class="badge week">週課OK</span>');
-    if (gameMonthlyAllOk(g)) bits.push('<span class="badge month">月課OK</span>');
-    const html = bits.join('');
-    if (meta.innerHTML !== html) meta.innerHTML = html;
-  }
-}
-function accHasMonthly(a) {
-  return (a.monthly || []).some(c => c.label);
-}
-function accHasWeekly(a) {
-  return (a.weekly || []).some(c => c.label);
-}
-function accHasDaily(a) {
-  return (a.daily || []).some(c => c.label);
-}
-
-function buildChecksHtml(g, a) {
-  const chip = (c, i, type, cls) => c.label
-    ? `<button type="button" class="chip ${cls}${c.done ? ' on' : ''}" data-t="${g.id}|${a.id}|${type}|${i}" aria-pressed="${c.done ? 'true' : 'false'}">${escape(c.label)}</button>`
-    : '';
-  const dChips = (a.daily || []).map((c, i) => chip(c, i, 'd', '')).filter(Boolean).join('');
-  const wChips = (a.weekly || []).map((c, i) => chip(c, i, 'w', 'w')).filter(Boolean).join('');
-  const mChips = (a.monthly || []).map((c, i) => chip(c, i, 'm', 'm')).filter(Boolean).join('');
-  let checks = '';
-  if (dChips) checks += `<div class="chip-sec"><div class="chip-label d">デイリー</div><div class="chip-row">${dChips}</div></div>`;
-  if (wChips) checks += `<div class="chip-sec"><div class="chip-label w">ウィークリー</div><div class="chip-row">${wChips}</div></div>`;
-  if (mChips) checks += `<div class="chip-sec"><div class="chip-label m">マンスリー</div><div class="chip-row">${mChips}</div></div>`;
-  return `${checks}<div class="abody-foot"><button type="button" class="abody-edit" data-ea="${g.id}|${a.id}">アカウント設定</button><button type="button" class="memo" data-note="${g.id}|${a.id}" title="メモ">📝</button></div>`;
-}
-
-function ensureAccBody(g, a) {
-  const key = g.id + '|' + a.id;
-  const box = document.querySelector('[data-abody="' + key + '"]');
-  if (!box || box.dataset.ready === '1') return box;
-  box.innerHTML = buildChecksHtml(g, a);
-  box.dataset.ready = '1';
-  return box;
-}
-
-function render(forceStructure = false) {
-
-  const root = document.getElementById('root');
-  const sig = state.games.map(g => g.id + ':' + (g.accounts||[]).map(a => a.id).join(',')).join('|')
-    + '|' + state.games.map(g => (g.accounts||[]).map(a =>
-      ['daily','weekly','monthly'].map(k => (a[k]||[]).filter(c=>c.label).map(c=>c.label).join(',')).join('/')
-    ).join(';')).join('#');
-  const needStructure = forceStructure || root.dataset.sig !== sig || !state.games.length;
-
-  if (!state.games.length) {
-    root.dataset.sig = '';
-    root.innerHTML = '<div class="empty">まだゲームがないよ…<br>右下の＋から追加してね♡</div>';
-    return;
-  }
-
-  if (needStructure) {
-    root.dataset.sig = sig;
-    root.innerHTML = state.games.map(g => {
-      return `
-    <div class="game" data-gid="${g.id}">
-      <div class="ghead">
-        <div class="gname" data-toggle="${g.id}">${escape(g.name)}</div>
-        <div class="gexpand" data-toggle="${g.id}">
-          <span class="gmeta" data-gmeta="${g.id}"></span>
-          <span class="chev" aria-hidden="true">♡</span>
-        </div>
-      </div>
-      <div class="gbody">
-        ${(g.accounts||[]).length ? `<div class="acc-grid">${(g.accounts||[]).map((a, ai) => {
-          return `<div class="acc" data-aid="${g.id}|${a.id}">
-            <div class="ahead" data-atoggle="${g.id}|${a.id}">
-              <div class="ainfo">
-                <div class="aname">
-                  <span class="aname-text">${escape(a.name)}</span>
-                  <span class="abadges">
-                    <span class="badge" data-bdaily="${g.id}|${a.id}" hidden>今日OK</span>
-                    <span class="badge week" data-bweek="${g.id}|${a.id}" hidden>週OK</span>
-                    <span class="badge month" data-bmonth="${g.id}|${a.id}" hidden>月OK</span>
-                  </span>
-                </div>
-                <div class="anote" data-anote="${g.id}|${a.id}"></div>
-              </div>
-            </div>
-            <div class="abody" data-abody="${g.id}|${a.id}"></div>
-          </div>`;
-        }).join('')}</div>` : ''}
-        <div class="gtools" data-gtools-wrap="${g.id}">
-          <button type="button" class="gtools-toggle" data-gtools="${g.id}" title="操作">···</button>
-          <div class="gactions">
-            <button type="button" class="ib ggear" data-eg="${g.id}" title="ゲーム設定">⚙️</button>
-            <button type="button" class="gaa" data-aa="${g.id}" title="アカウント追加">＋ アカウント</button>
-          </div>
-        </div>
-      </div>
-    </div>`;
-    }).join('');
-  }
-
-  // メモリ上の開閉だけ反映（保存しない）
-  state.games.forEach(g => {
-    const el = root.querySelector(`[data-gid="${g.id}"]`);
-    if (el) {
-      const want = !!gameOpen[g.id];
-      if (el.classList.contains('open') !== want) el.classList.toggle('open', want);
-    }
-    const tw = root.querySelector(`[data-gtools-wrap="${g.id}"]`);
-    if (tw) {
-      const wantT = !!toolsOpen[g.id];
-      if (tw.classList.contains('open') !== wantT) tw.classList.toggle('open', wantT);
-    }
-    (g.accounts||[]).forEach(a => {
-      const key = g.id + '|' + a.id;
-      const acc = root.querySelector(`[data-aid="${key}"]`);
-      if (!acc) return;
-      const want = !!accOpen[key];
-      if (acc.classList.contains('open') !== want) acc.classList.toggle('open', want);
-    });
-  });
-
-  state.games.forEach(g => {
-    syncGameHeader(g);
-    (g.accounts||[]).forEach(a => {
-      const key = g.id + '|' + a.id;
-      const done = isDone(a);
-      const weekDone = isWeekDone(a);
-      const monthDone = isMonthDone(a);
-      const acc = root.querySelector(`[data-aid="${key}"]`);
-      if (acc) acc.classList.toggle('done', done);
-      const bd = root.querySelector(`[data-bdaily="${key}"]`);
-      const bw = root.querySelector(`[data-bweek="${key}"]`);
-      const bm = root.querySelector(`[data-bmonth="${key}"]`);
-      if (bd) bd.hidden = !done;
-      if (bw) bw.hidden = !weekDone;
-      if (bm) bm.hidden = !monthDone;
-      const noteLines = (a.note||'').trim().split(/\n/);
-      const noteHead = noteLines[0] || '';
-      const noteRest = noteLines.slice(1).join(' ').trim();
-      const an = root.querySelector(`[data-anote="${key}"]`);
-      if (an) {
-        const want = noteHead ? ('📝 ' + noteHead) : '';
-        if (an.textContent !== want) an.textContent = want;
-        an.hidden = false;
-      }
-      // 未展開のアカウントはチェックDOMがないので触らない
-      const body = root.querySelector(`[data-abody="${key}"]`);
-      if (!body || body.dataset.ready !== '1') return;
-      [['daily','d'],['weekly','w'],['monthly','m']].forEach(([field, prefix]) => {
-        (a[field]||[]).forEach((c, i) => {
-          if (!c.label) return;
-          const chip = root.querySelector(`[data-t="${key}|${prefix}|${i}"]`);
-          if (!chip) return;
-          const on = !!c.done;
-          chip.classList.toggle('on', on);
-          chip.setAttribute('aria-pressed', on ? 'true' : 'false');
-        });
-      });
-
-    });
-  });
-}
-
-function syncAccountUI(g, a) {
-  const root = document.getElementById('root');
-  const key = g.id + '|' + a.id;
-  const done = isDone(a);
-  const weekDone = isWeekDone(a);
-  const monthDone = isMonthDone(a);
-  const acc = root.querySelector('[data-aid="' + key + '"]');
-  if (acc) acc.classList.toggle('done', done);
-  const bd = root.querySelector('[data-bdaily="' + key + '"]');
-  const bw = root.querySelector('[data-bweek="' + key + '"]');
-  const bm = root.querySelector('[data-bmonth="' + key + '"]');
-  if (bd) bd.hidden = !done;
-  if (bw) bw.hidden = !weekDone;
-  if (bm) bm.hidden = !monthDone;
-  [['daily', 'd'], ['weekly', 'w'], ['monthly', 'm']].forEach(([field, prefix]) => {
-    (a[field] || []).forEach((c, i) => {
-      if (!c.label) return;
-      const chip = root.querySelector('[data-t="' + key + '|' + prefix + '|' + i + '"]');
-      if (!chip) return;
-      const on = !!c.done;
-      chip.classList.toggle('on', on);
-      chip.setAttribute('aria-pressed', on ? 'true' : 'false');
-    });
-  });
-}
-
-function toggleChip(el) {
-  const t = el.dataset.t; if (!t) return;
-  const [gid, aid, type, idx] = t.split('|');
-  const g = state.games.find(x => x.id === gid);
-  if (!g) return;
-  const a = g.accounts.find(x => x.id === aid);
-  if (!a) return;
-  const map = { d: 'daily', w: 'weekly', m: 'monthly' };
-  const list = a[map[type]];
-  if (!list || !list[+idx]) return;
-  list[+idx].done = !list[+idx].done;
-  save(state);
-  syncAccountUI(g, a);
-  syncGameHeader(g);
-}
-
-
-function toggleGame(id) {
-  if (!id) return;
-  gameOpen[id] = !gameOpen[id];
-  const el = document.querySelector('[data-gid="' + id + '"]');
-  if (el) el.classList.toggle('open', !!gameOpen[id]);
-}
-
-function toggleAcc(key) {
-  if (!key) return;
-  const willOpen = !accOpen[key];
-  const [gid, aid] = key.split('|');
-  if (willOpen) {
-    // 同じゲーム内は1つだけ開く（重ね展開で邪魔しない）
-    Object.keys(accOpen).forEach(k => {
-      if (k.startsWith(gid + '|') && k !== key && accOpen[k]) {
-        accOpen[k] = false;
-        const other = document.querySelector('[data-aid="' + k + '"]');
-        if (other) { other.classList.remove('open'); other.style.zIndex = ''; }
-      }
-    });
-    const g = state.games.find(x => x.id === gid);
-    const a = g && g.accounts.find(x => x.id === aid);
-    if (g && a) ensureAccBody(g, a);
-  }
-  accOpen[key] = willOpen;
-  const el = document.querySelector('[data-aid="' + key + '"]');
-  if (el) {
-    el.classList.toggle('open', willOpen);
-    el.style.zIndex = willOpen ? '50' : '';
-  }
-}
-
-document.getElementById('root').addEventListener('click', e => {
-  const chip = e.target.closest('.chip');
-  if (chip) {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleChip(chip);
-    return;
-  }
-  // メモ・編集ボタンは先に処理（アカウント展開と分離）
-  const nt = e.target.closest('[data-note]');
-  if (nt) {
-    e.preventDefault();
-    e.stopPropagation();
-    const [gid, aid] = nt.dataset.note.split('|');
-    const g = state.games.find(x => x.id === gid);
-    const a = g.accounts.find(x => x.id === aid);
-    noteTarget = { gid, aid };
-    document.getElementById('nTitle').textContent = a.name + ' のメモ';
-    document.getElementById('notes').value = a.note || '';
-    document.getElementById('nModal').classList.add('show');
-    return;
-  }
-  const ea = e.target.closest('[data-ea]');
-  if (ea) {
-    e.preventDefault();
-    e.stopPropagation();
-    const [gid,aid] = ea.dataset.ea.split('|');
-    openA(gid, aid);
-    return;
-  }
-  // ⚙️ ゲーム設定
-  const eg = e.target.closest('[data-eg]');
-  if (eg) {
-    e.preventDefault();
-    e.stopPropagation();
-    openG(eg.dataset.eg);
-    return;
-  }
-  // ゲーム展開
-  const tog = e.target.closest('[data-toggle]');
-  if (tog) {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleGame(tog.dataset.toggle);
-    return;
-  }
-  // アカウント展開（バー全体）
-  const at = e.target.closest('[data-atoggle]');
-  if (at) {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleAcc(at.dataset.atoggle);
-    return;
-  }
-  const gt = e.target.closest('[data-gtools]');
-  if (gt) {
-    e.preventDefault();
-    e.stopPropagation();
-    const id = gt.dataset.gtools;
-    toolsOpen[id] = !toolsOpen[id];
-    const wrap = document.querySelector('[data-gtools-wrap="' + id + '"]');
-    if (wrap) wrap.classList.toggle('open', !!toolsOpen[id]);
-    return;
-  }
-  const aa = e.target.closest('[data-aa]');
-  if (aa) { openA(aa.dataset.aa); return; }
-});
-
-
-function closeOpenAccs(exceptKey) {
-  Object.keys(accOpen).forEach(k => {
-    if (!accOpen[k] || k === exceptKey) return;
-    accOpen[k] = false;
-    const el = document.querySelector('[data-aid="' + k + '"]');
-    if (el) { el.classList.remove('open'); el.style.zIndex = ''; }
-  });
-}
-document.addEventListener('click', e => {
-  if (e.target.closest('.modal.show') || e.target.closest('.modal')) return;
-  if (e.target.closest('.acc.open')) return;
-  if (e.target.closest('[data-atoggle]')) return; // 別カード開閉は toggle 側
-  closeOpenAccs();
-}, true);
-
-document.getElementById('fab').onclick = () => openG();
-document.getElementById('nCancel').onclick = () => document.getElementById('nModal').classList.remove('show');
-document.getElementById('nClear').onclick = () => {
-  document.getElementById('notes').value = '';
-  document.getElementById('notes').focus();
-};
-document.getElementById('nSave').onclick = () => {
-  if (!noteTarget) return;
-  const g = state.games.find(x => x.id === noteTarget.gid);
-  const a = g.accounts.find(x => x.id === noteTarget.aid);
-  a.note = document.getElementById('notes').value;
-  save(state);
-  document.getElementById('nModal').classList.remove('show');
-  // 全体 render せず、このアカウントの見出しだけ更新
-  const key = noteTarget.gid + '|' + noteTarget.aid;
-  const root = document.getElementById('root');
-  const noteLines = (a.note || '').trim().split(/\n/);
-  const noteHead = noteLines[0] || '';
-  const noteRest = noteLines.slice(1).join(' ').trim();
-  const an = root.querySelector('[data-anote="' + key + '"]');
-  if (an) {
-    an.hidden = false;
-    an.textContent = noteHead ? ('📝 ' + noteHead) : '';
-  }
-};
-
-function setResetFieldsEnabled(g) {
-  const hasW = g ? gameHasWeekly(g) : false;
-  const hasM = g ? gameHasMonthly(g) : false;
-  document.getElementById('gWDay').disabled = !hasW;
-  document.getElementById('gWTime').disabled = !hasW;
-  document.getElementById('gWeeklyHint').hidden = hasW;
-  document.getElementById('gMDay').disabled = !hasM;
-  document.getElementById('gMTime').disabled = !hasM;
-  document.getElementById('gMonthlyHint').hidden = hasM;
-}
-
-function openG(id = null) {
-  editG = id;
-  document.getElementById('gTitle').textContent = id ? 'ゲームを編集' : 'ゲームを追加';
-  document.getElementById('gDelZone').style.display = id ? 'block' : 'none';
-  if (id) {
-    const g = state.games.find(x => x.id === id);
-    document.getElementById('gName').value = g.name;
-    document.getElementById('gDaily').value = g.dailyReset || '05:00';
-    document.getElementById('gWDay').value = g.weeklyDay ?? 1;
-    document.getElementById('gWTime').value = g.weeklyReset || '05:00';
-    document.getElementById('gMDay').value = g.monthlyDay ?? 1;
-    document.getElementById('gMTime').value = g.monthlyReset || '05:00';
-    setResetFieldsEnabled(g);
-  } else {
-    document.getElementById('gName').value = '';
-    document.getElementById('gDaily').value = '05:00';
-    document.getElementById('gWDay').value = '1';
-    document.getElementById('gWTime').value = '05:00';
-    document.getElementById('gMDay').value = '1';
-    document.getElementById('gMTime').value = '05:00';
-    setResetFieldsEnabled(null);
-  }
-  document.getElementById('gModal').classList.add('show');
-}
-
-function openA(gid, aid = null) {
-  parentG = gid; editA = aid;
-  document.getElementById('aTitle').textContent = aid ? 'アカウントを編集' : 'アカウントを追加';
-  document.getElementById('aDelZone').style.display = aid ? 'block' : 'none';
-  if (aid) {
-    const g = state.games.find(x => x.id === gid);
-    const a = g.accounts.find(x => x.id === aid);
-    document.getElementById('aName').value = a.name;
-    for (let i = 0; i < 5; i++) document.getElementById('d'+(i+1)).value = (a.daily||[])[i]?.label || '';
-    for (let i = 0; i < 2; i++) document.getElementById('w'+(i+1)).value = (a.weekly||[])[i]?.label || '';
-    for (let i = 0; i < 2; i++) document.getElementById('m'+(i+1)).value = (a.monthly||[])[i]?.label || '';
-  } else {
-    document.getElementById('aName').value = '';
-    for (let i = 1; i <= 5; i++) document.getElementById('d'+i).value = '';
-    for (let i = 1; i <= 2; i++) document.getElementById('w'+i).value = '';
-    for (let i = 1; i <= 2; i++) document.getElementById('m'+i).value = '';
-  }
-  document.getElementById('aModal').classList.add('show');
-}
-
-document.getElementById('gCancel').onclick = () => document.getElementById('gModal').classList.remove('show');
-document.getElementById('aCancel').onclick = () => document.getElementById('aModal').classList.remove('show');
-
-document.getElementById('gSave').onclick = () => {
-  const name = document.getElementById('gName').value.trim();
-  if (!name) return alert('ゲーム名を入れてね');
-  const dailyReset = document.getElementById('gDaily').value;
-  const weeklyDay = +document.getElementById('gWDay').value;
-  const weeklyReset = document.getElementById('gWTime').value;
-  const monthlyDay = Math.min(28, Math.max(1, +document.getElementById('gMDay').value || 1));
-  const monthlyReset = document.getElementById('gMTime').value;
-  if (editG) {
-    const g = state.games.find(x => x.id === editG);
-    g.name = name; g.dailyReset = dailyReset;
-    if (gameHasWeekly(g)) { g.weeklyDay = weeklyDay; g.weeklyReset = weeklyReset; }
-    if (gameHasMonthly(g)) { g.monthlyDay = monthlyDay; g.monthlyReset = monthlyReset; }
-  } else {
-    state.games.push({
-      id: 'g'+Date.now(), name, dailyReset,
-      weeklyDay, weeklyReset, monthlyDay, monthlyReset, accounts: []
-    });
-  }
-  save(state);
-  document.getElementById('gModal').classList.remove('show');
-  render(true);
-  scheduleGameResets();
-};
-
-document.getElementById('aSave').onclick = () => {
-  const name = document.getElementById('aName').value.trim();
-  if (!name) return alert('アカウント名を入れてね');
-  const daily = [], weekly = [], monthly = [];
-  for (let i = 1; i <= 5; i++) daily.push({ label: document.getElementById('d'+i).value.trim(), done: false });
-  for (let i = 1; i <= 2; i++) weekly.push({ label: document.getElementById('w'+i).value.trim(), done: false });
-  for (let i = 1; i <= 2; i++) monthly.push({ label: document.getElementById('m'+i).value.trim(), done: false });
-  const g = state.games.find(x => x.id === parentG);
-  if (editA) {
-    const a = g.accounts.find(x => x.id === editA);
-    a.name = name;
-    a.daily = daily.map((c,i) => { const o = (a.daily||[])[i]; return { label: c.label, done: (o && o.label === c.label) ? o.done : false }; });
-    a.weekly = weekly.map((c,i) => { const o = (a.weekly||[])[i]; return { label: c.label, done: (o && o.label === c.label) ? o.done : false }; });
-    a.monthly = monthly.map((c,i) => { const o = (a.monthly||[])[i]; return { label: c.label, done: (o && o.label === c.label) ? o.done : false }; });
-  } else {
-    g.accounts.push({ id: 'a'+Date.now(), name, daily, weekly, monthly, note: '' });
-  }
-  save(state);
-  document.getElementById('aModal').classList.remove('show');
-  render(true);
-  scheduleGameResets();
-};
-
-document.getElementById('gDel').onclick = () => {
-  if (!confirm('このゲームを削除する？')) return;
-  state.games = state.games.filter(g => g.id !== editG);
-  save(state);
-  document.getElementById('gModal').classList.remove('show');
-  render(true);
-  scheduleGameResets();
-};
-document.getElementById('aDel').onclick = () => {
-  if (!confirm('このアカウントを削除する？')) return;
-  const g = state.games.find(x => x.id === parentG);
-  g.accounts = g.accounts.filter(a => a.id !== editA);
-  save(state);
-  document.getElementById('aModal').classList.remove('show');
-  render(true);
-  scheduleGameResets();
-};
-
-// ---- リセット予約（ゲーム単位・次の境界に1回だけ）----
-const resetTimers = new Map();
-
-function msUntilDaily(g, now = Date.now()) {
-  const [h, m] = (g.dailyReset || '05:00').split(':').map(Number);
-  const d = new Date(now);
-  const next = new Date(d);
-  next.setHours(h || 5, m || 0, 0, 0);
-  if (next <= d) next.setDate(next.getDate() + 1);
-  return next - d;
-}
-function msUntilWeekly(g, now = Date.now()) {
-  const [h, m] = (g.weeklyReset || '05:00').split(':').map(Number);
-  const day = g.weeklyDay ?? 1;
-  const d = new Date(now);
-  const next = new Date(d);
-  next.setHours(h || 5, m || 0, 0, 0);
-  let add = (day - next.getDay() + 7) % 7;
-  if (add === 0 && next <= d) add = 7;
-  next.setDate(next.getDate() + add);
-  return next - d;
-}
-function msUntilMonthly(g, now = Date.now()) {
-  const [h, m] = (g.monthlyReset || '05:00').split(':').map(Number);
-  const dom = Math.min(28, Math.max(1, g.monthlyDay ?? 1));
-  const d = new Date(now);
-  let y = d.getFullYear(), mo = d.getMonth();
-  const last = new Date(y, mo + 1, 0).getDate();
-  let next = new Date(y, mo, Math.min(dom, last), h || 5, m || 0, 0, 0);
-  if (next <= d) {
-    mo += 1;
-    if (mo > 11) { mo = 0; y += 1; }
-    const last2 = new Date(y, mo + 1, 0).getDate();
-    next = new Date(y, mo, Math.min(dom, last2), h || 5, m || 0, 0, 0);
-  }
-  return next - d;
-}
-
-function clearResetTimers() {
-  resetTimers.forEach(id => clearTimeout(id));
-  resetTimers.clear();
-}
-
-function scheduleGameResets() {
-  clearResetTimers();
-  const MAX = 2147483647; // setTimeout上限
-  state.games.forEach(g => {
-    const arm = (kind, ms) => {
-      const wait = Math.max(500, Math.min(ms + 50, MAX));
-      const tid = setTimeout(() => {
-        if (applyResets(state)) {
-          save(state);
-          render(false);
-        }
-        scheduleGameResets(); // 次の境界を再予約
-      }, wait);
-      resetTimers.set(g.id + ':' + kind, tid);
-    };
-    arm('d', msUntilDaily(g));
-    if (gameHasWeekly(g)) arm('w', msUntilWeekly(g));
-    if (gameHasMonthly(g)) arm('m', msUntilMonthly(g));
-  });
-}
-
-// 画面オフ・裏に回るときに念のため保存
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') save(state);
-});
-window.addEventListener('pagehide', () => save(state));
-
-// 起動時だけ：閉じてる間に過ぎた境界を反映
-if (applyResets(state)) save(state);
-render(true);
-scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v526').catch(()=>{});
-</script>
 </body>
 </html>

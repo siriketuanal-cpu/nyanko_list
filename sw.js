@@ -1,8 +1,9 @@
-/* オフライン固定・キャッシュ優先（通信は初回/更新時のみ） */
-const C = 'nyanko-split-v526';
+/* オフライン固定・キャッシュ優先 */
+const C = 'nyanko-split-v527';
 const A = [
   './',
   './index.html',
+  './app.mjs',
   './update.html',
   './core.mjs',
   './store.mjs',
@@ -32,7 +33,6 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request).then(hit => {
       if (hit) return hit;
-      // キャッシュに無いときだけネット（通常運用ではほぼ来ない）
       return fetch(e.request).then(res => {
         const copy = res.clone();
         caches.open(C).then(c => c.put(e.request, copy)).catch(() => {});
