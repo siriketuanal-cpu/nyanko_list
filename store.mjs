@@ -9,7 +9,7 @@ export function load() {
     const data = JSON.parse(raw);
     if (!Array.isArray(data.games)) return empty();
     if (!data.lastMonthly) data.lastMonthly = {};
-    data.expanded = {};
+    delete data.expanded;
     return data;
   } catch {
     return empty();
@@ -25,8 +25,7 @@ function empty() {
     games: [],
     lastDaily: {},
     lastWeekly: {},
-    lastMonthly: {},
-    expanded: {}
+    lastMonthly: {}
   };
 }
 

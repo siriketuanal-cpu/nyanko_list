@@ -42,14 +42,6 @@ export const monthlyKey = (now = Date.now(), dayOfMonth = 1, hour = 5, minute = 
   return boundary.getFullYear() + '-M' + String(boundary.getMonth() + 1).padStart(2, '0') + '-' + String(boundary.getDate()).padStart(2, '0');
 };
 
-export const fmtNow = () => {
-  const d = new Date();
-  return d.toLocaleString('ja-JP', {
-    month: 'numeric', day: 'numeric', weekday: 'short',
-    hour: '2-digit', minute: '2-digit'
-  });
-};
-
 export const gameHasWeekly = (g) =>
   (g.accounts || []).some(a => (a.weekly || []).some(c => c.label));
 export const gameHasMonthly = (g) =>

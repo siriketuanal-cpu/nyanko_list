@@ -6,15 +6,14 @@ const toolsOpen = Object.create(null);
 const accOpen = Object.create(null);
 let editG = null, editA = null, editGid = null, noteTarget = null;
 
-function isDone(a) {
-  const list = (a.daily || []).filter(c => c.label);
-  return list.length > 0 && list.every(c => c.done);
-}
 function dailyProgress(a) {
   const list = (a.daily || []).filter(c => c.label);
   if (!list.length) return { total: 0, done: 0, full: false };
   const done = list.filter(c => c.done).length;
   return { total: list.length, done, full: done === list.length };
+}
+function isDone(a) {
+  return dailyProgress(a).full;
 }
 function isWeekDone(a) {
   const list = (a.weekly || []).filter(c => c.label);
@@ -46,6 +45,20 @@ function syncGameHeader(g) {
   el.innerHTML = bits.join('');
 }
 
+function updateDailyBadge(bd, a) {
+  if (!bd) return;
+  const prog = dailyProgress(a);
+  if (prog.full) {
+    bd.textContent = '今日OK';
+    bd.hidden = false;
+  } else if (prog.done > 0) {
+    bd.textContent = String(prog.done);
+    bd.hidden = false;
+  } else {
+    bd.hidden = true;
+  }
+}
+
 function buildChecksHtml(g, a) {
   const chip = (c, i, type, cls) => c.label
     ? `<button type="button" class="chip ${cls}${c.done ? ' on' : ''}" data-t="${g.id}|${a.id}|${type}|${i}" aria-pressed="${c.done ? 'true' : 'false'}">${escape(c.label)}</button>`
@@ -69,12 +82,45 @@ function ensureAccBody(g, a) {
   return box;
 }
 
+function structureSig() {
+  // ゲーム／アカウントの増減だけを見る（ラベル変更は render(true) で強制再構築）
+  return state.games.map(g => g.id + ':' + (g.accounts || []).map(a => a.id).join(',')).join('|');
+}
+
+function syncAccountUI(g, a) {
+  const root = document.getElementById('root');
+  const key = g.id + '|' + a.id;
+  const acc = root.querySelector('[data-aid="' + key + '"]');
+  if (!acc) return;
+
+  const done = isDone(a);
+  acc.classList.toggle('done', done);
+  updateDailyBadge(root.querySelector('[data-bdaily="' + key + '"]'), a);
+
+  const bw = root.querySelector('[data-bweek="' + key + '"]');
+  const bm = root.querySelector('[data-bmonth="' + key + '"]');
+  if (bw) bw.hidden = !isWeekDone(a);
+  if (bm) bm.hidden = !isMonthDone(a);
+
+  const noteHead = ((a.note || '').trim().split(/\n/)[0]) || '';
+  const an = root.querySelector('[data-anote="' + key + '"]');
+  if (an) an.textContent = noteHead ? ('📝 ' + noteHead) : '';
+
+  [['daily', 'd'], ['weekly', 'w'], ['monthly', 'm']].forEach(([field, prefix]) => {
+    (a[field] || []).forEach((c, i) => {
+      if (!c.label) return;
+      const chip = root.querySelector('[data-t="' + key + '|' + prefix + '|' + i + '"]');
+      if (!chip) return;
+      const on = !!c.done;
+      chip.classList.toggle('on', on);
+      chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  });
+}
+
 function render(forceStructure = false) {
   const root = document.getElementById('root');
-  const sig = state.games.map(g => g.id + ':' + (g.accounts||[]).map(a => a.id).join(',')).join('|')
-    + '|' + state.games.map(g => (g.accounts||[]).map(a =>
-      ['daily','weekly','monthly'].map(k => (a[k]||[]).filter(c=>c.label).map(c=>c.label).join(',')).join('/')
-    ).join(';')).join('#');
+  const sig = structureSig();
   const needStructure = forceStructure || root.dataset.sig !== sig || !state.games.length;
 
   if (!state.games.length) {
@@ -132,82 +178,9 @@ function render(forceStructure = false) {
       const wantOpen = !!accOpen[key];
       if (wantOpen) ensureAccBody(g, a);
       acc.classList.toggle('open', wantOpen);
-      const done = isDone(a);
-      const weekDone = isWeekDone(a);
-      const monthDone = isMonthDone(a);
-      acc.classList.toggle('done', done);
-      const bd = root.querySelector(`[data-bdaily="${key}"]`);
-      const bw = root.querySelector(`[data-bweek="${key}"]`);
-      const bm = root.querySelector(`[data-bmonth="${key}"]`);
-      if (bd) {
-        const prog = dailyProgress(a);
-        if (prog.full) {
-          bd.textContent = '今日OK';
-          bd.hidden = false;
-        } else if (prog.done > 0) {
-          bd.textContent = String(prog.done);
-          bd.hidden = false;
-        } else {
-          bd.hidden = true;
-        }
-      }
-      if (bw) bw.hidden = !weekDone;
-      if (bm) bm.hidden = !monthDone;
-      const noteHead = ((a.note || '').trim().split(/\n/)[0]) || '';
-      const an = root.querySelector(`[data-anote="${key}"]`);
-      if (an) {
-        an.hidden = false;
-        an.textContent = noteHead ? ('📝 ' + noteHead) : '';
-      }
-      [['daily','d'],['weekly','w'],['monthly','m']].forEach(([field, prefix]) => {
-        (a[field] || []).forEach((c, i) => {
-          if (!c.label) return;
-          const chip = root.querySelector(`[data-t="${key}|${prefix}|${i}"]`);
-          if (!chip) return;
-          const on = !!c.done;
-          chip.classList.toggle('on', on);
-          chip.setAttribute('aria-pressed', on ? 'true' : 'false');
-        });
-      });
+      syncAccountUI(g, a);
     });
     syncGameHeader(g);
-  });
-}
-
-function syncAccountUI(g, a) {
-  const root = document.getElementById('root');
-  const key = g.id + '|' + a.id;
-  const done = isDone(a);
-  const weekDone = isWeekDone(a);
-  const monthDone = isMonthDone(a);
-  const acc = root.querySelector('[data-aid="' + key + '"]');
-  if (acc) acc.classList.toggle('done', done);
-  const bd = root.querySelector('[data-bdaily="' + key + '"]');
-  const bw = root.querySelector('[data-bweek="' + key + '"]');
-  const bm = root.querySelector('[data-bmonth="' + key + '"]');
-  if (bd) {
-    const prog = dailyProgress(a);
-    if (prog.full) {
-      bd.textContent = '今日OK';
-      bd.hidden = false;
-    } else if (prog.done > 0) {
-      bd.textContent = String(prog.done);
-      bd.hidden = false;
-    } else {
-      bd.hidden = true;
-    }
-  }
-  if (bw) bw.hidden = !weekDone;
-  if (bm) bm.hidden = !monthDone;
-  [['daily','d'],['weekly','w'],['monthly','m']].forEach(([field, prefix]) => {
-    (a[field] || []).forEach((c, i) => {
-      if (!c.label) return;
-      const chip = root.querySelector('[data-t="' + key + '|' + prefix + '|' + i + '"]');
-      if (!chip) return;
-      const on = !!c.done;
-      chip.classList.toggle('on', on);
-      chip.setAttribute('aria-pressed', on ? 'true' : 'false');
-    });
   });
 }
 
@@ -479,13 +452,7 @@ document.getElementById('nSave').onclick = () => {
   a.note = document.getElementById('notes').value;
   save(state);
   document.getElementById('nModal').classList.remove('show');
-  const key = noteTarget.gid + '|' + noteTarget.aid;
-  const noteHead = ((a.note || '').trim().split(/\n/)[0]) || '';
-  const an = document.querySelector('[data-anote="' + key + '"]');
-  if (an) {
-    an.hidden = false;
-    an.textContent = noteHead ? ('📝 ' + noteHead) : '';
-  }
+  syncAccountUI(g, a);
 };
 
 const resetTimers = new Map();
@@ -530,21 +497,21 @@ function clearResetTimers() {
 function scheduleGameResets() {
   clearResetTimers();
   const MAX = 2147483647;
+  const now = Date.now();
+  // ゲームごとに「次のリセット」1本だけ張る（日／週／月の最も近い時刻）
   state.games.forEach(g => {
-    const arm = (kind, ms) => {
-      const wait = Math.max(500, Math.min(ms + 50, MAX));
-      const tid = setTimeout(() => {
-        if (applyResets(state)) {
-          save(state);
-          render(false);
-        }
-        scheduleGameResets();
-      }, wait);
-      resetTimers.set(g.id + ':' + kind, tid);
-    };
-    arm('d', msUntilDaily(g));
-    if (gameHasWeekly(g)) arm('w', msUntilWeekly(g));
-    if (gameHasMonthly(g)) arm('m', msUntilMonthly(g));
+    let ms = msUntilDaily(g, now);
+    if (gameHasWeekly(g)) ms = Math.min(ms, msUntilWeekly(g, now));
+    if (gameHasMonthly(g)) ms = Math.min(ms, msUntilMonthly(g, now));
+    const wait = Math.max(500, Math.min(ms + 50, MAX));
+    const tid = setTimeout(() => {
+      if (applyResets(state)) {
+        save(state);
+        render(false);
+      }
+      scheduleGameResets();
+    }, wait);
+    resetTimers.set(g.id, tid);
   });
 }
 
@@ -557,10 +524,16 @@ if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
 
-// バージョン表示：長押しメニュー禁止＋タップで更新ページへ（リンクではないのでネイティブメニューが出ない）
+// 長押しでブラウザの検索バナー／コンテキストメニューを出さない（入力欄は除外）
+document.addEventListener('contextmenu', e => {
+  const t = e.target;
+  if (t && (t.closest('input, textarea, select'))) return;
+  e.preventDefault();
+});
+
+// バージョン表示：タップで更新ページへ
 const verEl = document.querySelector('.ver');
 if (verEl) {
-  verEl.addEventListener('contextmenu', e => e.preventDefault());
   verEl.addEventListener('click', () => { location.href = 'update.html'; });
   verEl.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); location.href = 'update.html'; }
@@ -569,5 +542,5 @@ if (verEl) {
 
 if ('serviceWorker' in navigator) {
   // updateViaCache: 'all' で SW 自体の余計な更新チェックを抑制。通常時はキャッシュのみで通信しない
-  navigator.serviceWorker.register('./sw.js?rev=v535', { updateViaCache: 'all' }).catch(() => {});
+  navigator.serviceWorker.register('./sw.js?rev=v537', { updateViaCache: 'all' }).catch(() => {});
 }
