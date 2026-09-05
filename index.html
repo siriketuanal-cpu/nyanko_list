@@ -45,7 +45,7 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
   background:#12121a;border:1px solid #2a2a3a;border-radius:12px;
   padding:8px;min-width:0;
 }
-.acc.done{background:var(--done);border-color:#1e3a2e}
+.acc.done .ahead{background:rgba(0,240,255,.1);border-radius:8px;margin:-2px -2px 0;padding:2px}
 .acc.open{z-index:30;border-color:#3a3a55}
 .ahead{
   display:flex;justify-content:space-between;align-items:flex-start;gap:4px;
@@ -64,8 +64,9 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .anote{
   font-size:.62rem;color:var(--muted);margin-top:3px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  min-height:1.15em;line-height:1.15em;
 }
-.acc.open .anote{display:none}
+.anote:empty::before{content:"\00a0"}
 .aactions{display:flex;gap:2px;flex-shrink:0;align-items:center}
 .aactions .ib.memo{font-size:.78rem;padding:2px 3px;opacity:.8;line-height:1}
 .aactions .achev{font-size:.65rem;opacity:.5;margin-left:1px;transition:transform .15s}
@@ -135,7 +136,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.20</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.21</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -290,14 +291,7 @@ function buildChecksHtml(g, a) {
   if (dChips) checks += `<div class="chip-sec"><div class="chip-label d">デイリー</div><div class="chip-row">${dChips}</div></div>`;
   if (wChips) checks += `<div class="chip-sec"><div class="chip-label w">ウィークリー</div><div class="chip-row">${wChips}</div></div>`;
   if (mChips) checks += `<div class="chip-sec"><div class="chip-label m">マンスリー</div><div class="chip-row">${mChips}</div></div>`;
-  const noteLines = (a.note || '').trim().split(/\n/);
-  const noteHead = noteLines[0] || '';
-  const noteRest = noteLines.slice(1).join(' ').trim();
-  const noteSep = noteHead ? '' : ' hidden';
-  const notePrev = noteHead
-    ? `<div class="note-preview" data-noteprev="${g.id}|${a.id}"><strong>📝 ${escape(noteHead)}</strong>${noteRest ? ' — ' + escape(noteRest.slice(0, 40)) : ''}</div>`
-    : `<div class="note-preview" data-noteprev="${g.id}|${a.id}" hidden></div>`;
-  return `${checks}<div class="note-sep" data-notesep="${g.id}|${a.id}"${noteSep}></div>${notePrev}<button type="button" class="abody-edit" data-ea="${g.id}|${a.id}">アカウント設定</button>`;
+  return `${checks}<button type="button" class="abody-edit" data-ea="${g.id}|${a.id}">アカウント設定</button>`;
 }
 
 function ensureAccBody(g, a) {
@@ -357,7 +351,7 @@ function render(forceStructure = false) {
                     <span class="badge month" data-bmonth="${g.id}|${a.id}" hidden>月OK</span>
                   </span>
                 </div>
-                <div class="anote" data-anote="${g.id}|${a.id}" hidden></div>
+                <div class="anote" data-anote="${g.id}|${a.id}"></div>
               </div>
               <div class="aactions">
                 <button type="button" class="ib memo" data-note="${g.id}|${a.id}" title="メモ">📝</button>
@@ -421,15 +415,8 @@ function render(forceStructure = false) {
       const an = root.querySelector(`[data-anote="${key}"]`);
       if (an) {
         const want = noteHead ? ('📝 ' + noteHead) : '';
-        if (noteHead) {
-          if (an.hidden || an.textContent !== want) {
-            an.hidden = false;
-            an.textContent = want;
-          }
-        } else if (!an.hidden) {
-          an.hidden = true;
-          an.textContent = '';
-        }
+        if (an.textContent !== want) an.textContent = want;
+        an.hidden = false;
       }
       // 未展開のアカウントはチェックDOMがないので触らない
       const body = root.querySelector(`[data-abody="${key}"]`);
@@ -444,19 +431,7 @@ function render(forceStructure = false) {
           chip.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
       });
-      const np = root.querySelector(`[data-noteprev="${key}"]`);
-      const ns = root.querySelector(`[data-notesep="${key}"]`);
-      if (np) {
-        if (noteHead) {
-          np.hidden = false;
-          np.innerHTML = `<strong>📝 ${escape(noteHead)}</strong>${noteRest ? ' — ' + escape(noteRest.slice(0,40)) : ''}`;
-          if (ns) ns.hidden = false;
-        } else {
-          np.hidden = true;
-          np.innerHTML = '';
-          if (ns) ns.hidden = true;
-        }
-      }
+
     });
   });
 }
@@ -650,23 +625,8 @@ document.getElementById('nSave').onclick = () => {
   const noteRest = noteLines.slice(1).join(' ').trim();
   const an = root.querySelector('[data-anote="' + key + '"]');
   if (an) {
-    if (noteHead) { an.hidden = false; an.textContent = '📝 ' + noteHead; }
-    else { an.hidden = true; an.textContent = ''; }
-  }
-  const body = root.querySelector('[data-abody="' + key + '"]');
-  if (body && body.dataset.ready === '1') {
-    const np = root.querySelector('[data-noteprev="' + key + '"]');
-    const ns = root.querySelector('[data-notesep="' + key + '"]');
-    if (np) {
-      if (noteHead) {
-        np.hidden = false;
-        np.innerHTML = '<strong>📝 ' + escape(noteHead) + '</strong>' + (noteRest ? ' — ' + escape(noteRest.slice(0, 40)) : '');
-        if (ns) ns.hidden = false;
-      } else {
-        np.hidden = true; np.innerHTML = '';
-        if (ns) ns.hidden = true;
-      }
-    }
+    an.hidden = false;
+    an.textContent = noteHead ? ('📝 ' + noteHead) : '';
   }
 };
 
@@ -869,7 +829,7 @@ window.addEventListener('pagehide', () => save(state));
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v520').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v521').catch(()=>{});
 </script>
 </body>
 </html>
