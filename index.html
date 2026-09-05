@@ -43,6 +43,7 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .ainfo{min-width:0;flex:1;overflow:hidden}
 .aname{font-weight:600;color:var(--neon3);font-size:.85rem;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;width:100%;min-height:1.25em}
 .aname-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acc.daily-ok .aname-text{color:var(--neon2);border-bottom:1px solid rgba(0,240,255,.35)}
 .abadges{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:2px;flex:0 0 auto;margin-left:auto;min-height:1.2em}
 .abadges .badge[hidden]{visibility:hidden;pointer-events:none}
 .anote{font-size:.62rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-height:1.15em;line-height:1.15em}
@@ -51,11 +52,12 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .acc.open .abody{display:block}
 .acc-grid.is-dim .acc:not(.open){opacity:.28}
 .acc-grid.is-dim .acc.open{opacity:1}
-.abody-foot{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:10px;padding-top:6px;border-top:1px solid rgba(255,255,255,.06)}
-.abody-edit{border:none;background:transparent;color:var(--muted);font-size:.8rem;cursor:pointer;padding:4px 6px;opacity:.45;line-height:1}
-.abody-foot .memo{font-size:.85rem;padding:4px 6px;opacity:.7;background:transparent;border:none;cursor:pointer;line-height:1}
+.abody-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:6px;border-top:1px solid rgba(255,255,255,.06)}
+.abody-edit{border:none;background:transparent;color:var(--muted);font-size:.8rem;cursor:pointer;padding:4px 6px;opacity:.4;line-height:1}
+.abody-foot .memo{font-size:.95rem;padding:6px 10px;opacity:.85;background:transparent;border:none;cursor:pointer;line-height:1;margin-left:auto}
 .abody-edit:active,.abody-foot .memo:active{color:var(--neon3);opacity:1}
 .badge{font-size:.5rem;background:var(--neon2);color:#0d0d12;padding:1px 4px;border-radius:4px;font-weight:700;line-height:1.2;flex-shrink:0}
+.badge.complete{font-size:.52rem;letter-spacing:.06em;padding:2px 5px;background:linear-gradient(90deg,#00e0ff,#7af0ff);color:#061018}
 .badge.week{background:var(--week);color:#0d1a12}
 .badge.month{background:var(--month);color:#1a1008}
 .chip-sec{margin-bottom:8px}
@@ -98,7 +100,7 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
 
 <div class="title-row">
   <h1>♡ にゃんこチェック ♡</h1>
-  <span class="ver" role="link" tabindex="0" title="タップで最新版に更新">v0.5.40</span>
+  <span class="ver" role="link" tabindex="0" title="タップで最新版に更新">v0.5.41</span>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>

@@ -39,7 +39,8 @@ function syncGameHeader(g) {
   const el = document.querySelector('[data-gmeta="' + g.id + '"]');
   if (!el) return;
   const bits = [];
-  if (gameDailyAllOk(g)) bits.push('<span class="badge">日課OK</span>');
+  // 全アカウントのデイリー完了時は COMPLETE（日課OKの置き換え）
+  if (gameDailyAllOk(g)) bits.push('<span class="badge complete">COMPLETE</span>');
   if (gameWeeklyAllOk(g)) bits.push('<span class="badge week">週課OK</span>');
   if (gameMonthlyAllOk(g)) bits.push('<span class="badge month">月課OK</span>');
   el.innerHTML = bits.join('');
@@ -99,6 +100,9 @@ function syncAccountUI(g, a) {
   const key = g.id + '|' + a.id;
   const acc = document.querySelector('[data-aid="' + key + '"]');
   if (!acc) return;
+
+  // デイリー完了時は名前だけ軽いハイライト（エフェクトなし）
+  acc.classList.toggle('daily-ok', isDone(a));
 
   // カード内だけ探す（document 全体を何度も走査しない）
   updateDailyBadge(acc.querySelector('[data-bdaily]'), a);
@@ -563,7 +567,7 @@ const defer = (fn) => {
 defer(() => {
   scheduleGameResets();
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?rev=v540', { updateViaCache: 'all' }).catch(() => {});
+    navigator.serviceWorker.register('./sw.js?rev=v541', { updateViaCache: 'all' }).catch(() => {});
   }
 });
 
