@@ -49,10 +49,10 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .acc.open{z-index:12}
 .ahead{display:flex;align-items:flex-start;gap:4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:8px;border-radius:11px;transition:background .12s}
 .ainfo{min-width:0;flex:1;overflow:hidden}
-.aname{font-weight:600;color:var(--neon3);font-size:.85rem;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;width:100%}
+.aname{font-weight:600;color:var(--neon3);font-size:.85rem;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;width:100%;min-height:1.25em}
 .aname-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.abadges{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:2px;flex:0 0 auto;margin-left:auto;min-height:1.15em}
-.abadges .badge[hidden]{display:inline-block!important;visibility:hidden;pointer-events:none;width:0;min-width:0;padding:0;margin:0;overflow:hidden;border:0}
+.abadges{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:2px;flex:0 0 auto;margin-left:auto;min-height:1.2em}
+.abadges .badge[hidden]{visibility:hidden;pointer-events:none}
 .anote{font-size:.62rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-height:1.15em;line-height:1.15em}
 .anote:empty::before{content:"\00a0"}
 .abody{display:none;padding:8px;background:#12121a;border:1px solid #9a9aac;border-radius:12px;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:13;box-shadow:0 8px 20px rgba(0,0,0,.4)}
@@ -74,7 +74,6 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .chip-label.m{color:var(--month)}
 .chip-row{display:flex;flex-direction:column;gap:4px}
 .chip{display:block;width:100%;text-align:left;border:1px solid #2e2e42;background:#0e0e16;color:var(--text);border-radius:8px;padding:7px 8px;font-size:.72rem;line-height:1.3;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chip:active{transform:scale(.98)}
 .chip.on{background:#1a3d48;border-color:#2a5a68;color:var(--neon2);text-decoration:line-through}
 .chip.w.on{background:#163528;border-color:#2a5a40;color:var(--week)}
 .chip.m.on{background:#3a2818;border-color:#6a4a28;color:#ffd0a8}
@@ -107,7 +106,7 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
 
 <div class="title-row">
   <h1>♡ にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.29</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.31</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
