@@ -26,10 +26,11 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .gtools{padding:2px 8px 8px}
 .gtools-toggle{display:block;width:100%;padding:4px 0;border:none;background:transparent;color:var(--muted);font-size:.7rem;letter-spacing:.2em;cursor:pointer;-webkit-tap-highlight-color:transparent;opacity:.5}
 .gtools-toggle:active{opacity:.9;color:var(--neon3)}
-.gactions{display:none;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding:4px 0 2px}
+.gactions{display:none;grid-template-columns:1fr 1fr;align-items:center;gap:6px;padding:4px 0 2px}
 .gtools.open .gactions{display:grid}
 .gtools.open .gtools-toggle{opacity:.85;color:var(--neon3)}
 .gactions .ggear{justify-self:start}
+.gactions .gaa{justify-self:end}
 .gactions .gexpandall{justify-self:center;font-size:.62rem;padding:4px 12px;border-radius:8px;border:1px solid #2a2a3a;background:#12121a;color:var(--neon3);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .gactions .gexpandall:active{border-color:var(--neon3);opacity:.9}
 .gactions .gaa{justify-self:end;font-size:.75rem;color:var(--muted);background:none;border:none;cursor:pointer;padding:4px 2px;-webkit-tap-highlight-color:transparent}
@@ -38,37 +39,48 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .game.open .chev{transform:rotate(180deg)}
 .gbody{display:none;padding-bottom:4px;overflow:visible}
 .game.open .gbody{display:block}
-.acc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px 8px 4px;align-items:start}
+.acc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px 8px 4px;align-items:start;overflow:visible}
 .acc{
   position:relative;z-index:1;
   background:#12121a;border:1px solid #2a2a3a;border-radius:12px;
-  padding:8px 8px 6px;min-width:0;
-  display:flex;flex-direction:column;gap:0;
+  padding:8px;min-width:0;
 }
 .acc.done{background:var(--done);border-color:#1e3a2e}
-.acc.open{z-index:5;border-color:#3a3a55}
+.acc.open{z-index:30;border-color:#3a3a55}
 .ahead{
   display:flex;justify-content:space-between;align-items:flex-start;gap:4px;
   cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-  min-height:44px;
 }
 .ainfo{min-width:0;flex:1;overflow:hidden}
-.aname{font-weight:600;color:var(--neon3);font-size:.85rem;display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
-.aname-text{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.abadges{display:flex;flex-wrap:wrap;align-items:center;gap:3px;min-height:1.1em}
-.aactions{display:flex;gap:2px;flex-shrink:0;align-items:center;padding-top:1px}
+.aname{
+  font-weight:600;color:var(--neon3);font-size:.85rem;
+  display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;
+}
+.aname-text{
+  flex:1 1 auto;min-width:0;max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.abadges{display:flex;flex-wrap:nowrap;align-items:center;gap:3px;flex:0 0 auto}
+.anote{
+  font-size:.62rem;color:var(--muted);margin-top:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+}
+.acc.open .anote{display:none}
+.aactions{display:flex;gap:2px;flex-shrink:0;align-items:center}
 .aactions .ib.memo{font-size:.78rem;padding:2px 3px;opacity:.8;line-height:1}
 .aactions .achev{font-size:.65rem;opacity:.5;margin-left:1px;transition:transform .15s}
 .acc.open .achev{transform:rotate(90deg)}
 .abody{
-  display:none;padding-top:6px;margin-top:4px;
-  border-top:1px dashed #2a2a3a;
-  contain:layout style;
+  display:none;position:absolute;left:0;right:0;top:calc(100% + 2px);
+  padding:8px;border-radius:10px;
+  background:#14141e;border:1px solid #3a3a55;
+  box-shadow:0 12px 32px rgba(0,0,0,.6);
+  z-index:40;contain:layout style;
 }
 .acc.open .abody{display:block}
 .abody-edit{display:block;width:100%;margin-top:6px;padding:6px 0 2px;border:none;background:transparent;color:var(--muted);font-size:.65rem;text-align:center;cursor:pointer}
 .abody-edit:active{color:var(--neon3)}
-.badge{font-size:.52rem;background:var(--neon2);color:#0d0d12;padding:1px 4px;border-radius:4px;font-weight:700;line-height:1.2}
+.badge{font-size:.5rem;background:var(--neon2);color:#0d0d12;padding:1px 4px;border-radius:4px;font-weight:700;line-height:1.2;flex-shrink:0}
 .badge.week{background:#c9a0ff}
 .badge.month{background:var(--month);color:#1a1008}
 .chip-sec{margin-bottom:6px}
@@ -123,7 +135,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.19</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.20</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -345,6 +357,7 @@ function render(forceStructure = false) {
                     <span class="badge month" data-bmonth="${g.id}|${a.id}" hidden>月OK</span>
                   </span>
                 </div>
+                <div class="anote" data-anote="${g.id}|${a.id}" hidden></div>
               </div>
               <div class="aactions">
                 <button type="button" class="ib memo" data-note="${g.id}|${a.id}" title="メモ">📝</button>
@@ -358,7 +371,6 @@ function render(forceStructure = false) {
           <button type="button" class="gtools-toggle" data-gtools="${g.id}" title="操作">···</button>
           <div class="gactions">
             <button type="button" class="ib ggear" data-eg="${g.id}" title="ゲーム設定">⚙️</button>
-            <button type="button" class="gexpandall" data-eall="${g.id}">全展開</button>
             <button type="button" class="gaa" data-aa="${g.id}" title="アカウント追加">＋ アカウント</button>
           </div>
         </div>
@@ -502,13 +514,21 @@ function toggleGame(id) {
 function toggleAcc(key) {
   if (!key) return;
   const willOpen = !accOpen[key];
-  accOpen[key] = willOpen;
+  const [gid, aid] = key.split('|');
   if (willOpen) {
-    const [gid, aid] = key.split('|');
+    // 同じゲーム内は1つだけ開く（重ね展開で邪魔しない）
+    Object.keys(accOpen).forEach(k => {
+      if (k.startsWith(gid + '|') && k !== key && accOpen[k]) {
+        accOpen[k] = false;
+        const other = document.querySelector('[data-aid="' + k + '"]');
+        if (other) { other.classList.remove('open'); other.style.zIndex = ''; }
+      }
+    });
     const g = state.games.find(x => x.id === gid);
     const a = g && g.accounts.find(x => x.id === aid);
     if (g && a) ensureAccBody(g, a);
   }
+  accOpen[key] = willOpen;
   const el = document.querySelector('[data-aid="' + key + '"]');
   if (el) {
     el.classList.toggle('open', willOpen);
@@ -849,7 +869,7 @@ window.addEventListener('pagehide', () => save(state));
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v519').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v520').catch(()=>{});
 </script>
 </body>
 </html>
