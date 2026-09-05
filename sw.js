@@ -1,5 +1,5 @@
 /* オフライン固定・キャッシュ優先（通信は初回/更新時のみ） */
-const C = 'nyanko-split-v525';
+const C = 'nyanko-split-v526';
 const A = [
   './',
   './index.html',
