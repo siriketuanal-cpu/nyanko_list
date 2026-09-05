@@ -15,7 +15,7 @@
 html,body{overscroll-behavior:none;overscroll-behavior-y:none;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
 body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rgba(255,45,106,.45);margin-bottom:2px}.title-row{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:8px;min-height:1.6em}.title-row h1{margin:0;text-align:center}.ver{position:absolute;right:0;top:50%;transform:translateY(-50%);font:700 0.6rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.75;letter-spacing:.03em;padding:2px 5px;border:1px solid #3a2a4a;border-radius:5px}.ver:active{color:var(--neon2);border-color:var(--neon2)}
-.game{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.game{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:visible}
 .ghead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid transparent;touch-action:manipulation}
 .game.open .ghead{border-bottom-color:var(--line)}
 .gname{font-weight:700;color:var(--neon);font-size:.95rem;cursor:pointer;flex-shrink:0;max-width:48%;padding:6px 4px 6px 0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
@@ -36,54 +36,52 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .gactions .gaa:active{color:var(--neon2)}
 .chev{color:var(--neon3);font-size:.75rem;transition:transform .2s;opacity:.85}
 .game.open .chev{transform:rotate(180deg)}
-.gbody{display:none;padding-bottom:4px}
+.gbody{display:none;padding-bottom:4px;overflow:visible}
 .game.open .gbody{display:block}
-.acc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px 8px 4px;align-items:start}
+.acc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px 8px 4px;align-items:start}
 .acc{
   position:relative;z-index:1;
   background:#12121a;border:1px solid #2a2a3a;border-radius:12px;
-  padding:8px;min-width:0;min-height:68px;height:68px;
-  box-sizing:border-box;
+  padding:8px 8px 6px;min-width:0;
+  display:flex;flex-direction:column;gap:0;
 }
 .acc.done{background:var(--done);border-color:#1e3a2e}
-.acc.open{z-index:40;border-color:#3a3a55}
+.acc.open{z-index:5;border-color:#3a3a55}
 .ahead{
-  display:flex;justify-content:space-between;align-items:center;gap:2px;
+  display:flex;justify-content:space-between;align-items:flex-start;gap:4px;
   cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-  height:100%;min-height:0;
+  min-height:44px;
 }
 .ainfo{min-width:0;flex:1;overflow:hidden}
-.aname{font-weight:600;color:var(--neon3);font-size:.78rem;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:3px;min-width:0}
-.aname-text{flex:0 1 auto;max-width:2.8em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.abadges{display:flex;flex-wrap:nowrap;align-items:center;gap:2px;min-width:0;overflow:hidden}
-.anote{display:none}
-.aactions{display:flex;gap:0;flex-shrink:0;align-items:center}
-.aactions .ib.memo{font-size:.72rem;padding:2px;opacity:.75;line-height:1}
-.aactions .achev{font-size:.6rem;opacity:.45;margin-left:1px}
+.aname{font-weight:600;color:var(--neon3);font-size:.85rem;display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.aname-text{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.abadges{display:flex;flex-wrap:wrap;align-items:center;gap:3px;min-height:1.1em}
+.aactions{display:flex;gap:2px;flex-shrink:0;align-items:center;padding-top:1px}
+.aactions .ib.memo{font-size:.78rem;padding:2px 3px;opacity:.8;line-height:1}
+.aactions .achev{font-size:.65rem;opacity:.5;margin-left:1px;transition:transform .15s}
+.acc.open .achev{transform:rotate(90deg)}
 .abody{
-  display:none;position:absolute;left:0;right:0;top:100%;
-  margin-top:2px;padding:6px;border-radius:10px;
-  background:#14141e;border:1px solid #3a3a55;
-  box-shadow:0 10px 28px rgba(0,0,0,.55);
-  z-index:41;contain:layout style;
+  display:none;padding-top:6px;margin-top:4px;
+  border-top:1px dashed #2a2a3a;
+  contain:layout style;
 }
 .acc.open .abody{display:block}
-.abody-edit{display:block;width:100%;margin-top:6px;padding:5px 0 2px;border:none;background:transparent;color:var(--muted);font-size:.62rem;text-align:center;cursor:pointer}
+.abody-edit{display:block;width:100%;margin-top:6px;padding:6px 0 2px;border:none;background:transparent;color:var(--muted);font-size:.65rem;text-align:center;cursor:pointer}
 .abody-edit:active{color:var(--neon3)}
-.badge{font-size:.48rem;background:var(--neon2);color:#0d0d12;padding:1px 3px;border-radius:4px;font-weight:700;flex-shrink:0;line-height:1.2}
+.badge{font-size:.52rem;background:var(--neon2);color:#0d0d12;padding:1px 4px;border-radius:4px;font-weight:700;line-height:1.2}
 .badge.week{background:#c9a0ff}
 .badge.month{background:var(--month);color:#1a1008}
-.chip-sec{margin-bottom:5px}
+.chip-sec{margin-bottom:6px}
 .chip-sec:last-of-type{margin-bottom:2px}
-.chip-label{font-size:.5rem;font-weight:700;letter-spacing:.03em;margin-bottom:3px;opacity:.9}
+.chip-label{font-size:.55rem;font-weight:700;letter-spacing:.03em;margin-bottom:3px;opacity:.9}
 .chip-label.d{color:var(--neon2)}
 .chip-label.w{color:#c9a0ff}
 .chip-label.m{color:var(--month)}
-.chip-row{display:flex;flex-direction:column;gap:3px}
+.chip-row{display:flex;flex-direction:column;gap:4px}
 .chip{
   display:block;width:100%;text-align:left;
   border:1px solid #2e2e42;background:#0e0e16;color:var(--text);
-  border-radius:8px;padding:5px 6px;font-size:.62rem;line-height:1.25;
+  border-radius:8px;padding:7px 8px;font-size:.72rem;line-height:1.3;
   cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
@@ -92,7 +90,7 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .chip.w.on{background:rgba(201,160,255,.12);border-color:rgba(201,160,255,.45);color:#e0c8ff}
 .chip.m.on{background:rgba(255,168,107,.12);border-color:rgba(255,168,107,.45);color:#ffd0a8}
 .note-sep{height:1px;margin:6px 0 4px;background:linear-gradient(90deg,transparent,#c9a0ff66,transparent);border:0}
-.note-preview{font-size:.62rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note-preview{font-size:.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .note-sep{height:1px;margin:8px 0 6px;background:linear-gradient(90deg,transparent,#c9a0ff66,transparent);border:0}
 .note-preview{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .empty{text-align:center;color:var(--muted);padding:40px 16px}
@@ -125,7 +123,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.18</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.19</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -851,7 +849,7 @@ window.addEventListener('pagehide', () => save(state));
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v518').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v519').catch(()=>{});
 </script>
 </body>
 </html>
