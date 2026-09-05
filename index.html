@@ -45,10 +45,12 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
   background:#12121a;border:1px solid #2a2a3a;border-radius:12px;
   padding:8px;min-width:0;
 }
-.acc.done .ahead{background:rgba(0,240,255,.28);border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,240,255,.35)}
-.acc.week-done .ahead{background:rgba(94,224,160,.22);border-radius:8px;box-shadow:inset 0 0 0 1px rgba(94,224,160,.3)}
-.acc.month-done .ahead{background:rgba(255,168,107,.22);border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,168,107,.3)}
-.acc.done.week-done .ahead{background:linear-gradient(90deg,rgba(0,240,255,.26),rgba(94,224,160,.2))}
+.acc.done .ainfo{
+  background:#1a3d48;
+  border-radius:8px;
+  padding:5px 6px;
+  margin:-2px 0;
+}
 .acc-grid:has(.acc.open) .acc:not(.open){opacity:.42;filter:brightness(.72);transition:opacity .15s,filter .15s}
 .acc-grid:has(.acc.open) .acc.open{opacity:1;filter:none;z-index:40}
 .acc.open{z-index:30;border-color:#3a3a55}
@@ -142,7 +144,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.22</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.23</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -408,11 +410,7 @@ function render(forceStructure = false) {
       const weekDone = isWeekDone(a);
       const monthDone = isMonthDone(a);
       const acc = root.querySelector(`[data-aid="${key}"]`);
-      if (acc) {
-        acc.classList.toggle('done', done);
-        acc.classList.toggle('week-done', weekDone);
-        acc.classList.toggle('month-done', monthDone);
-      }
+      if (acc) acc.classList.toggle('done', done);
       const bd = root.querySelector(`[data-bdaily="${key}"]`);
       const bw = root.querySelector(`[data-bweek="${key}"]`);
       const bm = root.querySelector(`[data-bmonth="${key}"]`);
@@ -453,11 +451,7 @@ function syncAccountUI(g, a) {
   const weekDone = isWeekDone(a);
   const monthDone = isMonthDone(a);
   const acc = root.querySelector('[data-aid="' + key + '"]');
-  if (acc) {
-    acc.classList.toggle('done', done);
-    acc.classList.toggle('week-done', weekDone);
-    acc.classList.toggle('month-done', monthDone);
-  }
+  if (acc) acc.classList.toggle('done', done);
   const bd = root.querySelector('[data-bdaily="' + key + '"]');
   const bw = root.querySelector('[data-bweek="' + key + '"]');
   const bm = root.querySelector('[data-bmonth="' + key + '"]');
@@ -617,6 +611,22 @@ document.getElementById('root').addEventListener('click', e => {
   const aa = e.target.closest('[data-aa]');
   if (aa) { openA(aa.dataset.aa); return; }
 });
+
+
+function closeOpenAccs(exceptKey) {
+  Object.keys(accOpen).forEach(k => {
+    if (!accOpen[k] || k === exceptKey) return;
+    accOpen[k] = false;
+    const el = document.querySelector('[data-aid="' + k + '"]');
+    if (el) { el.classList.remove('open'); el.style.zIndex = ''; }
+  });
+}
+document.addEventListener('click', e => {
+  if (e.target.closest('.modal.show') || e.target.closest('.modal')) return;
+  if (e.target.closest('.acc.open')) return;
+  if (e.target.closest('[data-atoggle]')) return; // 別カード開閉は toggle 側
+  closeOpenAccs();
+}, true);
 
 document.getElementById('fab').onclick = () => openG();
 document.getElementById('nCancel').onclick = () => document.getElementById('nModal').classList.remove('show');
@@ -843,7 +853,7 @@ window.addEventListener('pagehide', () => save(state));
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v522').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v523').catch(()=>{});
 </script>
 </body>
 </html>
