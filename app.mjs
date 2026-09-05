@@ -149,8 +149,7 @@ function render(forceStructure = false) {
           bd.textContent = '今日OK';
           bd.hidden = false;
         } else if (prog.done > 0) {
-          const circled = ['①','②','③','④','⑤'][prog.done - 1] || String(prog.done);
-          bd.textContent = circled;
+          bd.textContent = String(prog.done);
           bd.hidden = false;
         } else {
           bd.hidden = true;
@@ -196,8 +195,7 @@ function syncAccountUI(g, a) {
       bd.textContent = '今日OK';
       bd.hidden = false;
     } else if (prog.done > 0) {
-      const circled = ['①','②','③','④','⑤'][prog.done - 1] || String(prog.done);
-      bd.textContent = circled;
+      bd.textContent = String(prog.done);
       bd.hidden = false;
     } else {
       bd.hidden = true;
@@ -587,5 +585,5 @@ if (verEl) {
 
 if ('serviceWorker' in navigator) {
   // updateViaCache: 'all' で SW 自体の余計な更新チェックを抑制。通常時はキャッシュのみで通信しない
-  navigator.serviceWorker.register('./sw.js?rev=v533', { updateViaCache: 'all' }).catch(() => {});
+  navigator.serviceWorker.register('./sw.js?rev=v534', { updateViaCache: 'all' }).catch(() => {});
 }
