@@ -18,9 +18,10 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .title-row h1{margin:0;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rgba(255,45,106,.45)}
 .ver{position:absolute;right:0;top:50%;transform:translateY(-50%);font:700 .6rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.75;padding:2px 5px;border:1px solid #3a2a4a;border-radius:5px}
 .ver:active{color:var(--neon2);border-color:var(--neon2)}
-.game{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:visible}
-.ghead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid transparent;touch-action:manipulation}
-.game.open .ghead{border-bottom-color:var(--line)}
+.game{background:var(--card);border:1px solid rgba(106,106,122,.55);border-radius:12px;margin-bottom:10px;overflow:visible}
+.ghead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid transparent;touch-action:manipulation;border-radius:12px 12px 0 0}
+.game.open .ghead{border-bottom-color:rgba(106,106,122,.45)}
+.game:not(.open) .ghead{border-radius:12px}
 .gname{font-weight:700;color:var(--neon);font-size:.95rem;cursor:pointer;flex-shrink:0;max-width:48%;padding:6px 4px 6px 0;-webkit-tap-highlight-color:transparent}
 .gname:active{opacity:.8}
 .gexpand{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:40px;min-width:48px;padding:6px 2px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
@@ -42,10 +43,13 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .ib{background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;padding:4px}
 .ib:active{color:var(--neon2)}
 .acc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px 8px 4px;align-items:start;overflow:visible}
-.acc{background:#12121a;border:1px solid #6a6a7a;border-radius:12px;padding:0;min-width:0;box-shadow:0 0 0 1px rgba(255,255,255,.04)}
-.acc.done{background:#1a3d48;border-color:#4a8a9a}
-.acc.open{border-color:#9a9aac}
-.ahead{display:flex;align-items:flex-start;gap:4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:8px}
+.acc{background:#12121a;border:1px solid rgba(106,106,122,.65);border-radius:12px;padding:0;min-width:0;position:relative;transition:border-color .15s,opacity .15s,filter .15s}
+.acc.done{border-color:#4a8a9a}
+.acc.done .ahead{background:#1a3d48}
+.acc:not(.open).done .ahead{border-radius:11px}
+.acc.open{border-color:#9a9aac;z-index:12}
+.ahead{display:flex;align-items:flex-start;gap:4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:8px;border-radius:11px 11px 0 0;transition:background .15s}
+.acc:not(.open) .ahead{border-radius:11px}
 .ainfo{min-width:0;flex:1;overflow:hidden}
 .aname{font-weight:600;color:var(--neon3);font-size:.85rem;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;width:100%}
 .aname-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -53,9 +57,9 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .abadges .badge[hidden]{display:inline-block!important;visibility:hidden;pointer-events:none;width:0;min-width:0;padding:0;margin:0;overflow:hidden;border:0}
 .anote{font-size:.62rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-height:1.15em;line-height:1.15em}
 .anote:empty::before{content:"\00a0"}
-.abody{display:none;padding:0 8px 8px;border-top:1px solid rgba(255,255,255,.08)}
+.abody{display:none;padding:0 8px 8px;background:#12121a;border:1px solid #9a9aac;border-top:1px solid rgba(255,255,255,.08);border-radius:0 0 12px 12px;position:absolute;left:-1px;right:-1px;top:100%;z-index:13;box-shadow:0 10px 24px rgba(0,0,0,.45)}
 .acc.open .abody{display:block}
-.acc-grid:has(.acc.open) .acc:not(.open){opacity:.42;filter:brightness(.72);transition:opacity .15s,filter .15s}
+.acc-grid:has(.acc.open) .acc:not(.open){opacity:.42;filter:brightness(.72)}
 .acc-grid:has(.acc.open) .acc.open{opacity:1;filter:none}
 .abody-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding-top:4px}
 .abody-edit{border:none;background:transparent;color:var(--muted);font-size:.65rem;text-align:left;cursor:pointer;padding:4px 0}
@@ -105,7 +109,7 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
 
 <div class="title-row">
   <h1>♡ にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.27</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.28</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
