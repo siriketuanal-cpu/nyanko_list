@@ -37,11 +37,9 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .ib{background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;padding:4px}
 .ib:active{color:var(--neon2)}
 .acc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:6px 6px 2px;align-items:start;overflow:visible}
-.acc{background:#12121a;border:1px solid rgba(106,106,122,.65);border-radius:12px;padding:0;min-width:0;position:relative;transition:border-color .12s,opacity .12s}
-.acc.done{border-color:#4a8a9a}
-.acc.done .ahead{background:#1a3d48}
+.acc{background:#12121a;border:1px solid rgba(106,106,122,.65);border-radius:12px;padding:0;min-width:0;position:relative;transition:opacity .12s}
 .acc.open{z-index:12}
-.ahead{display:flex;align-items:flex-start;gap:4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:7px 8px;border-radius:11px;transition:background .12s}
+.ahead{display:flex;align-items:flex-start;gap:4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:7px 8px;border-radius:11px}
 .ainfo{min-width:0;flex:1;overflow:hidden}
 .aname{font-weight:600;color:var(--neon3);font-size:.85rem;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;width:100%;min-height:1.25em}
 .aname-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -51,26 +49,26 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .anote:empty::before{content:"\00a0"}
 .abody{display:none;padding:8px;background:#12121a;border:1px solid #9a9aac;border-radius:12px;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:13;box-shadow:0 8px 20px rgba(0,0,0,.4)}
 .acc.open .abody{display:block}
-.acc-grid:has(.acc.open) .acc:not(.open){opacity:.4}
-.acc-grid:has(.acc.open) .acc.open{opacity:1}
-.abody-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding-top:4px}
-.abody-edit{border:none;background:transparent;color:var(--muted);font-size:.65rem;text-align:left;cursor:pointer;padding:4px 0}
-.abody-foot .memo{font-size:.85rem;padding:4px 6px;opacity:.85;background:transparent;border:none;cursor:pointer;line-height:1}
-.abody-edit:active{color:var(--neon3)}
+.acc-grid.is-dim .acc:not(.open){opacity:.28}
+.acc-grid.is-dim .acc.open{opacity:1}
+.abody-foot{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:10px;padding-top:6px;border-top:1px solid rgba(255,255,255,.06)}
+.abody-edit{border:none;background:transparent;color:var(--muted);font-size:.8rem;cursor:pointer;padding:4px 6px;opacity:.45;line-height:1}
+.abody-foot .memo{font-size:.85rem;padding:4px 6px;opacity:.7;background:transparent;border:none;cursor:pointer;line-height:1}
+.abody-edit:active,.abody-foot .memo:active{color:var(--neon3);opacity:1}
 .badge{font-size:.5rem;background:var(--neon2);color:#0d0d12;padding:1px 4px;border-radius:4px;font-weight:700;line-height:1.2;flex-shrink:0}
 .badge.week{background:var(--week);color:#0d1a12}
 .badge.month{background:var(--month);color:#1a1008}
-.chip-sec{margin-bottom:6px}
+.chip-sec{margin-bottom:8px}
 .chip-sec:last-of-type{margin-bottom:2px}
-.chip-label{font-size:.55rem;font-weight:700;letter-spacing:.03em;margin-bottom:3px;opacity:.9}
+.chip-label{font-size:.58rem;font-weight:700;letter-spacing:.03em;margin-bottom:4px;opacity:.95}
 .chip-label.d{color:var(--neon2)}
 .chip-label.w{color:var(--week)}
 .chip-label.m{color:var(--month)}
-.chip-row{display:flex;flex-direction:column;gap:4px}
-.chip{display:block;width:100%;text-align:left;border:1px solid #2e2e42;background:#0e0e16;color:var(--text);border-radius:8px;padding:7px 8px;font-size:.72rem;line-height:1.3;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chip.on{background:#1a3d48;border-color:#2a5a68;color:var(--neon2);text-decoration:line-through}
-.chip.w.on{background:#163528;border-color:#2a5a40;color:var(--week)}
-.chip.m.on{background:#3a2818;border-color:#6a4a28;color:#ffd0a8}
+.chip-row{display:flex;flex-direction:column;gap:6px}
+.chip{display:block;width:100%;text-align:left;border:1px solid #5a5a72;background:#14141e;color:var(--text);border-radius:8px;padding:9px 10px;font-size:.78rem;font-weight:500;line-height:1.35;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip.on{background:#1a3d48;border-color:#3a7a8a;color:var(--neon2);text-decoration:line-through}
+.chip.w.on{background:#163528;border-color:#2a6a48;color:var(--week)}
+.chip.m.on{background:#3a2818;border-color:#7a5a30;color:#ffd0a8}
 .empty{text-align:center;color:var(--muted);padding:40px 16px}
 .fab{position:fixed;right:12px;bottom:14px;width:36px;height:36px;border-radius:50%;border:1px solid #3a2a3a;background:#16161f;color:var(--muted);font-size:1.15rem;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.35);z-index:50;cursor:pointer;opacity:.55}
 .fab:active{transform:scale(.94);opacity:.9;color:var(--neon);border-color:var(--neon)}
@@ -100,7 +98,7 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
 
 <div class="title-row">
   <h1>♡ にゃんこチェック ♡</h1>
-  <span class="ver" role="link" tabindex="0" title="タップで最新版に更新">v0.5.37</span>
+  <span class="ver" role="link" tabindex="0" title="タップで最新版に更新">v0.5.40</span>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>

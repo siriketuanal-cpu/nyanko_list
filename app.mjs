@@ -70,7 +70,7 @@ function buildChecksHtml(g, a) {
   if (dChips) checks += `<div class="chip-sec"><div class="chip-label d">デイリー</div><div class="chip-row">${dChips}</div></div>`;
   if (wChips) checks += `<div class="chip-sec"><div class="chip-label w">ウィークリー</div><div class="chip-row">${wChips}</div></div>`;
   if (mChips) checks += `<div class="chip-sec"><div class="chip-label m">マンスリー</div><div class="chip-row">${mChips}</div></div>`;
-  return `${checks}<div class="abody-foot"><button type="button" class="abody-edit" data-ea="${g.id}|${a.id}">アカウント設定</button><button type="button" class="memo" data-note="${g.id}|${a.id}" title="メモ">📝</button></div>`;
+  return `${checks}<div class="abody-foot"><button type="button" class="abody-edit" data-ea="${g.id}|${a.id}" title="アカウント設定">⚙️</button><button type="button" class="memo" data-note="${g.id}|${a.id}" title="メモ">📝</button></div>`;
 }
 
 function ensureAccBody(g, a) {
@@ -87,29 +87,34 @@ function structureSig() {
   return state.games.map(g => g.id + ':' + (g.accounts || []).map(a => a.id).join(',')).join('|');
 }
 
+function syncGridDim(gid) {
+  const game = document.querySelector('[data-gid="' + gid + '"]');
+  const grid = game && game.querySelector('.acc-grid');
+  if (!grid) return;
+  const anyOpen = Object.keys(accOpen).some(k => accOpen[k] && k.startsWith(gid + '|'));
+  grid.classList.toggle('is-dim', anyOpen);
+}
+
 function syncAccountUI(g, a) {
-  const root = document.getElementById('root');
   const key = g.id + '|' + a.id;
-  const acc = root.querySelector('[data-aid="' + key + '"]');
+  const acc = document.querySelector('[data-aid="' + key + '"]');
   if (!acc) return;
 
-  const done = isDone(a);
-  acc.classList.toggle('done', done);
-  updateDailyBadge(root.querySelector('[data-bdaily="' + key + '"]'), a);
-
-  const bw = root.querySelector('[data-bweek="' + key + '"]');
-  const bm = root.querySelector('[data-bmonth="' + key + '"]');
+  // カード内だけ探す（document 全体を何度も走査しない）
+  updateDailyBadge(acc.querySelector('[data-bdaily]'), a);
+  const bw = acc.querySelector('[data-bweek]');
+  const bm = acc.querySelector('[data-bmonth]');
   if (bw) bw.hidden = !isWeekDone(a);
   if (bm) bm.hidden = !isMonthDone(a);
 
   const noteHead = ((a.note || '').trim().split(/\n/)[0]) || '';
-  const an = root.querySelector('[data-anote="' + key + '"]');
+  const an = acc.querySelector('[data-anote]');
   if (an) an.textContent = noteHead ? ('📝 ' + noteHead) : '';
 
   [['daily', 'd'], ['weekly', 'w'], ['monthly', 'm']].forEach(([field, prefix]) => {
     (a[field] || []).forEach((c, i) => {
       if (!c.label) return;
-      const chip = root.querySelector('[data-t="' + key + '|' + prefix + '|' + i + '"]');
+      const chip = acc.querySelector('[data-t="' + key + '|' + prefix + '|' + i + '"]');
       if (!chip) return;
       const on = !!c.done;
       chip.classList.toggle('on', on);
@@ -169,17 +174,19 @@ function render(forceStructure = false) {
   }
 
   state.games.forEach(g => {
-    const tw = root.querySelector(`[data-gtools-wrap="${g.id}"]`);
+    const gameEl = root.querySelector(`[data-gid="${g.id}"]`);
+    const tw = gameEl && gameEl.querySelector(`[data-gtools-wrap="${g.id}"]`);
     if (tw) tw.classList.toggle('open', !!toolsOpen[g.id]);
     (g.accounts || []).forEach(a => {
       const key = g.id + '|' + a.id;
-      const acc = root.querySelector(`[data-aid="${key}"]`);
+      const acc = gameEl && gameEl.querySelector(`[data-aid="${key}"]`);
       if (!acc) return;
       const wantOpen = !!accOpen[key];
       if (wantOpen) ensureAccBody(g, a);
       acc.classList.toggle('open', wantOpen);
       syncAccountUI(g, a);
     });
+    syncGridDim(g.id);
     syncGameHeader(g);
   });
 }
@@ -188,13 +195,17 @@ function toggleChip(el) {
   const t = el.dataset.t; if (!t) return;
   const [gid, aid, type, idx] = t.split('|');
   const g = state.games.find(x => x.id === gid);
-  if (!g) return;
+  if (!g || !g.accounts) return;
   const a = g.accounts.find(x => x.id === aid);
   if (!a) return;
   const map = { d: 'daily', w: 'weekly', m: 'monthly' };
-  const list = a[map[type]];
-  if (!list || !list[+idx]) return;
-  list[+idx].done = !list[+idx].done;
+  const field = map[type];
+  if (!field) return;
+  if (!Array.isArray(a[field])) a[field] = [];
+  const list = a[field];
+  const i = +idx;
+  if (!list[i] || !list[i].label) return;
+  list[i].done = !list[i].done;
   save(state);
   syncAccountUI(g, a);
   syncGameHeader(g);
@@ -219,15 +230,19 @@ function toggleAcc(key) {
   accOpen[key] = willOpen;
   const el = document.querySelector('[data-aid="' + key + '"]');
   if (el) el.classList.toggle('open', willOpen);
+  syncGridDim(gid);
 }
 
 function closeOpenAccs() {
+  const gids = new Set();
   Object.keys(accOpen).forEach(k => {
     if (!accOpen[k]) return;
     accOpen[k] = false;
+    gids.add(k.split('|')[0]);
     const el = document.querySelector('[data-aid="' + k + '"]');
     if (el) el.classList.remove('open');
   });
+  gids.forEach(syncGridDim);
 }
 
 document.getElementById('root').addEventListener('click', e => {
@@ -288,9 +303,8 @@ document.getElementById('root').addEventListener('click', e => {
 });
 
 document.addEventListener('click', e => {
-  if (e.target.closest('.modal')) return;
-  if (e.target.closest('.acc.open')) return;
-  if (e.target.closest('[data-atoggle]')) return;
+  // 展開中カード内・トグル・チップ操作は閉じない（タップ抜け防止）
+  if (e.target.closest('.modal, .acc.open, [data-atoggle], .chip, .fab')) return;
   closeOpenAccs();
 }, true);
 
@@ -357,7 +371,9 @@ function packChecks(prefix, max, existing) {
   for (let i = 1; i <= max; i++) {
     const label = (document.getElementById(prefix + i).value || '').trim();
     if (!label) continue;
-    const prev = existing && existing.find(c => c.label === label);
+    // 同じ文言なら優先、なければ同じ枠番号の完了状態を引き継ぐ（改名時の誤リセット防止）
+    let prev = existing && existing.find(c => c.label === label);
+    if (!prev && existing && existing[i - 1] && existing[i - 1].label) prev = existing[i - 1];
     out.push({ label, done: prev ? !!prev.done : false });
   }
   return out;
@@ -515,14 +531,41 @@ function scheduleGameResets() {
   });
 }
 
+function onResume() {
+  // バックグラウンドから戻ったとき：リセット反映＋タイマー張り直し（操作を邪魔しないよう軽く）
+  if (applyResets(state)) {
+    save(state);
+    render(false);
+  }
+  scheduleGameResets();
+}
+
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') save(state);
+  if (document.visibilityState === 'hidden') {
+    save(state);
+  } else if (document.visibilityState === 'visible') {
+    onResume();
+  }
 });
 window.addEventListener('pagehide', () => save(state));
+window.addEventListener('pageshow', e => {
+  // bfcache 復帰時もリセット確認
+  if (e.persisted) onResume();
+});
 
+// 起動：まず画面を出してから、後回しでタイマーと SW
 if (applyResets(state)) save(state);
 render(true);
-scheduleGameResets();
+const defer = (fn) => {
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(fn, { timeout: 1200 });
+  else setTimeout(fn, 0);
+};
+defer(() => {
+  scheduleGameResets();
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js?rev=v540', { updateViaCache: 'all' }).catch(() => {});
+  }
+});
 
 // 長押しでブラウザの検索バナー／コンテキストメニューを出さない（入力欄は除外）
 document.addEventListener('contextmenu', e => {
@@ -538,9 +581,4 @@ if (verEl) {
   verEl.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); location.href = 'update.html'; }
   });
-}
-
-if ('serviceWorker' in navigator) {
-  // updateViaCache: 'all' で SW 自体の余計な更新チェックを抑制。通常時はキャッシュのみで通信しない
-  navigator.serviceWorker.register('./sw.js?rev=v537', { updateViaCache: 'all' }).catch(() => {});
 }
