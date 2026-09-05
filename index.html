@@ -45,11 +45,9 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
   background:#12121a;border:1px solid #2a2a3a;border-radius:12px;
   padding:8px;min-width:0;
 }
-.acc.done .ainfo{
+.acc.done .ahead{
   background:#1a3d48;
-  border-radius:8px;
-  padding:5px 6px;
-  margin:-2px 0;
+  border-radius:10px;
 }
 .acc-grid:has(.acc.open) .acc:not(.open){opacity:.42;filter:brightness(.72);transition:opacity .15s,filter .15s}
 .acc-grid:has(.acc.open) .acc.open{opacity:1;filter:none;z-index:40}
@@ -57,17 +55,18 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .ahead{
   display:flex;justify-content:space-between;align-items:flex-start;gap:4px;
   cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  padding:6px;margin:-2px;border-radius:10px;
 }
 .ainfo{min-width:0;flex:1;overflow:hidden}
 .aname{
   font-weight:600;color:var(--neon3);font-size:.85rem;
-  display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;
+  display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;width:100%;
 }
 .aname-text{
-  flex:1 1 auto;min-width:0;max-width:100%;
+  flex:1 1 auto;min-width:0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.abadges{display:flex;flex-wrap:nowrap;align-items:center;gap:3px;flex:0 0 auto;min-height:1.15em}
+.abadges{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:3px;flex:0 0 auto;margin-left:auto;min-height:1.15em}
 .abadges .badge[hidden]{display:inline-block!important;visibility:hidden;pointer-events:none;min-width:2.6em}
 .anote{
   font-size:.62rem;color:var(--muted);margin-top:3px;
@@ -87,7 +86,9 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
   z-index:40;contain:layout style;
 }
 .acc.open .abody{display:block}
-.abody-edit{display:block;width:100%;margin-top:6px;padding:6px 0 2px;border:none;background:transparent;color:var(--muted);font-size:.65rem;text-align:center;cursor:pointer}
+.abody-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding-top:4px}
+.abody-edit{border:none;background:transparent;color:var(--muted);font-size:.65rem;text-align:left;cursor:pointer;padding:4px 0}
+.abody-foot .memo{font-size:.85rem;padding:4px 6px;opacity:.85;background:transparent;border:none;cursor:pointer;line-height:1}
 .abody-edit:active{color:var(--neon3)}
 .badge{font-size:.5rem;background:var(--neon2);color:#0d0d12;padding:1px 4px;border-radius:4px;font-weight:700;line-height:1.2;flex-shrink:0}
 .badge.week{background:var(--week);color:#0d1a12}
@@ -107,9 +108,9 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .chip:active{transform:scale(.98)}
-.chip.on{background:rgba(0,240,255,.12);border-color:rgba(0,240,255,.45);color:var(--neon2);text-decoration:line-through;opacity:.85}
-.chip.w.on{background:rgba(94,224,160,.14);border-color:rgba(94,224,160,.5);color:var(--week)}
-.chip.m.on{background:rgba(255,168,107,.12);border-color:rgba(255,168,107,.45);color:#ffd0a8}
+.chip.on{background:#1a3d48;border-color:#2a5a68;color:var(--neon2);text-decoration:line-through}
+.chip.w.on{background:#163528;border-color:#2a5a40;color:var(--week)}
+.chip.m.on{background:#3a2818;border-color:#6a4a28;color:#ffd0a8}
 .note-sep{height:1px;margin:6px 0 4px;background:linear-gradient(90deg,transparent,#c9a0ff66,transparent);border:0}
 .note-preview{font-size:.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .note-sep{height:1px;margin:8px 0 6px;background:linear-gradient(90deg,transparent,#c9a0ff66,transparent);border:0}
@@ -144,7 +145,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.23</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.24</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -299,7 +300,7 @@ function buildChecksHtml(g, a) {
   if (dChips) checks += `<div class="chip-sec"><div class="chip-label d">デイリー</div><div class="chip-row">${dChips}</div></div>`;
   if (wChips) checks += `<div class="chip-sec"><div class="chip-label w">ウィークリー</div><div class="chip-row">${wChips}</div></div>`;
   if (mChips) checks += `<div class="chip-sec"><div class="chip-label m">マンスリー</div><div class="chip-row">${mChips}</div></div>`;
-  return `${checks}<button type="button" class="abody-edit" data-ea="${g.id}|${a.id}">アカウント設定</button>`;
+  return `${checks}<div class="abody-foot"><button type="button" class="abody-edit" data-ea="${g.id}|${a.id}">アカウント設定</button><button type="button" class="memo" data-note="${g.id}|${a.id}" title="メモ">📝</button></div>`;
 }
 
 function ensureAccBody(g, a) {
@@ -362,7 +363,6 @@ function render(forceStructure = false) {
                 <div class="anote" data-anote="${g.id}|${a.id}"></div>
               </div>
               <div class="aactions">
-                <button type="button" class="ib memo" data-note="${g.id}|${a.id}" title="メモ">📝</button>
                 <span class="achev" aria-hidden="true">›</span>
               </div>
             </div>
@@ -853,7 +853,7 @@ window.addEventListener('pagehide', () => save(state));
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v523').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v524').catch(()=>{});
 </script>
 </body>
 </html>
