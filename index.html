@@ -10,7 +10,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root{--bg:#0d0d12;--card:#16161f;--line:#2a2a3a;--neon:#ff2d6a;--neon2:#00f0ff;--neon3:#c9a0ff;--text:#e8e8f0;--muted:#8888a0;--check:#00f0ff;--done:#1a2a22;--month:#ffa86b;}
+:root{--bg:#0d0d12;--card:#16161f;--line:#2a2a3a;--neon:#ff2d6a;--neon2:#00f0ff;--neon3:#c9a0ff;--week:#5ee0a0;--text:#e8e8f0;--muted:#8888a0;--check:#00f0ff;--done:#1a2a22;--month:#ffa86b;}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{overscroll-behavior:none;overscroll-behavior-y:none;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
 body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
@@ -45,7 +45,12 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
   background:#12121a;border:1px solid #2a2a3a;border-radius:12px;
   padding:8px;min-width:0;
 }
-.acc.done .ahead{background:rgba(0,240,255,.1);border-radius:8px;margin:-2px -2px 0;padding:2px}
+.acc.done .ahead{background:rgba(0,240,255,.28);border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,240,255,.35)}
+.acc.week-done .ahead{background:rgba(94,224,160,.22);border-radius:8px;box-shadow:inset 0 0 0 1px rgba(94,224,160,.3)}
+.acc.month-done .ahead{background:rgba(255,168,107,.22);border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,168,107,.3)}
+.acc.done.week-done .ahead{background:linear-gradient(90deg,rgba(0,240,255,.26),rgba(94,224,160,.2))}
+.acc-grid:has(.acc.open) .acc:not(.open){opacity:.42;filter:brightness(.72);transition:opacity .15s,filter .15s}
+.acc-grid:has(.acc.open) .acc.open{opacity:1;filter:none;z-index:40}
 .acc.open{z-index:30;border-color:#3a3a55}
 .ahead{
   display:flex;justify-content:space-between;align-items:flex-start;gap:4px;
@@ -60,7 +65,8 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
   flex:1 1 auto;min-width:0;max-width:100%;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.abadges{display:flex;flex-wrap:nowrap;align-items:center;gap:3px;flex:0 0 auto}
+.abadges{display:flex;flex-wrap:nowrap;align-items:center;gap:3px;flex:0 0 auto;min-height:1.15em}
+.abadges .badge[hidden]{display:inline-block!important;visibility:hidden;pointer-events:none;min-width:2.6em}
 .anote{
   font-size:.62rem;color:var(--muted);margin-top:3px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
@@ -82,13 +88,13 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 .abody-edit{display:block;width:100%;margin-top:6px;padding:6px 0 2px;border:none;background:transparent;color:var(--muted);font-size:.65rem;text-align:center;cursor:pointer}
 .abody-edit:active{color:var(--neon3)}
 .badge{font-size:.5rem;background:var(--neon2);color:#0d0d12;padding:1px 4px;border-radius:4px;font-weight:700;line-height:1.2;flex-shrink:0}
-.badge.week{background:#c9a0ff}
+.badge.week{background:var(--week);color:#0d1a12}
 .badge.month{background:var(--month);color:#1a1008}
 .chip-sec{margin-bottom:6px}
 .chip-sec:last-of-type{margin-bottom:2px}
 .chip-label{font-size:.55rem;font-weight:700;letter-spacing:.03em;margin-bottom:3px;opacity:.9}
 .chip-label.d{color:var(--neon2)}
-.chip-label.w{color:#c9a0ff}
+.chip-label.w{color:var(--week)}
 .chip-label.m{color:var(--month)}
 .chip-row{display:flex;flex-direction:column;gap:4px}
 .chip{
@@ -100,7 +106,7 @@ h1{text-align:center;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rg
 }
 .chip:active{transform:scale(.98)}
 .chip.on{background:rgba(0,240,255,.12);border-color:rgba(0,240,255,.45);color:var(--neon2);text-decoration:line-through;opacity:.85}
-.chip.w.on{background:rgba(201,160,255,.12);border-color:rgba(201,160,255,.45);color:#e0c8ff}
+.chip.w.on{background:rgba(94,224,160,.14);border-color:rgba(94,224,160,.5);color:var(--week)}
 .chip.m.on{background:rgba(255,168,107,.12);border-color:rgba(255,168,107,.45);color:#ffd0a8}
 .note-sep{height:1px;margin:6px 0 4px;background:linear-gradient(90deg,transparent,#c9a0ff66,transparent);border:0}
 .note-preview{font-size:.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -136,7 +142,7 @@ label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 <body>
 <div class="title-row">
   <h1>♡ 悪い子にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.21</a>
+  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.22</a>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -402,7 +408,11 @@ function render(forceStructure = false) {
       const weekDone = isWeekDone(a);
       const monthDone = isMonthDone(a);
       const acc = root.querySelector(`[data-aid="${key}"]`);
-      if (acc) acc.classList.toggle('done', done);
+      if (acc) {
+        acc.classList.toggle('done', done);
+        acc.classList.toggle('week-done', weekDone);
+        acc.classList.toggle('month-done', monthDone);
+      }
       const bd = root.querySelector(`[data-bdaily="${key}"]`);
       const bw = root.querySelector(`[data-bweek="${key}"]`);
       const bm = root.querySelector(`[data-bmonth="${key}"]`);
@@ -443,7 +453,11 @@ function syncAccountUI(g, a) {
   const weekDone = isWeekDone(a);
   const monthDone = isMonthDone(a);
   const acc = root.querySelector('[data-aid="' + key + '"]');
-  if (acc) acc.classList.toggle('done', done);
+  if (acc) {
+    acc.classList.toggle('done', done);
+    acc.classList.toggle('week-done', weekDone);
+    acc.classList.toggle('month-done', monthDone);
+  }
   const bd = root.querySelector('[data-bdaily="' + key + '"]');
   const bw = root.querySelector('[data-bweek="' + key + '"]');
   const bm = root.querySelector('[data-bmonth="' + key + '"]');
@@ -829,7 +843,7 @@ window.addEventListener('pagehide', () => save(state));
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v521').catch(()=>{});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v522').catch(()=>{});
 </script>
 </body>
 </html>
