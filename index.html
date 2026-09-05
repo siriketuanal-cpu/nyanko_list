@@ -19,18 +19,12 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .ver{position:absolute;right:0;top:50%;transform:translateY(-50%);font:700 .6rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.75;padding:2px 5px;border:1px solid #3a2a4a;border-radius:5px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation;cursor:pointer}
 .ver:active{color:var(--neon2);border-color:var(--neon2)}
 .game{background:var(--card);border:1px solid rgba(106,106,122,.55);border-radius:12px;margin-bottom:10px;overflow:visible}
-.ghead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid transparent;touch-action:manipulation;border-radius:12px 12px 0 0}
-.game.open .ghead{border-bottom-color:rgba(106,106,122,.45)}
-.game:not(.open) .ghead{border-radius:12px}
-.gname{font-weight:700;color:var(--neon);font-size:.95rem;cursor:pointer;flex-shrink:0;max-width:48%;padding:6px 4px 6px 0;-webkit-tap-highlight-color:transparent}
-.gname:active{opacity:.8}
-.gexpand{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:40px;min-width:48px;padding:6px 2px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+.ghead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid rgba(106,106,122,.45);border-radius:12px 12px 0 0}
+.gname{font-weight:700;color:var(--neon);font-size:.95rem;flex-shrink:0;max-width:48%;padding:6px 4px 6px 0}
+.gexpand{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:40px;min-width:48px;padding:6px 2px;user-select:none}
 .gmeta{font-size:.62rem;color:var(--muted);text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap}
 .gmeta .badge{font-size:.55rem}
-.chev{color:var(--neon3);font-size:.75rem;transition:transform .2s;opacity:.85}
-.game.open .chev{transform:rotate(180deg)}
-.gbody{display:none;padding-bottom:2px;overflow:visible}
-.game.open .gbody{display:block}
+.gbody{display:block;padding-bottom:2px;overflow:visible}
 .gtools{padding:2px 8px 4px}
 .gtools-toggle{display:block;width:100%;padding:4px 0;border:none;background:transparent;color:var(--muted);font-size:.7rem;letter-spacing:.2em;cursor:pointer;opacity:.5;-webkit-tap-highlight-color:transparent}
 .gtools-toggle:active{opacity:.9;color:var(--neon3)}
@@ -106,7 +100,7 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
 
 <div class="title-row">
   <h1>♡ にゃんこチェック ♡</h1>
-  <span class="ver" role="link" tabindex="0" title="タップで最新版に更新">v0.5.34</span>
+  <span class="ver" role="link" tabindex="0" title="タップで最新版に更新">v0.5.35</span>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>

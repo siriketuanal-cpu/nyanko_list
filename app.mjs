@@ -2,7 +2,6 @@ import { escape, gameHasWeekly, gameHasMonthly } from './core.mjs';
 import { load, save, applyResets } from './store.mjs';
 
 let state = load();
-const gameOpen = Object.create(null);
 const toolsOpen = Object.create(null);
 const accOpen = Object.create(null);
 let editG = null, editA = null, editGid = null, noteTarget = null;
@@ -89,10 +88,9 @@ function render(forceStructure = false) {
     root.innerHTML = state.games.map(g => `
     <div class="game" data-gid="${g.id}">
       <div class="ghead">
-        <div class="gname" data-toggle="${g.id}">${escape(g.name)}</div>
-        <div class="gexpand" data-toggle="${g.id}">
+        <div class="gname">${escape(g.name)}</div>
+        <div class="gexpand">
           <span class="gmeta" data-gmeta="${g.id}"></span>
-          <span class="chev" aria-hidden="true">♡</span>
         </div>
       </div>
       <div class="gbody">
@@ -125,8 +123,6 @@ function render(forceStructure = false) {
   }
 
   state.games.forEach(g => {
-    const el = root.querySelector(`[data-gid="${g.id}"]`);
-    if (el) el.classList.toggle('open', !!gameOpen[g.id]);
     const tw = root.querySelector(`[data-gtools-wrap="${g.id}"]`);
     if (tw) tw.classList.toggle('open', !!toolsOpen[g.id]);
     (g.accounts || []).forEach(a => {
@@ -231,12 +227,6 @@ function toggleChip(el) {
   syncGameHeader(g);
 }
 
-function toggleGame(id) {
-  gameOpen[id] = !gameOpen[id];
-  const el = document.querySelector('[data-gid="' + id + '"]');
-  if (el) el.classList.toggle('open', !!gameOpen[id]);
-}
-
 function toggleAcc(key) {
   if (!key) return;
   const willOpen = !accOpen[key];
@@ -299,12 +289,6 @@ document.getElementById('root').addEventListener('click', e => {
   if (at) {
     e.stopPropagation();
     toggleAcc(at.dataset.atoggle);
-    return;
-  }
-  const tg = e.target.closest('[data-toggle]');
-  if (tg) {
-    e.stopPropagation();
-    toggleGame(tg.dataset.toggle);
     return;
   }
   const gt = e.target.closest('[data-gtools]');
@@ -585,5 +569,5 @@ if (verEl) {
 
 if ('serviceWorker' in navigator) {
   // updateViaCache: 'all' で SW 自体の余計な更新チェックを抑制。通常時はキャッシュのみで通信しない
-  navigator.serviceWorker.register('./sw.js?rev=v534', { updateViaCache: 'all' }).catch(() => {});
+  navigator.serviceWorker.register('./sw.js?rev=v535', { updateViaCache: 'all' }).catch(() => {});
 }
