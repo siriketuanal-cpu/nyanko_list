@@ -1,5 +1,5 @@
-/* オフライン固定・キャッシュ優先 */
-const C = 'nyanko-split-v531';
+/* 完全キャッシュ優先・通常時はネットワークに出ない */
+const C = 'nyanko-split-v533';
 const A = [
   './',
   './index.html',
@@ -31,13 +31,17 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then(hit => {
+    caches.match(e.request, { ignoreSearch: true }).then(hit => {
+      // キャッシュにあれば絶対にネットワークへ出ない
       if (hit) return hit;
+      // 初回インストール時など、キャッシュにない場合のみ取得して保存
       return fetch(e.request).then(res => {
-        const copy = res.clone();
-        caches.open(C).then(c => c.put(e.request, copy)).catch(() => {});
+        if (res && res.ok && res.type === 'basic') {
+          const copy = res.clone();
+          caches.open(C).then(c => c.put(e.request, copy)).catch(() => {});
+        }
         return res;
-      }).catch(() => caches.match('./index.html'));
+      }).catch(() => caches.match('./index.html') || caches.match('./'));
     })
   );
 });

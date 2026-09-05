@@ -11,6 +11,12 @@ function isDone(a) {
   const list = (a.daily || []).filter(c => c.label);
   return list.length > 0 && list.every(c => c.done);
 }
+function dailyProgress(a) {
+  const list = (a.daily || []).filter(c => c.label);
+  if (!list.length) return { total: 0, done: 0, full: false };
+  const done = list.filter(c => c.done).length;
+  return { total: list.length, done, full: done === list.length };
+}
 function isWeekDone(a) {
   const list = (a.weekly || []).filter(c => c.label);
   return list.length > 0 && list.every(c => c.done);
@@ -137,7 +143,19 @@ function render(forceStructure = false) {
       const bd = root.querySelector(`[data-bdaily="${key}"]`);
       const bw = root.querySelector(`[data-bweek="${key}"]`);
       const bm = root.querySelector(`[data-bmonth="${key}"]`);
-      if (bd) bd.hidden = !done;
+      if (bd) {
+        const prog = dailyProgress(a);
+        if (prog.full) {
+          bd.textContent = '今日OK';
+          bd.hidden = false;
+        } else if (prog.done > 0) {
+          const circled = ['①','②','③','④','⑤'][prog.done - 1] || String(prog.done);
+          bd.textContent = circled;
+          bd.hidden = false;
+        } else {
+          bd.hidden = true;
+        }
+      }
       if (bw) bw.hidden = !weekDone;
       if (bm) bm.hidden = !monthDone;
       const noteHead = ((a.note || '').trim().split(/\n/)[0]) || '';
@@ -172,7 +190,19 @@ function syncAccountUI(g, a) {
   const bd = root.querySelector('[data-bdaily="' + key + '"]');
   const bw = root.querySelector('[data-bweek="' + key + '"]');
   const bm = root.querySelector('[data-bmonth="' + key + '"]');
-  if (bd) bd.hidden = !done;
+  if (bd) {
+    const prog = dailyProgress(a);
+    if (prog.full) {
+      bd.textContent = '今日OK';
+      bd.hidden = false;
+    } else if (prog.done > 0) {
+      const circled = ['①','②','③','④','⑤'][prog.done - 1] || String(prog.done);
+      bd.textContent = circled;
+      bd.hidden = false;
+    } else {
+      bd.hidden = true;
+    }
+  }
   if (bw) bw.hidden = !weekDone;
   if (bm) bm.hidden = !monthDone;
   [['daily','d'],['weekly','w'],['monthly','m']].forEach(([field, prefix]) => {
@@ -544,4 +574,18 @@ window.addEventListener('pagehide', () => save(state));
 if (applyResets(state)) save(state);
 render(true);
 scheduleGameResets();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js?rev=v531').catch(() => {});
+
+// バージョン表示：長押しメニュー禁止＋タップで更新ページへ（リンクではないのでネイティブメニューが出ない）
+const verEl = document.querySelector('.ver');
+if (verEl) {
+  verEl.addEventListener('contextmenu', e => e.preventDefault());
+  verEl.addEventListener('click', () => { location.href = 'update.html'; });
+  verEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); location.href = 'update.html'; }
+  });
+}
+
+if ('serviceWorker' in navigator) {
+  // updateViaCache: 'all' で SW 自体の余計な更新チェックを抑制。通常時はキャッシュのみで通信しない
+  navigator.serviceWorker.register('./sw.js?rev=v533', { updateViaCache: 'all' }).catch(() => {});
+}

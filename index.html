@@ -16,7 +16,7 @@ html,body{overscroll-behavior:none;height:100%;background:var(--bg);color:var(--
 body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .title-row{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:8px;min-height:1.6em}
 .title-row h1{margin:0;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rgba(255,45,106,.45)}
-.ver{position:absolute;right:0;top:50%;transform:translateY(-50%);font:700 .6rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.75;padding:2px 5px;border:1px solid #3a2a4a;border-radius:5px}
+.ver{position:absolute;right:0;top:50%;transform:translateY(-50%);font:700 .6rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.75;padding:2px 5px;border:1px solid #3a2a4a;border-radius:5px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation;cursor:pointer}
 .ver:active{color:var(--neon2);border-color:var(--neon2)}
 .game{background:var(--card);border:1px solid rgba(106,106,122,.55);border-radius:12px;margin-bottom:10px;overflow:visible}
 .ghead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid transparent;touch-action:manipulation;border-radius:12px 12px 0 0}
@@ -29,9 +29,9 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .gmeta .badge{font-size:.55rem}
 .chev{color:var(--neon3);font-size:.75rem;transition:transform .2s;opacity:.85}
 .game.open .chev{transform:rotate(180deg)}
-.gbody{display:none;padding-bottom:4px;overflow:visible}
+.gbody{display:none;padding-bottom:2px;overflow:visible}
 .game.open .gbody{display:block}
-.gtools{padding:2px 8px 8px}
+.gtools{padding:2px 8px 4px}
 .gtools-toggle{display:block;width:100%;padding:4px 0;border:none;background:transparent;color:var(--muted);font-size:.7rem;letter-spacing:.2em;cursor:pointer;opacity:.5;-webkit-tap-highlight-color:transparent}
 .gtools-toggle:active{opacity:.9;color:var(--neon3)}
 .gactions{display:none;grid-template-columns:1fr 1fr;align-items:center;gap:6px;padding:4px 0 2px}
@@ -42,12 +42,12 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .gactions .gaa:active{color:var(--neon2)}
 .ib{background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;padding:4px}
 .ib:active{color:var(--neon2)}
-.acc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px 8px 4px;align-items:start;overflow:visible}
+.acc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:6px 6px 2px;align-items:start;overflow:visible}
 .acc{background:#12121a;border:1px solid rgba(106,106,122,.65);border-radius:12px;padding:0;min-width:0;position:relative;transition:border-color .12s,opacity .12s}
 .acc.done{border-color:#4a8a9a}
 .acc.done .ahead{background:#1a3d48}
 .acc.open{z-index:12}
-.ahead{display:flex;align-items:flex-start;gap:4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:8px;border-radius:11px;transition:background .12s}
+.ahead{display:flex;align-items:flex-start;gap:4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:7px 8px;border-radius:11px;transition:background .12s}
 .ainfo{min-width:0;flex:1;overflow:hidden}
 .aname{font-weight:600;color:var(--neon3);font-size:.85rem;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;width:100%;min-height:1.25em}
 .aname-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -55,7 +55,7 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .abadges .badge[hidden]{visibility:hidden;pointer-events:none}
 .anote{font-size:.62rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-height:1.15em;line-height:1.15em}
 .anote:empty::before{content:"\00a0"}
-.abody{display:none;padding:8px;background:#12121a;border:1px solid #9a9aac;border-radius:12px;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:13;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.abody{display:none;padding:8px;background:#12121a;border:1px solid #9a9aac;border-radius:12px;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:13;box-shadow:0 8px 20px rgba(0,0,0,.4)}
 .acc.open .abody{display:block}
 .acc-grid:has(.acc.open) .acc:not(.open){opacity:.4}
 .acc-grid:has(.acc.open) .acc.open{opacity:1}
@@ -106,7 +106,7 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
 
 <div class="title-row">
   <h1>♡ にゃんこチェック ♡</h1>
-  <a class="ver" href="update.html" title="タップで最新版に更新">v0.5.31</a>
+  <span class="ver" role="link" tabindex="0" title="タップで最新版に更新">v0.5.33</span>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
