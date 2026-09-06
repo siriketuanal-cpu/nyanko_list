@@ -476,37 +476,41 @@ document.getElementById('nSave').onclick = () => {
 };
 
 const resetTimers = new Map();
+function parseHM(s, defH = 5) {
+  const [h, m] = String(s || '').split(':').map(Number);
+  return [Number.isFinite(h) ? h : defH, Number.isFinite(m) ? m : 0];
+}
 function msUntilDaily(g, now = Date.now()) {
-  const [h, m] = (g.dailyReset || '05:00').split(':').map(Number);
+  const [h, m] = parseHM(g.dailyReset);
   const d = new Date(now);
   const next = new Date(d);
-  next.setHours(h || 5, m || 0, 0, 0);
+  next.setHours(h, m, 0, 0);
   if (next <= d) next.setDate(next.getDate() + 1);
   return next - d;
 }
 function msUntilWeekly(g, now = Date.now()) {
-  const [h, m] = (g.weeklyReset || '05:00').split(':').map(Number);
+  const [h, m] = parseHM(g.weeklyReset);
   const day = g.weeklyDay ?? 1;
   const d = new Date(now);
   const next = new Date(d);
-  next.setHours(h || 5, m || 0, 0, 0);
+  next.setHours(h, m, 0, 0);
   let add = (day - next.getDay() + 7) % 7;
   if (add === 0 && next <= d) add = 7;
   next.setDate(next.getDate() + add);
   return next - d;
 }
 function msUntilMonthly(g, now = Date.now()) {
-  const [h, m] = (g.monthlyReset || '05:00').split(':').map(Number);
+  const [h, m] = parseHM(g.monthlyReset);
   const dom = Math.min(28, Math.max(1, g.monthlyDay ?? 1));
   const d = new Date(now);
   let y = d.getFullYear(), mo = d.getMonth();
   const last = new Date(y, mo + 1, 0).getDate();
-  let next = new Date(y, mo, Math.min(dom, last), h || 5, m || 0, 0, 0);
+  let next = new Date(y, mo, Math.min(dom, last), h, m, 0, 0);
   if (next <= d) {
     mo += 1;
     if (mo > 11) { mo = 0; y += 1; }
     const last2 = new Date(y, mo + 1, 0).getDate();
-    next = new Date(y, mo, Math.min(dom, last2), h || 5, m || 0, 0, 0);
+    next = new Date(y, mo, Math.min(dom, last2), h, m, 0, 0);
   }
   return next - d;
 }
@@ -567,7 +571,7 @@ const defer = (fn) => {
 defer(() => {
   scheduleGameResets();
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?rev=v541', { updateViaCache: 'all' }).catch(() => {});
+    navigator.serviceWorker.register('./sw.js?rev=v542', { updateViaCache: 'all' }).catch(() => {});
   }
 });
 

@@ -35,9 +35,13 @@ export function applyResets(state) {
   if (!state.lastDaily) state.lastDaily = {};
   if (!state.lastWeekly) state.lastWeekly = {};
   if (!state.lastMonthly) state.lastMonthly = {};
+  const hm = (s, defH = 5) => {
+    const [h, m] = String(s || '').split(':').map(Number);
+    return [Number.isFinite(h) ? h : defH, Number.isFinite(m) ? m : 0];
+  };
   state.games.forEach(g => {
-    const [dh, dm] = (g.dailyReset || '05:00').split(':').map(Number);
-    const dKey = dailyKey(now, dh || 5, dm || 0);
+    const [dh, dm] = hm(g.dailyReset);
+    const dKey = dailyKey(now, dh, dm);
     // キー未記録は「いまの周期」を覚えるだけ（チェックを消さない）
     if (state.lastDaily[g.id] == null) {
       state.lastDaily[g.id] = dKey;
@@ -51,8 +55,8 @@ export function applyResets(state) {
     }
 
     if (gameHasWeekly(g)) {
-      const [wh, wm] = (g.weeklyReset || '05:00').split(':').map(Number);
-      const wKey = weeklyKey(now, g.weeklyDay ?? 1, wh || 5, wm || 0);
+      const [wh, wm] = hm(g.weeklyReset);
+      const wKey = weeklyKey(now, g.weeklyDay ?? 1, wh, wm);
       if (state.lastWeekly[g.id] == null) {
         state.lastWeekly[g.id] = wKey;
         changed = true;
@@ -66,8 +70,8 @@ export function applyResets(state) {
     }
 
     if (gameHasMonthly(g)) {
-      const [mh, mm] = (g.monthlyReset || '05:00').split(':').map(Number);
-      const mKey = monthlyKey(now, g.monthlyDay ?? 1, mh || 5, mm || 0);
+      const [mh, mm] = hm(g.monthlyReset);
+      const mKey = monthlyKey(now, g.monthlyDay ?? 1, mh, mm);
       if (state.lastMonthly[g.id] == null) {
         state.lastMonthly[g.id] = mKey;
         changed = true;

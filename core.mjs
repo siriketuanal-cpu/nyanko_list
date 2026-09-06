@@ -12,12 +12,16 @@ export const dailyKey = (now = Date.now(), hour = 5, minute = 0) => {
     String(boundary.getDate()).padStart(2, '0');
 };
 
+/** 直近のリセット境界（曜日 day + hour:minute）を週の起点キーにする */
 export const weeklyKey = (now = Date.now(), day = 1, hour = 5, minute = 0) => {
   const d = new Date(now);
   const boundary = new Date(d);
   boundary.setHours(hour, minute, 0, 0);
-  const diff = (day - boundary.getDay() + 7) % 7;
-  boundary.setDate(boundary.getDate() - diff);
+  // 今日から「リセット曜日」まで何日戻るか（0=今日がその曜日）
+  // ※ (day - getDay) だと「次のその曜日まで」になり誤リセットの原因になる
+  const back = (boundary.getDay() - day + 7) % 7;
+  boundary.setDate(boundary.getDate() - back);
+  // リセット曜日でも、まだ時刻前なら前週の境界
   if (d < boundary) boundary.setDate(boundary.getDate() - 7);
   return boundary.getFullYear() + '-W' +
     String(boundary.getMonth() + 1).padStart(2, '0') + '-' +
