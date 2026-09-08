@@ -99,7 +99,8 @@ function structureSig() {
 }
 
 function syncGridDim() {
-  // 暗転は使用しない。開閉状態の同期用関数だけ残す。
+  const anyOpen = Object.keys(openAccByGame).length > 0;
+  document.body.classList.toggle('focus-mode', anyOpen);
 }
 
 function getAccountUI(key) {
@@ -235,13 +236,9 @@ function render(forceStructure = false) {
       const wantOpen = !!accOpen[key];
       if (!getAccountUI(key)) cacheAccountUI(g, a, acc);
       acc.classList.toggle('open', wantOpen);
-      if (wantOpen) {
-        const ui = getAccountUI(key);
+      {
         const body = prepareAccountBody(g, a, key);
         if (body && !body.parentNode) acc.appendChild(body);
-      } else {
-        const ui = getAccountUI(key);
-        if (ui?.body?.parentNode === acc) acc.removeChild(ui.body);
       }
       syncAccountUI(g, a);
     });
@@ -288,7 +285,6 @@ function toggleAcc(key) {
       const otherUI = getAccountUI(prevKey);
       const other = otherUI?.acc || document.querySelector('[data-aid="' + prevKey + '"]');
       if (other) other.classList.remove('open');
-      if (otherUI?.body?.parentNode === other) other.removeChild(otherUI.body);
       delete openAccByGame[otherGid];
     });
     openAccByGame[gid] = key;
@@ -304,12 +300,7 @@ function toggleAcc(key) {
     if (willOpen) {
       const g = state.games.find(x => x.id === gid);
       const a = g && g.accounts.find(x => x.id === aid);
-      if (g && a) {
-        const body = prepareAccountBody(g, a, key);
-        if (body && !body.parentNode) el.appendChild(body);
-      }
-    } else if (ui?.body?.parentNode === el) {
-      el.removeChild(ui.body);
+      if (g && a) prepareAccountBody(g, a, key);
     }
   }
   syncGridDim();
@@ -324,7 +315,6 @@ function closeOpenAccs() {
     const ui = getAccountUI(k);
     const el = ui?.acc || document.querySelector('[data-aid="' + k + '"]');
     if (el) el.classList.remove('open');
-    if (ui?.body?.parentNode === el) el.removeChild(ui.body);
   });
   syncGridDim();
 }
@@ -386,11 +376,9 @@ document.getElementById('root').addEventListener('click', e => {
   }
 });
 
-document.addEventListener('click', e => {
-  // 展開中カード内・トグル・チップ操作は閉じない（タップ抜け防止）
-  if (e.target.closest('.modal, .acc.open, [data-atoggle], .chip, .fab')) return;
+document.getElementById('focusDim').addEventListener('click', () => {
   closeOpenAccs();
-}, true);
+});
 
 document.getElementById('fab').onclick = () => openG();
 document.getElementById('gCancel').onclick = () => document.getElementById('gModal').classList.remove('show');
