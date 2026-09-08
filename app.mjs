@@ -40,24 +40,23 @@ function syncGameHeader(g) {
   if (!el) return;
   const bits = [];
   // 全アカウントのデイリー完了時は COMPLETE（日課OKの置き換え）
-  if (gameDailyAllOk(g)) bits.push('<span class="badge complete">COMPLETE</span>');
-  if (gameWeeklyAllOk(g)) bits.push('<span class="badge week">週課OK</span>');
-  if (gameMonthlyAllOk(g)) bits.push('<span class="badge month">月課OK</span>');
+  if (gameDailyAllOk(g)) bits.push('<span class="badge complete" title="全アカウント デイリー完了">✓</span>');
+  if (gameWeeklyAllOk(g)) bits.push('<span class="badge week" title="全アカウント 週課完了">✓</span>');
+  if (gameMonthlyAllOk(g)) bits.push('<span class="badge month" title="全アカウント 月課完了">✓</span>');
   el.innerHTML = bits.join('');
 }
 
 function updateDailyBadge(bd, a) {
   if (!bd) return;
   const prog = dailyProgress(a);
-  if (prog.full) {
-    bd.textContent = '今日OK';
-    bd.hidden = false;
-  } else if (prog.done > 0) {
-    bd.textContent = String(prog.done);
-    bd.hidden = false;
-  } else {
+  if (!prog.total) {
     bd.hidden = true;
+    return;
   }
+  bd.textContent = prog.full ? '✓' : `${prog.done}/${prog.total}`;
+  bd.title = prog.full ? 'デイリー完了' : `デイリー ${prog.done}/${prog.total}`;
+  bd.classList.toggle('complete', prog.full);
+  bd.hidden = false;
 }
 
 function buildChecksHtml(g, a) {
@@ -103,6 +102,8 @@ function syncAccountUI(g, a) {
 
   // デイリー完了時は名前だけ軽いハイライト（エフェクトなし）
   acc.classList.toggle('daily-ok', isDone(a));
+  const nameEl = acc.querySelector('.aname-text');
+  if (nameEl) nameEl.textContent = a.name || '';
 
   // カード内だけ探す（document 全体を何度も走査しない）
   updateDailyBadge(acc.querySelector('[data-bdaily]'), a);
@@ -157,8 +158,8 @@ function render(forceStructure = false) {
                   <span class="aname-text">${escape(a.name)}</span>
                   <span class="abadges">
                     <span class="badge" data-bdaily="${g.id}|${a.id}" hidden>今日OK</span>
-                    <span class="badge week" data-bweek="${g.id}|${a.id}" hidden>週OK</span>
-                    <span class="badge month" data-bmonth="${g.id}|${a.id}" hidden>月OK</span>
+                    <span class="badge week" data-bweek="${g.id}|${a.id}" hidden title="週課完了">✓</span>
+                    <span class="badge month" data-bmonth="${g.id}|${a.id}" hidden title="月課完了">✓</span>
                   </span>
                 </div>
                 <div class="anote" data-anote="${g.id}|${a.id}"></div>
@@ -445,11 +446,12 @@ document.getElementById('aSave').onclick = () => {
   }
   save(state);
   document.getElementById('aModal').classList.remove('show');
-  (g.accounts || []).forEach(a => {
-    const box = document.querySelector('[data-abody="' + g.id + '|' + a.id + '"]');
+  const savedAcc = g.accounts.find(a => a.id === editA);
+  if (savedAcc) {
+    const box = document.querySelector('[data-abody="' + g.id + '|' + savedAcc.id + '"]');
     if (box) { box.dataset.ready = '0'; box.innerHTML = ''; }
-  });
-  render(true);
+  }
+  render(false);
   scheduleGameResets();
 };
 
@@ -476,6 +478,8 @@ document.getElementById('nSave').onclick = () => {
 };
 
 const resetTimers = new Map();
+const MAX_TIMEOUT = 2147483647;
+const RECHECK_TIMEOUT = MAX_TIMEOUT - 60000;
 function parseHM(s, defH = 5) {
   const [h, m] = String(s || '').split(':').map(Number);
   return [Number.isFinite(h) ? h : defH, Number.isFinite(m) ? m : 0];
@@ -514,31 +518,40 @@ function msUntilMonthly(g, now = Date.now()) {
   }
   return next - d;
 }
+function nextResetMs(g, now = Date.now()) {
+  let ms = msUntilDaily(g, now);
+  if (gameHasWeekly(g)) ms = Math.min(ms, msUntilWeekly(g, now));
+  if (gameHasMonthly(g)) ms = Math.min(ms, msUntilMonthly(g, now));
+  return ms;
+}
 function clearResetTimers() {
   resetTimers.forEach(id => clearTimeout(id));
   resetTimers.clear();
 }
 function scheduleGameResets() {
   clearResetTimers();
-  const MAX = 2147483647;
   const now = Date.now();
-  // ゲームごとに「次のリセット」1本だけ張る（日／週／月の最も近い時刻）
-  state.games.forEach(g => {
-    let ms = msUntilDaily(g, now);
-    if (gameHasWeekly(g)) ms = Math.min(ms, msUntilWeekly(g, now));
-    if (gameHasMonthly(g)) ms = Math.min(ms, msUntilMonthly(g, now));
-    const wait = Math.max(500, Math.min(ms + 50, MAX));
-    const tid = setTimeout(() => {
-      if (applyResets(state)) {
-        save(state);
-        render(false);
-      }
-      scheduleGameResets();
-    }, wait);
-    resetTimers.set(g.id, tid);
-  });
+  state.games.forEach(g => scheduleOneGameReset(g, now));
 }
-
+function scheduleOneGameReset(g, now = Date.now()) {
+  const ms = Math.max(0, nextResetMs(g, now));
+  // 月課などが遠い場合は、リセット処理をせず「次回時刻の再計算」だけ行う。
+  const wait = Math.min(Math.max(50, ms), RECHECK_TIMEOUT);
+  const tid = setTimeout(() => {
+    const current = state.games.find(x => x.id === g.id);
+    if (!current) return scheduleGameResets();
+    if (ms > RECHECK_TIMEOUT) {
+      scheduleOneGameReset(current);
+      return;
+    }
+    if (applyResets(state)) {
+      save(state);
+      render(false);
+    }
+    scheduleOneGameReset(current);
+  }, wait);
+  resetTimers.set(g.id, tid);
+}
 function onResume() {
   // バックグラウンドから戻ったとき：リセット反映＋タイマー張り直し（操作を邪魔しないよう軽く）
   if (applyResets(state)) {
