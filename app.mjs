@@ -43,7 +43,7 @@ function syncGameHeader(g) {
   if (!el) return;
   const bits = [];
   // 全アカウントのデイリー完了時は COMPLETE（日課OKの置き換え）
-  if (gameDailyAllOk(g)) bits.push('<span class="badge complete" title="全アカウント デイリー完了">✓</span>');
+  if (gameDailyAllOk(g)) bits.push('<span class="badge complete" title="全アカウント デイリー完了">COMPLETE</span>');
   if (gameWeeklyAllOk(g)) bits.push('<span class="badge week" title="全アカウント 週課完了">✓</span>');
   if (gameMonthlyAllOk(g)) bits.push('<span class="badge month" title="全アカウント 月課完了">✓</span>');
   el.innerHTML = bits.join('');
