@@ -100,6 +100,8 @@ function syncGridDim(gid) {
   const game = document.querySelector('[data-gid="' + gid + '"]');
   const grid = game && game.querySelector('.acc-grid');
   if (!grid) return;
+  // 暗転は必ず「そのゲームのアカウント一覧」だけに限定する。
+  // 別ゲームの .acc-grid には触れない。
   grid.classList.toggle('is-dim', !!openAccByGame[gid]);
 }
 
