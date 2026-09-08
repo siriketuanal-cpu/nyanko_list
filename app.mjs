@@ -76,19 +76,21 @@ function buildChecksHtml(g, a) {
   return `${checks}<div class="abody-foot"><button type="button" class="abody-edit" data-ea="${g.id}|${a.id}" title="アカウント設定">⚙️</button><button type="button" class="memo" data-note="${g.id}|${a.id}" title="メモ">📝</button></div>`;
 }
 
-function ensureAccBody(g, a) {
-  // 開閉時にHTML生成しない。構造生成時に一度だけ作っておき、
-  // タップ時はclassの切り替えだけで瞬時に開閉する。
-  const key = g.id + '|' + a.id;
-  const cached = accountUICache.get(key);
-  if (cached?.body) return cached.body;
-  const box = document.querySelector('[data-abody="' + key + '"]');
-  if (!box) return null;
-  if (box.dataset.ready !== '1') {
-    box.innerHTML = buildChecksHtml(g, a);
-    box.dataset.ready = '1';
-  }
-  return box;
+function prepareAccountBody(g, a, key) {
+  let ui = accountUICache.get(key);
+  if (!ui) return null;
+  if (ui.body) return ui.body;
+
+  const body = document.createElement('div');
+  body.className = 'abody';
+  body.dataset.abody = key;
+  body.dataset.ready = '1';
+  body.innerHTML = buildChecksHtml(g, a);
+  ui.body = body;
+
+  ui.chips = Object.create(null);
+  body.querySelectorAll('[data-t]').forEach(el => { ui.chips[el.dataset.t] = el; });
+  return body;
 }
 
 function structureSig() {
@@ -96,13 +98,11 @@ function structureSig() {
   return state.games.map(g => g.id + ':' + (g.accounts || []).map(a => a.id).join(',')).join('|');
 }
 
-function syncGridDim(gid) {
-  const game = document.querySelector('[data-gid="' + gid + '"]');
-  const grid = game && game.querySelector('.acc-grid');
-  if (!grid) return;
-  // 暗転は必ず「そのゲームのアカウント一覧」だけに限定する。
-  // 別ゲームの .acc-grid には触れない。
-  grid.classList.toggle('is-dim', !!openAccByGame[gid]);
+function syncGridDim() {
+  const anyOpen = Object.keys(openAccByGame).length > 0;
+  document.querySelectorAll('.acc-grid').forEach(grid => {
+    grid.classList.toggle('is-dim', anyOpen);
+  });
 }
 
 function getAccountUI(key) {
@@ -110,20 +110,46 @@ function getAccountUI(key) {
 }
 function cacheAccountUI(g, a, acc) {
   const key = g.id + '|' + a.id;
-  const chips = Object.create(null);
-  acc.querySelectorAll('[data-t]').forEach(el => { chips[el.dataset.t] = el; });
   const ui = {
     acc,
+    body: null,
     name: acc.querySelector('.aname-text'),
     daily: acc.querySelector('[data-bdaily]'),
     week: acc.querySelector('[data-bweek]'),
     month: acc.querySelector('[data-bmonth]'),
     note: acc.querySelector('[data-anote]'),
-    chips
+    chips: Object.create(null)
   };
   accountUICache.set(key, ui);
   return ui;
 }
+
+// 本文DOMは初期描画を重くしないため、アイドル時間に少しずつ先行生成してキャッシュする。
+// タップが先に来た場合だけ、そのアカウントを即時生成する。
+let warmupQueued = false;
+function warmAccountBodies(deadline) {
+  warmupQueued = false;
+  const games = state.games;
+  for (const g of games) {
+    for (const a of (g.accounts || [])) {
+      const key = g.id + '|' + a.id;
+      if (!accountUICache.has(key)) continue;
+      if (!accountUICache.get(key).body) prepareAccountBody(g, a, key);
+      if (deadline && deadline.timeRemaining && deadline.timeRemaining() < 2) {
+        warmupQueued = true;
+        requestIdleCallback(warmAccountBodies, { timeout: 1200 });
+        return;
+      }
+    }
+  }
+}
+function queueAccountWarmup() {
+  if (warmupQueued) return;
+  warmupQueued = true;
+  if ('requestIdleCallback' in window) requestIdleCallback(warmAccountBodies, { timeout: 1200 });
+  else setTimeout(() => warmAccountBodies(null), 80);
+}
+
 function syncAccountUI(g, a) {
   const key = g.id + '|' + a.id;
   const ui = getAccountUI(key);
@@ -189,7 +215,6 @@ function render(forceStructure = false) {
                 <div class="anote" data-anote="${g.id}|${a.id}"></div>
               </div>
             </div>
-            <div class="abody" data-abody="${g.id}|${a.id}" data-ready="1">${buildChecksHtml(g, a)}</div>
           </div>`).join('')}</div>` : ''}
         <div class="gtools" data-gtools-wrap="${g.id}">
           <button type="button" class="gtools-toggle" data-gtools="${g.id}" title="操作">···</button>
@@ -213,11 +238,20 @@ function render(forceStructure = false) {
       const wantOpen = !!accOpen[key];
       if (!getAccountUI(key)) cacheAccountUI(g, a, acc);
       acc.classList.toggle('open', wantOpen);
+      if (wantOpen) {
+        const ui = getAccountUI(key);
+        const body = prepareAccountBody(g, a, key);
+        if (body && !body.parentNode) acc.appendChild(body);
+      } else {
+        const ui = getAccountUI(key);
+        if (ui?.body?.parentNode === acc) acc.removeChild(ui.body);
+      }
       syncAccountUI(g, a);
     });
-    syncGridDim(g.id);
     syncGameHeader(g);
   });
+  syncGridDim();
+  queueAccountWarmup();
 }
 
 function toggleChip(el) {
@@ -249,21 +283,39 @@ function toggleAcc(key) {
   const willOpen = !accOpen[key];
 
   if (willOpen) {
-    const prevKey = openAccByGame[gid];
-    if (prevKey && prevKey !== key) {
+    // 開く対象は常に1枚だけ。別ゲームを開いたときも前のカードを閉じる。
+    Object.keys(openAccByGame).forEach(otherGid => {
+      const prevKey = openAccByGame[otherGid];
+      if (!prevKey || prevKey === key) return;
       accOpen[prevKey] = false;
-      const other = document.querySelector('[data-aid="' + prevKey + '"]');
+      const otherUI = getAccountUI(prevKey);
+      const other = otherUI?.acc || document.querySelector('[data-aid="' + prevKey + '"]');
       if (other) other.classList.remove('open');
-    }
+      if (otherUI?.body?.parentNode === other) other.removeChild(otherUI.body);
+      delete openAccByGame[otherGid];
+    });
     openAccByGame[gid] = key;
   } else {
     delete openAccByGame[gid];
   }
 
   accOpen[key] = willOpen;
-  const el = document.querySelector('[data-aid="' + key + '"]');
-  if (el) el.classList.toggle('open', willOpen);
-  syncGridDim(gid);
+  const ui = getAccountUI(key);
+  const el = ui?.acc || document.querySelector('[data-aid="' + key + '"]');
+  if (el) {
+    el.classList.toggle('open', willOpen);
+    if (willOpen) {
+      const g = state.games.find(x => x.id === gid);
+      const a = g && g.accounts.find(x => x.id === aid);
+      if (g && a) {
+        const body = prepareAccountBody(g, a, key);
+        if (body && !body.parentNode) el.appendChild(body);
+      }
+    } else if (ui?.body?.parentNode === el) {
+      el.removeChild(ui.body);
+    }
+  }
+  syncGridDim();
 }
 
 function closeOpenAccs() {
@@ -272,10 +324,12 @@ function closeOpenAccs() {
     if (!k) return;
     accOpen[k] = false;
     delete openAccByGame[gid];
-    const el = document.querySelector('[data-aid="' + k + '"]');
+    const ui = getAccountUI(k);
+    const el = ui?.acc || document.querySelector('[data-aid="' + k + '"]');
     if (el) el.classList.remove('open');
-    syncGridDim(gid);
+    if (ui?.body?.parentNode === el) el.removeChild(ui.body);
   });
+  syncGridDim();
 }
 
 document.getElementById('root').addEventListener('click', e => {
@@ -477,9 +531,10 @@ document.getElementById('aSave').onclick = () => {
   document.getElementById('aModal').classList.remove('show');
   const savedAcc = g.accounts.find(a => a.id === editA);
   if (savedAcc) {
-    const box = document.querySelector('[data-abody="' + g.id + '|' + savedAcc.id + '"]');
-    if (box) { box.dataset.ready = '0'; box.innerHTML = ''; }
-    accountUICache.delete(g.id + '|' + savedAcc.id);
+    const savedKey = g.id + '|' + savedAcc.id;
+    const oldUI = getAccountUI(savedKey);
+    if (oldUI?.body?.parentNode === oldUI.acc) oldUI.acc.removeChild(oldUI.body);
+    accountUICache.delete(savedKey);
   }
   render(false);
   scheduleGameResets();
