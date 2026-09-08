@@ -77,11 +77,17 @@ function buildChecksHtml(g, a) {
 }
 
 function ensureAccBody(g, a) {
+  // 開閉時にHTML生成しない。構造生成時に一度だけ作っておき、
+  // タップ時はclassの切り替えだけで瞬時に開閉する。
   const key = g.id + '|' + a.id;
+  const cached = accountUICache.get(key);
+  if (cached?.body) return cached.body;
   const box = document.querySelector('[data-abody="' + key + '"]');
-  if (!box || box.dataset.ready === '1') return box;
-  box.innerHTML = buildChecksHtml(g, a);
-  box.dataset.ready = '1';
+  if (!box) return null;
+  if (box.dataset.ready !== '1') {
+    box.innerHTML = buildChecksHtml(g, a);
+    box.dataset.ready = '1';
+  }
   return box;
 }
 
@@ -181,7 +187,7 @@ function render(forceStructure = false) {
                 <div class="anote" data-anote="${g.id}|${a.id}"></div>
               </div>
             </div>
-            <div class="abody" data-abody="${g.id}|${a.id}"></div>
+            <div class="abody" data-abody="${g.id}|${a.id}" data-ready="1">${buildChecksHtml(g, a)}</div>
           </div>`).join('')}</div>` : ''}
         <div class="gtools" data-gtools-wrap="${g.id}">
           <button type="button" class="gtools-toggle" data-gtools="${g.id}" title="操作">···</button>
@@ -203,7 +209,6 @@ function render(forceStructure = false) {
       const acc = gameEl && gameEl.querySelector(`[data-aid="${key}"]`);
       if (!acc) return;
       const wantOpen = !!accOpen[key];
-      if (wantOpen) ensureAccBody(g, a);
       if (!getAccountUI(key)) cacheAccountUI(g, a, acc);
       acc.classList.toggle('open', wantOpen);
       syncAccountUI(g, a);
@@ -247,13 +252,6 @@ function toggleAcc(key) {
       accOpen[prevKey] = false;
       const other = document.querySelector('[data-aid="' + prevKey + '"]');
       if (other) other.classList.remove('open');
-    }
-    const g = state.games.find(x => x.id === gid);
-    const a = g && g.accounts.find(x => x.id === aid);
-    if (g && a) {
-      ensureAccBody(g, a);
-      const el = document.querySelector('[data-aid="' + key + '"]');
-      if (el) cacheAccountUI(g, a, el);
     }
     openAccByGame[gid] = key;
   } else {
