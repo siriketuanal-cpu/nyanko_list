@@ -4,25 +4,28 @@ import { load, save, applyResets } from './store.mjs';
 let state = load();
 const toolsOpen = Object.create(null);
 const accOpen = Object.create(null);
+const openAccByGame = Object.create(null);
+const accountUICache = new Map();
+const progressCache = new WeakMap();
 let editG = null, editA = null, editGid = null, noteTarget = null;
 
-function dailyProgress(a) {
-  const list = (a.daily || []).filter(c => c.label);
-  if (!list.length) return { total: 0, done: 0, full: false };
-  const done = list.filter(c => c.done).length;
-  return { total: list.length, done, full: done === list.length };
+function getProgress(a, field) {
+  let cached = progressCache.get(a);
+  if (!cached) { cached = Object.create(null); progressCache.set(a, cached); }
+  if (cached[field]) return cached[field];
+  const list = (a[field] || []).filter(c => c.label);
+  const done = list.reduce((n, c) => n + (c.done ? 1 : 0), 0);
+  const result = { total: list.length, done, full: list.length > 0 && done === list.length };
+  cached[field] = result;
+  return result;
 }
-function isDone(a) {
-  return dailyProgress(a).full;
+function invalidateProgress(a) {
+  progressCache.delete(a);
 }
-function isWeekDone(a) {
-  const list = (a.weekly || []).filter(c => c.label);
-  return list.length > 0 && list.every(c => c.done);
-}
-function isMonthDone(a) {
-  const list = (a.monthly || []).filter(c => c.label);
-  return list.length > 0 && list.every(c => c.done);
-}
+function dailyProgress(a) { return getProgress(a, 'daily'); }
+function isDone(a) { return dailyProgress(a).full; }
+function isWeekDone(a) { return getProgress(a, 'weekly').full; }
+function isMonthDone(a) { return getProgress(a, 'monthly').full; }
 function gameDailyAllOk(g) {
   const list = (g.accounts || []).filter(a => (a.daily || []).some(c => c.label));
   return list.length > 0 && list.every(isDone);
@@ -53,7 +56,7 @@ function updateDailyBadge(bd, a) {
     bd.hidden = true;
     return;
   }
-  bd.textContent = prog.full ? '✓' : `${prog.done}/${prog.total}`;
+  bd.textContent = prog.full ? 'デイリー完了' : `${prog.done}/${prog.total}`;
   bd.title = prog.full ? 'デイリー完了' : `デイリー ${prog.done}/${prog.total}`;
   bd.classList.toggle('complete', prog.full);
   bd.hidden = false;
@@ -91,35 +94,47 @@ function syncGridDim(gid) {
   const game = document.querySelector('[data-gid="' + gid + '"]');
   const grid = game && game.querySelector('.acc-grid');
   if (!grid) return;
-  const anyOpen = Object.keys(accOpen).some(k => accOpen[k] && k.startsWith(gid + '|'));
-  grid.classList.toggle('is-dim', anyOpen);
+  grid.classList.toggle('is-dim', !!openAccByGame[gid]);
 }
 
+function getAccountUI(key) {
+  return accountUICache.get(key) || null;
+}
+function cacheAccountUI(g, a, acc) {
+  const key = g.id + '|' + a.id;
+  const chips = Object.create(null);
+  acc.querySelectorAll('[data-t]').forEach(el => { chips[el.dataset.t] = el; });
+  const ui = {
+    acc,
+    name: acc.querySelector('.aname-text'),
+    daily: acc.querySelector('[data-bdaily]'),
+    week: acc.querySelector('[data-bweek]'),
+    month: acc.querySelector('[data-bmonth]'),
+    note: acc.querySelector('[data-anote]'),
+    chips
+  };
+  accountUICache.set(key, ui);
+  return ui;
+}
 function syncAccountUI(g, a) {
   const key = g.id + '|' + a.id;
-  const acc = document.querySelector('[data-aid="' + key + '"]');
-  if (!acc) return;
+  const ui = getAccountUI(key);
+  if (!ui) return;
+  const acc = ui.acc;
 
-  // デイリー完了時は名前だけ軽いハイライト（エフェクトなし）
   acc.classList.toggle('daily-ok', isDone(a));
-  const nameEl = acc.querySelector('.aname-text');
-  if (nameEl) nameEl.textContent = a.name || '';
-
-  // カード内だけ探す（document 全体を何度も走査しない）
-  updateDailyBadge(acc.querySelector('[data-bdaily]'), a);
-  const bw = acc.querySelector('[data-bweek]');
-  const bm = acc.querySelector('[data-bmonth]');
-  if (bw) bw.hidden = !isWeekDone(a);
-  if (bm) bm.hidden = !isMonthDone(a);
+  if (ui.name) ui.name.textContent = a.name || '';
+  updateDailyBadge(ui.daily, a);
+  if (ui.week) ui.week.hidden = !isWeekDone(a);
+  if (ui.month) ui.month.hidden = !isMonthDone(a);
 
   const noteHead = ((a.note || '').trim().split(/\n/)[0]) || '';
-  const an = acc.querySelector('[data-anote]');
-  if (an) an.textContent = noteHead ? ('📝 ' + noteHead) : '';
+  if (ui.note) ui.note.textContent = noteHead ? ('📝 ' + noteHead) : '';
 
   [['daily', 'd'], ['weekly', 'w'], ['monthly', 'm']].forEach(([field, prefix]) => {
     (a[field] || []).forEach((c, i) => {
       if (!c.label) return;
-      const chip = acc.querySelector('[data-t="' + key + '|' + prefix + '|' + i + '"]');
+      const chip = ui.chips[key + '|' + prefix + '|' + i];
       if (!chip) return;
       const on = !!c.done;
       chip.classList.toggle('on', on);
@@ -140,6 +155,7 @@ function render(forceStructure = false) {
   }
 
   if (needStructure) {
+    accountUICache.clear();
     root.dataset.sig = sig;
     root.innerHTML = state.games.map(g => `
     <div class="game" data-gid="${g.id}">
@@ -157,7 +173,7 @@ function render(forceStructure = false) {
                 <div class="aname">
                   <span class="aname-text">${escape(a.name)}</span>
                   <span class="abadges">
-                    <span class="badge" data-bdaily="${g.id}|${a.id}" hidden>今日OK</span>
+                    <span class="badge" data-bdaily="${g.id}|${a.id}" hidden>デイリー完了</span>
                     <span class="badge week" data-bweek="${g.id}|${a.id}" hidden title="週課完了">✓</span>
                     <span class="badge month" data-bmonth="${g.id}|${a.id}" hidden title="月課完了">✓</span>
                   </span>
@@ -188,6 +204,7 @@ function render(forceStructure = false) {
       if (!acc) return;
       const wantOpen = !!accOpen[key];
       if (wantOpen) ensureAccBody(g, a);
+      if (!getAccountUI(key)) cacheAccountUI(g, a, acc);
       acc.classList.toggle('open', wantOpen);
       syncAccountUI(g, a);
     });
@@ -211,6 +228,7 @@ function toggleChip(el) {
   const i = +idx;
   if (!list[i] || !list[i].label) return;
   list[i].done = !list[i].done;
+  invalidateProgress(a);
   save(state);
   syncAccountUI(g, a);
   syncGameHeader(g);
@@ -218,20 +236,30 @@ function toggleChip(el) {
 
 function toggleAcc(key) {
   if (!key) return;
+  const sep = key.indexOf('|');
+  const gid = sep > 0 ? key.slice(0, sep) : '';
+  const aid = sep > 0 ? key.slice(sep + 1) : '';
   const willOpen = !accOpen[key];
-  const [gid] = key.split('|');
+
   if (willOpen) {
-    Object.keys(accOpen).forEach(k => {
-      if (k.startsWith(gid + '|') && k !== key && accOpen[k]) {
-        accOpen[k] = false;
-        const other = document.querySelector('[data-aid="' + k + '"]');
-        if (other) other.classList.remove('open');
-      }
-    });
+    const prevKey = openAccByGame[gid];
+    if (prevKey && prevKey !== key) {
+      accOpen[prevKey] = false;
+      const other = document.querySelector('[data-aid="' + prevKey + '"]');
+      if (other) other.classList.remove('open');
+    }
     const g = state.games.find(x => x.id === gid);
-    const a = g && g.accounts.find(x => x.id === key.split('|')[1]);
-    if (g && a) ensureAccBody(g, a);
+    const a = g && g.accounts.find(x => x.id === aid);
+    if (g && a) {
+      ensureAccBody(g, a);
+      const el = document.querySelector('[data-aid="' + key + '"]');
+      if (el) cacheAccountUI(g, a, el);
+    }
+    openAccByGame[gid] = key;
+  } else {
+    delete openAccByGame[gid];
   }
+
   accOpen[key] = willOpen;
   const el = document.querySelector('[data-aid="' + key + '"]');
   if (el) el.classList.toggle('open', willOpen);
@@ -239,15 +267,15 @@ function toggleAcc(key) {
 }
 
 function closeOpenAccs() {
-  const gids = new Set();
-  Object.keys(accOpen).forEach(k => {
-    if (!accOpen[k]) return;
+  Object.keys(openAccByGame).forEach(gid => {
+    const k = openAccByGame[gid];
+    if (!k) return;
     accOpen[k] = false;
-    gids.add(k.split('|')[0]);
+    delete openAccByGame[gid];
     const el = document.querySelector('[data-aid="' + k + '"]');
     if (el) el.classList.remove('open');
+    syncGridDim(gid);
   });
-  gids.forEach(syncGridDim);
 }
 
 document.getElementById('root').addEventListener('click', e => {
@@ -445,11 +473,13 @@ document.getElementById('aSave').onclick = () => {
     });
   }
   save(state);
+  invalidateProgress(editA ? g.accounts.find(a => a.id === editA) : g.accounts[g.accounts.length - 1]);
   document.getElementById('aModal').classList.remove('show');
   const savedAcc = g.accounts.find(a => a.id === editA);
   if (savedAcc) {
     const box = document.querySelector('[data-abody="' + g.id + '|' + savedAcc.id + '"]');
     if (box) { box.dataset.ready = '0'; box.innerHTML = ''; }
+    accountUICache.delete(g.id + '|' + savedAcc.id);
   }
   render(false);
   scheduleGameResets();
@@ -545,6 +575,7 @@ function scheduleOneGameReset(g, now = Date.now()) {
       return;
     }
     if (applyResets(state)) {
+      state.games.forEach(g => (g.accounts || []).forEach(invalidateProgress));
       save(state);
       render(false);
     }
@@ -555,6 +586,7 @@ function scheduleOneGameReset(g, now = Date.now()) {
 function onResume() {
   // バックグラウンドから戻ったとき：リセット反映＋タイマー張り直し（操作を邪魔しないよう軽く）
   if (applyResets(state)) {
+    state.games.forEach(g => (g.accounts || []).forEach(invalidateProgress));
     save(state);
     render(false);
   }
@@ -575,7 +607,10 @@ window.addEventListener('pageshow', e => {
 });
 
 // 起動：まず画面を出してから、後回しでタイマーと SW
-if (applyResets(state)) save(state);
+if (applyResets(state)) {
+  state.games.forEach(g => (g.accounts || []).forEach(invalidateProgress));
+  save(state);
+}
 render(true);
 const defer = (fn) => {
   if (typeof requestIdleCallback === 'function') requestIdleCallback(fn, { timeout: 1200 });

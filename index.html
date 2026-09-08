@@ -10,7 +10,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root{--bg:#0d0d12;--card:#16161f;--line:#6a6a7a;--neon:#ff2d6a;--neon2:#00f0ff;--neon3:#c9a0ff;--week:#5ee0a0;--text:#e8e8f0;--muted:#8888a0;--month:#ffa86b}
+:root{--bg:#0d0d12;--card:#16161f;--line:#6a6a7a;--neon:#ff2d6a;--neon2:#00f0ff;--neon3:#c9a0ff;--week:#5ee0a0;--done:#c8ff68;--text:#e8e8f0;--muted:#8888a0;--month:#ffa86b}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{overscroll-behavior:none;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
@@ -37,7 +37,7 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .ib{background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;padding:4px}
 .ib:active{color:var(--neon2)}
 .acc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:6px 6px 2px;align-items:start;overflow:visible}
-.acc{background:#12121a;border:1px solid rgba(106,106,122,.65);border-radius:12px;padding:0;min-width:0;position:relative}
+.acc{background:#12121a;border:1px solid rgba(106,106,122,.65);border-radius:12px;padding:0;min-width:0;position:relative;contain:layout style}
 .acc.open{z-index:12;border-color:#8a8aa0;box-shadow:0 6px 18px rgba(0,0,0,.28)}
 .ahead{display:flex;align-items:flex-start;gap:4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:7px 8px;border-radius:11px}
 .ainfo{min-width:0;flex:1;overflow:hidden}
@@ -48,7 +48,7 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .abadges .badge[hidden]{visibility:hidden;pointer-events:none}
 .anote{font-size:.62rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-height:1.15em;line-height:1.15em}
 .anote:empty::before{content:"\00a0"}
-.abody{display:none;padding:8px;background:#12121a;border:1px solid #9a9aac;border-radius:12px;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:13;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.abody{display:none;padding:8px;background:#12121a;border:1px solid #9a9aac;border-radius:12px;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:13;box-shadow:0 8px 20px rgba(0,0,0,.4);contain:layout paint style}
 .acc.open .abody{display:block}
 .acc-grid.is-dim .acc:not(.open){opacity:.58}
 .acc-grid.is-dim .acc.open{opacity:1}
@@ -57,7 +57,7 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .abody-foot .memo{font-size:.95rem;padding:6px 10px;opacity:.85;background:transparent;border:none;cursor:pointer;line-height:1;margin-left:auto}
 .abody-edit:active,.abody-foot .memo:active{color:var(--neon3);opacity:1}
 .badge{font-size:.52rem;background:var(--neon2);color:#0d0d12;padding:1px 4px;border-radius:4px;font-weight:700;line-height:1.2;flex-shrink:0}
-.badge.complete{font-size:.7rem;letter-spacing:0;padding:1px 5px;background:linear-gradient(90deg,#00e0ff,#7af0ff);color:#061018}
+.badge.complete{font-size:.56rem;letter-spacing:0;padding:2px 5px;background:var(--done);color:#11190a;border:1px solid rgba(190,255,100,.7);box-shadow:0 0 6px rgba(190,255,100,.22)}
 .badge.week{background:var(--week);color:#0d1a12}
 .badge.month{background:var(--month);color:#1a1008}
 .chip-sec{margin-bottom:8px}
