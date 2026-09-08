@@ -50,7 +50,7 @@ body.focus-mode #focusDim{display:block}
 .acc.daily-ok .aname-text{color:var(--neon2);border-bottom:1px solid rgba(0,240,255,.35)}
 .abadges{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:2px;flex:0 0 auto;margin-left:auto;min-height:1.2em}
 .abadges .badge[hidden]{visibility:hidden;pointer-events:none}
-.anote{font-size:.68rem;font-weight:600;color:#f4f4f7;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.15em;line-height:1.2em;width:calc(200% + 8px);max-width:calc(200% + 8px);padding-right:4px;box-sizing:border-box}
+.anote{font-size:.68rem;font-weight:600;color:#f4f4f7;margin-top:3px;white-space:normal;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;min-height:2.4em;line-height:1.2em;width:calc(200% + 8px);max-width:calc(200% + 8px);padding-right:4px;box-sizing:border-box}
 .anote:empty::before{content:"\00a0"}
 .abody-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:6px;border-top:1px solid rgba(255,255,255,.06)}
 .abody-edit{border:none;background:transparent;color:var(--muted);font-size:.8rem;cursor:pointer;padding:4px 6px;opacity:.4;line-height:1}
@@ -100,6 +100,9 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
 .nhead h2{margin:0;flex:1;min-width:0}
 .nclear{flex-shrink:0;font-size:.62rem;padding:4px 8px;border-radius:6px;border:1px solid #3a2030;background:#1a1018;color:#ff8aa8;cursor:pointer}
 .nclear:active{background:#2a1520}
+#nModal{align-items:initial;justify-content:initial;background:transparent}
+#nModal .mb{position:fixed;left:var(--note-left,12px);top:var(--note-top,80px);width:min(92vw,420px);max-width:none;max-height:min(70vh,520px);border-radius:14px;border:1px solid var(--neon);box-shadow:0 10px 30px rgba(0,0,0,.5);transform:none}
+#nModal.show .mb{display:block}
 </style>
 </head>
 <body>

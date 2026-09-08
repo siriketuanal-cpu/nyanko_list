@@ -7,7 +7,7 @@ const accOpen = Object.create(null);
 const openAccByGame = Object.create(null);
 const accountUICache = new Map();
 const progressCache = new WeakMap();
-let editG = null, editA = null, editGid = null, noteTarget = null;
+let editG = null, editA = null, editGid = null, noteTarget = null, noteAnchor = null;
 
 function getProgress(a, field) {
   let cached = progressCache.get(a);
@@ -335,9 +335,12 @@ document.getElementById('root').addEventListener('click', e => {
     const a = g && g.accounts.find(x => x.id === aid);
     if (!a) return;
     noteTarget = { gid, aid };
+    noteAnchor = nt.closest('.acc') || nt;
     document.getElementById('nTitle').textContent = a.name + ' のメモ';
     document.getElementById('notes').value = a.note || '';
-    document.getElementById('nModal').classList.add('show');
+    const modal = document.getElementById('nModal');
+    modal.classList.add('show');
+    requestAnimationFrame(positionNoteModal);
     return;
   }
   const ea = e.target.closest('[data-ea]');
@@ -380,10 +383,14 @@ document.getElementById('focusDim').addEventListener('click', () => {
   closeOpenAccs();
 });
 
+document.getElementById('nModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeNoteModal();
+});
+
 document.getElementById('fab').onclick = () => openG();
 document.getElementById('gCancel').onclick = () => document.getElementById('gModal').classList.remove('show');
 document.getElementById('aCancel').onclick = () => document.getElementById('aModal').classList.remove('show');
-document.getElementById('nCancel').onclick = () => document.getElementById('nModal').classList.remove('show');
+document.getElementById('nCancel').onclick = closeNoteModal;
 document.getElementById('nClear').onclick = () => {
   document.getElementById('notes').value = '';
   document.getElementById('notes').focus();
@@ -536,6 +543,34 @@ document.getElementById('aDel').onclick = () => {
   scheduleGameResets();
 };
 
+function closeNoteModal() {
+  document.getElementById('nModal').classList.remove('show');
+  noteAnchor = null;
+}
+
+function positionNoteModal() {
+  if (!noteAnchor) return;
+  const modal = document.getElementById('nModal');
+  if (!modal.classList.contains('show')) return;
+  const panel = modal.querySelector('.mb');
+  if (!panel) return;
+  const r = noteAnchor.getBoundingClientRect();
+  const gap = 8;
+  const margin = 8;
+  const pw = Math.min(window.innerWidth * .92, 420);
+  const ph = Math.min(window.innerHeight * .70, 520);
+  let left = r.left;
+  if (left + pw > window.innerWidth - margin) left = window.innerWidth - pw - margin;
+  if (left < margin) left = margin;
+  let top = r.bottom + gap;
+  if (top + ph > window.innerHeight - margin) top = Math.max(margin, r.top - ph - gap);
+  modal.style.setProperty('--note-left', left + 'px');
+  modal.style.setProperty('--note-top', top + 'px');
+}
+
+window.addEventListener('resize', positionNoteModal, { passive:true });
+window.addEventListener('scroll', positionNoteModal, { passive:true });
+
 document.getElementById('nSave').onclick = () => {
   if (!noteTarget) return;
   const g = state.games.find(x => x.id === noteTarget.gid);
@@ -543,7 +578,7 @@ document.getElementById('nSave').onclick = () => {
   if (!a) return;
   a.note = document.getElementById('notes').value;
   save(state);
-  document.getElementById('nModal').classList.remove('show');
+  closeNoteModal();
   syncAccountUI(g, a);
 };
 
