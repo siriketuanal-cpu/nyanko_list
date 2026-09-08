@@ -99,10 +99,7 @@ function structureSig() {
 }
 
 function syncGridDim() {
-  const anyOpen = Object.keys(openAccByGame).length > 0;
-  document.querySelectorAll('.acc-grid').forEach(grid => {
-    grid.classList.toggle('is-dim', anyOpen);
-  });
+  // 暗転は使用しない。開閉状態の同期用関数だけ残す。
 }
 
 function getAccountUI(key) {
