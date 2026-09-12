@@ -162,9 +162,8 @@ function syncAccountUI(g, a) {
   if (ui.week) ui.week.hidden = !isWeekDone(a);
   if (ui.month) ui.month.hidden = !isMonthDone(a);
 
-  // 改行の1行目だけでなく全文を渡す。折り返し・2段化はCSSの line-clamp に任せる
-  // （改行はここで空白に畳んでおき、実際の見た目の折り返し位置とズレないようにする）
-  const noteHead = (a.note || '').trim().replace(/\s+/g, ' ');
+  // 改行はそのまま活かし、通常の空白だけ畳む。折り返し(pre-line)と2段クランプはCSS側で処理。
+  const noteHead = (a.note || '').trim().replace(/[ \t]+/g, ' ').replace(/\n{2,}/g, '\n');
   if (ui.note) ui.note.textContent = noteHead ? ('📝 ' + noteHead) : '';
 
   [['daily', 'd'], ['weekly', 'w'], ['monthly', 'm'], ['misc', 'x']].forEach(([field, prefix]) => {
@@ -224,6 +223,7 @@ function render(forceStructure = false) {
           <div class="gactions">
             <button type="button" class="ib ggear" data-eg="${g.id}" title="ゲーム設定">⚙️</button>
             <button type="button" class="gaa" data-aa="${g.id}" title="アカウント追加">＋ アカウント</button>
+            ${(g.accounts || []).length > 1 ? `<button type="button" class="gaa" data-sync="${g.id}" title="先頭アカウントの内容を他の全員に反映">📋 全員に反映</button>` : ''}
           </div>
         </div>
       </div>
@@ -408,6 +408,12 @@ document.getElementById('root').addEventListener('click', e => {
     openA(aa.dataset.aa);
     return;
   }
+  const sy = e.target.closest('[data-sync]');
+  if (sy) {
+    e.stopPropagation();
+    applyGameTemplate(sy.dataset.sync);
+    return;
+  }
 });
 
 document.getElementById('focusDim').addEventListener('click', () => {
@@ -493,6 +499,30 @@ function packChecks(prefix, max, existing) {
     out.push({ label, done: prev ? !!prev.done : false });
   }
   return out;
+}
+
+// ゲーム内の先頭アカウントのデイリー/ウィークリー/マンスリーを、他の全アカウントに反映。
+// その他欄はイベント名など個別性が高いので対象外。文言が一致する項目は完了状態を引き継ぐ。
+function applyGameTemplate(gid) {
+  const g = state.games.find(x => x.id === gid);
+  if (!g || !g.accounts || g.accounts.length < 2) return;
+  const src = g.accounts[0];
+  const rest = g.accounts.slice(1);
+  const ok = confirm(`「${src.name}」のデイリー/ウィークリー/マンスリーの内容を、他の${rest.length}件のアカウントに反映します。\n（同じ文言の項目は完了状態を引き継ぎます。「その他」欄は対象外です）\nよろしいですか？`);
+  if (!ok) return;
+  ['daily', 'weekly', 'monthly'].forEach(field => {
+    const template = src[field] || [];
+    rest.forEach(a => {
+      const existing = a[field] || [];
+      a[field] = template.map(t => {
+        const prev = existing.find(c => c.label === t.label);
+        return { label: t.label, done: prev ? !!prev.done : false };
+      });
+      invalidateProgress(a);
+    });
+  });
+  save(state);
+  render(true);
 }
 
 document.getElementById('gSave').onclick = () => {
