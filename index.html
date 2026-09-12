@@ -10,7 +10,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root{--bg:#0d0d12;--card:#16161f;--line:#6a6a7a;--neon:#ff2d6a;--neon2:#00f0ff;--neon3:#c9a0ff;--week:#5ee0a0;--done:#c8ff68;--text:#e8e8f0;--muted:#8888a0;--month:#ffa86b}
+:root{--bg:#0d0d12;--card:#16161f;--line:#6a6a7a;--neon:#ff2d6a;--neon2:#00f0ff;--neon3:#c9a0ff;--week:#5ee0a0;--done:#c8ff68;--text:#e8e8f0;--muted:#8888a0;--month:#ffa86b;--misc:#f5c518}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{overscroll-behavior:none;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
@@ -52,7 +52,7 @@ body.focus-mode #focusDim{display:block}
 .abadges .badge[hidden]{visibility:hidden;pointer-events:none}
 .anote{font-size:.68rem;font-weight:600;color:#f4f4f7;margin-top:3px;white-space:normal;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;min-height:2.4em;line-height:1.2em;width:calc(200% + 8px);max-width:calc(200% + 8px);padding-right:4px;box-sizing:border-box}
 .anote:empty::before{content:"\00a0"}
-.abody-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:6px;border-top:1px solid rgba(255,255,255,.06)}
+.abody-foot{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:6px;border-top:1px solid rgba(255,255,255,.06)}
 .abody-edit{border:none;background:transparent;color:var(--muted);font-size:.8rem;cursor:pointer;padding:4px 6px;opacity:.4;line-height:1}
 .abody-foot .memo{font-size:.95rem;padding:6px 10px;opacity:.85;background:transparent;border:none;cursor:pointer;line-height:1;margin-left:auto}
 .abody-edit:active,.abody-foot .memo:active{color:var(--neon3);opacity:1}
@@ -66,10 +66,15 @@ body.focus-mode #focusDim{display:block}
 .chip-label.d{color:var(--neon2)}
 .chip-label.w{color:var(--week)}
 .chip-label.m{color:var(--month)}
+.chip-label.x{color:var(--misc)}
 .abody > .chip-sec{display:flex;flex-direction:column;min-width:0}
 .abody > .chip-sec .chip-label{flex:0 0 auto}
 .abody > .chip-sec .chip-row{display:flex;flex-direction:column;gap:6px;min-width:0}
 .abody > .chip-sec{min-height:0}
+/* その他チェック：3列グリッドの下に横幅いっぱいの独立した折り返し行として配置 */
+.abody > .chip-sec.x{grid-column:1/-1;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06)}
+.abody > .chip-sec.x .chip-row{flex-direction:row;flex-wrap:wrap}
+.abody > .chip-sec.x .chip{width:auto;flex:0 1 auto;max-width:100%}
 .abody{display:grid;visibility:hidden;opacity:0;pointer-events:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px;background:#12121a;border:1px solid #9a9aac;border-radius:12px;position:absolute;left:0;top:calc(100% + 4px);width:calc(200% + 8px);z-index:13;box-shadow:0 8px 20px rgba(0,0,0,.4);contain:layout paint style;box-sizing:border-box}
 .acc.open .abody{visibility:visible;opacity:1;pointer-events:auto}
 .acc:nth-child(even) .abody{left:calc(-100% - 8px)}
@@ -77,6 +82,8 @@ body.focus-mode #focusDim{display:block}
 .chip.on{background:#1a3d48;border-color:#3a7a8a;color:var(--neon2);text-decoration:line-through}
 .chip.w.on{background:#163528;border-color:#2a6a48;color:var(--week)}
 .chip.m.on{background:#3a2818;border-color:#7a5a30;color:#ffd0a8}
+.chip.x.on{background:#3a3218;border-color:#7a6a2a;color:var(--misc);text-decoration:line-through}
+.chip.pending{outline:2px dashed var(--neon);outline-offset:-2px}
 .empty{text-align:center;color:var(--muted);padding:40px 16px}
 .fab{position:fixed;right:12px;bottom:14px;width:36px;height:36px;border-radius:50%;border:1px solid #3a2a3a;background:#16161f;color:var(--muted);font-size:1.15rem;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.35);z-index:50;cursor:pointer;opacity:.55}
 .fab:active{transform:scale(.94);opacity:.9;color:var(--neon);border-color:var(--neon)}
@@ -136,7 +143,7 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
     <div id="gMonthlyBlock">
       <label class="s">月課リセット（日付＋時刻）</label>
       <div class="row">
-        <input type="number" id="gMDay" min="1" max="28" value="1" placeholder="日">
+        <input type="number" id="gMDay" min="1" max="31" value="1" placeholder="日">
         <input type="time" id="gMTime" value="05:00">
       </div>
       <p class="hint" id="gMonthlyHint" hidden>マンスリー未設定のため変更できません</p>
@@ -169,6 +176,12 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
     <div class="g2">
       <label class="s">マンスリー（空欄は非表示・最大2）</label>
       <input type="text" id="m1" placeholder="①"><input type="text" id="m2" placeholder="②">
+    </div>
+    <div class="g2">
+      <label class="s">その他（自動リセットなし・空欄は非表示・最大5）</label>
+      <input type="text" id="x1" placeholder="①"><input type="text" id="x2" placeholder="②">
+      <input type="text" id="x3" placeholder="③"><input type="text" id="x4" placeholder="④">
+      <input type="text" id="x5" placeholder="⑤">
     </div>
     <div class="btns">
       <button class="cancel" id="aCancel">キャンセル</button>

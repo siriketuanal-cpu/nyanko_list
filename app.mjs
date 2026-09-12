@@ -69,10 +69,12 @@ function buildChecksHtml(g, a) {
   const dChips = (a.daily || []).map((c, i) => chip(c, i, 'd', '')).filter(Boolean).join('');
   const wChips = (a.weekly || []).map((c, i) => chip(c, i, 'w', 'w')).filter(Boolean).join('');
   const mChips = (a.monthly || []).map((c, i) => chip(c, i, 'm', 'm')).filter(Boolean).join('');
+  const xChips = (a.misc || []).map((c, i) => chip(c, i, 'x', 'x')).filter(Boolean).join('');
   let checks = '';
   if (dChips) checks += `<div class="chip-sec"><div class="chip-label d">デイリー</div><div class="chip-row">${dChips}</div></div>`;
   if (wChips) checks += `<div class="chip-sec"><div class="chip-label w">ウィークリー</div><div class="chip-row">${wChips}</div></div>`;
   if (mChips) checks += `<div class="chip-sec"><div class="chip-label m">マンスリー</div><div class="chip-row">${mChips}</div></div>`;
+  if (xChips) checks += `<div class="chip-sec x"><div class="chip-label x">その他</div><div class="chip-row">${xChips}</div></div>`;
   return `${checks}<div class="abody-foot"><button type="button" class="abody-edit" data-ea="${g.id}|${a.id}" title="アカウント設定">⚙️</button><button type="button" class="memo" data-note="${g.id}|${a.id}" title="メモ">📝</button></div>`;
 }
 
@@ -160,10 +162,12 @@ function syncAccountUI(g, a) {
   if (ui.week) ui.week.hidden = !isWeekDone(a);
   if (ui.month) ui.month.hidden = !isMonthDone(a);
 
-  const noteHead = ((a.note || '').trim().split(/\n/)[0]) || '';
+  // 改行の1行目だけでなく全文を渡す。折り返し・2段化はCSSの line-clamp に任せる
+  // （改行はここで空白に畳んでおき、実際の見た目の折り返し位置とズレないようにする）
+  const noteHead = (a.note || '').trim().replace(/\s+/g, ' ');
   if (ui.note) ui.note.textContent = noteHead ? ('📝 ' + noteHead) : '';
 
-  [['daily', 'd'], ['weekly', 'w'], ['monthly', 'm']].forEach(([field, prefix]) => {
+  [['daily', 'd'], ['weekly', 'w'], ['monthly', 'm'], ['misc', 'x']].forEach(([field, prefix]) => {
     (a[field] || []).forEach((c, i) => {
       if (!c.label) return;
       const chip = ui.chips[key + '|' + prefix + '|' + i];
@@ -187,6 +191,7 @@ function render(forceStructure = false) {
   }
 
   if (needStructure) {
+    clearPending();
     accountUICache.clear();
     root.dataset.sig = sig;
     root.innerHTML = state.games.map(g => `
@@ -248,14 +253,33 @@ function render(forceStructure = false) {
   queueAccountWarmup();
 }
 
-function toggleChip(el) {
+// チェックは常に「1回目タップ=保留、2回目タップ=確定」の2段階。
+// 方向(ON/OFF)を問わず一律にすることで、フィールドごとの分岐を増やさない。
+let pendingKey = null, pendingEl = null;
+function clearPending() {
+  if (pendingEl) pendingEl.classList.remove('pending');
+  pendingKey = null; pendingEl = null;
+}
+function handleChipTap(el) {
+  const t = el.dataset.t; if (!t) return;
+  if (pendingKey === t) {
+    clearPending();
+    commitChip(el);
+  } else {
+    clearPending();
+    pendingKey = t;
+    pendingEl = el;
+    el.classList.add('pending');
+  }
+}
+function commitChip(el) {
   const t = el.dataset.t; if (!t) return;
   const [gid, aid, type, idx] = t.split('|');
   const g = state.games.find(x => x.id === gid);
   if (!g || !g.accounts) return;
   const a = g.accounts.find(x => x.id === aid);
   if (!a) return;
-  const map = { d: 'daily', w: 'weekly', m: 'monthly' };
+  const map = { d: 'daily', w: 'weekly', m: 'monthly', x: 'misc' };
   const field = map[type];
   if (!field) return;
   if (!Array.isArray(a[field])) a[field] = [];
@@ -264,13 +288,15 @@ function toggleChip(el) {
   if (!list[i] || !list[i].label) return;
   list[i].done = !list[i].done;
   invalidateProgress(a);
-  save(state);
   syncAccountUI(g, a);
   syncGameHeader(g);
+  // チェックタップの体感を優先し、保存(同期I/O)は描画確定後に回す
+  requestAnimationFrame(() => setTimeout(() => save(state), 0));
 }
 
 function toggleAcc(key) {
   if (!key) return;
+  clearPending();
   const sep = key.indexOf('|');
   const gid = sep > 0 ? key.slice(0, sep) : '';
   const aid = sep > 0 ? key.slice(sep + 1) : '';
@@ -307,6 +333,7 @@ function toggleAcc(key) {
 }
 
 function closeOpenAccs() {
+  clearPending();
   Object.keys(openAccByGame).forEach(gid => {
     const k = openAccByGame[gid];
     if (!k) return;
@@ -319,12 +346,16 @@ function closeOpenAccs() {
   syncGridDim();
 }
 
+document.addEventListener('click', e => {
+  if (pendingKey && !e.target.closest('.chip')) clearPending();
+});
 document.getElementById('root').addEventListener('click', e => {
   const chip = e.target.closest('.chip');
+  if (!chip) clearPending();
   if (chip) {
     e.preventDefault();
     e.stopPropagation();
-    toggleChip(chip);
+    handleChipTap(chip);
     return;
   }
   const nt = e.target.closest('[data-note]');
@@ -408,6 +439,7 @@ function setResetFieldsEnabled(g) {
 }
 
 function openG(id = null) {
+  clearPending();
   editG = id;
   const g = id ? state.games.find(x => x.id === id) : null;
   document.getElementById('gTitle').textContent = g ? 'ゲーム設定' : 'ゲームを追加';
@@ -423,6 +455,7 @@ function openG(id = null) {
 }
 
 function openA(gid, aid = null) {
+  clearPending();
   editGid = gid;
   editA = aid;
   const g = state.games.find(x => x.id === gid);
@@ -440,6 +473,10 @@ function openA(gid, aid = null) {
   for (let i = 1; i <= 2; i++) {
     const c = a && a.monthly && a.monthly[i - 1];
     document.getElementById('m' + i).value = c && c.label ? c.label : '';
+  }
+  for (let i = 1; i <= 5; i++) {
+    const c = a && a.misc && a.misc[i - 1];
+    document.getElementById('x' + i).value = c && c.label ? c.label : '';
   }
   document.getElementById('aDelZone').style.display = a ? 'block' : 'none';
   document.getElementById('aModal').classList.add('show');
@@ -464,7 +501,7 @@ document.getElementById('gSave').onclick = () => {
   const dailyReset = document.getElementById('gDaily').value || '05:00';
   const weeklyDay = +document.getElementById('gWDay').value;
   const weeklyReset = document.getElementById('gWTime').value || '05:00';
-  const monthlyDay = +document.getElementById('gMDay').value || 1;
+  const monthlyDay = Math.min(31, Math.max(1, +document.getElementById('gMDay').value || 1));
   const monthlyReset = document.getElementById('gMTime').value || '05:00';
   if (editG) {
     const g = state.games.find(x => x.id === editG);
@@ -508,6 +545,7 @@ document.getElementById('aSave').onclick = () => {
       a.daily = packChecks('d', 5, a.daily);
       a.weekly = packChecks('w', 2, a.weekly);
       a.monthly = packChecks('m', 2, a.monthly);
+      a.misc = packChecks('x', 5, a.misc);
     }
   } else {
     g.accounts.push({
@@ -515,6 +553,7 @@ document.getElementById('aSave').onclick = () => {
       daily: packChecks('d', 5, null),
       weekly: packChecks('w', 2, null),
       monthly: packChecks('m', 2, null),
+      misc: packChecks('x', 5, null),
       note: ''
     });
   }
@@ -610,16 +649,18 @@ function msUntilWeekly(g, now = Date.now()) {
 }
 function msUntilMonthly(g, now = Date.now()) {
   const [h, m] = parseHM(g.monthlyReset);
-  const dom = Math.min(28, Math.max(1, g.monthlyDay ?? 1));
+  // core.mjs の monthlyKey と同じ「月の実日数でクランプ」に合わせる。
+  // ここだけ28固定だと29〜31日設定時にタイマーが本来のリセット日を飛び越えてしまう。
+  const rawDom = Math.max(1, g.monthlyDay ?? 1);
   const d = new Date(now);
   let y = d.getFullYear(), mo = d.getMonth();
   const last = new Date(y, mo + 1, 0).getDate();
-  let next = new Date(y, mo, Math.min(dom, last), h, m, 0, 0);
+  let next = new Date(y, mo, Math.min(rawDom, last), h, m, 0, 0);
   if (next <= d) {
     mo += 1;
     if (mo > 11) { mo = 0; y += 1; }
     const last2 = new Date(y, mo + 1, 0).getDate();
-    next = new Date(y, mo, Math.min(dom, last2), h, m, 0, 0);
+    next = new Date(y, mo, Math.min(rawDom, last2), h, m, 0, 0);
   }
   return next - d;
 }
@@ -660,6 +701,7 @@ function scheduleOneGameReset(g, now = Date.now()) {
 }
 function onResume() {
   // バックグラウンドから戻ったとき：リセット反映＋タイマー張り直し（操作を邪魔しないよう軽く）
+  clearPending();
   if (applyResets(state)) {
     state.games.forEach(g => (g.accounts || []).forEach(invalidateProgress));
     save(state);
