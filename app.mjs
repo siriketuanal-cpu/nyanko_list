@@ -66,7 +66,7 @@ function buildChecksHtml(g, a) {
   const chip = (c, i, type, cls) => c.label
     ? `<button type="button" class="chip ${cls}${c.done ? ' on' : ''}" data-t="${g.id}|${a.id}|${type}|${i}" aria-pressed="${c.done ? 'true' : 'false'}">${escape(c.label)}</button>`
     : '';
-  const dChips = (a.daily || []).map((c, i) => chip(c, i, 'd', '')).filter(Boolean).join('');
+  const dChips = (a.daily || []).map((c, i) => chip(c, i, 'd', 'd')).filter(Boolean).join('');
   const wChips = (a.weekly || []).map((c, i) => chip(c, i, 'w', 'w')).filter(Boolean).join('');
   const mChips = (a.monthly || []).map((c, i) => chip(c, i, 'm', 'm')).filter(Boolean).join('');
   const xChips = (a.misc || []).map((c, i) => chip(c, i, 'x', 'x')).filter(Boolean).join('');
