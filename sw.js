@@ -1,5 +1,5 @@
 /* 完全キャッシュ優先・通常時はネットワークに出ない */
-const C = 'nyanko-split-v554';
+const C = 'nyanko-split-v555';
 const A = [
   './',
   './index.html',

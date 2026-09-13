@@ -5,7 +5,7 @@
   "lang": "ja",
   "start_url": "./index.html",
   "scope": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#0d0d12",
   "theme_color": "#0d0d12",
@@ -34,5 +34,14 @@
       "type": "image/svg+xml",
       "purpose": "any"
     }
-  ]
+  ],
+  "display_override": [
+    "fullscreen",
+    "standalone",
+    "minimal-ui"
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "prefer_related_applications": false
 }

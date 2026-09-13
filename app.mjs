@@ -830,7 +830,7 @@ const defer = (fn) => {
 defer(() => {
   scheduleGameResets();
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?rev=v554', { updateViaCache: 'all' }).catch(() => {});
+    navigator.serviceWorker.register('./sw.js?rev=v555', { updateViaCache: 'all' }).catch(() => {});
   }
 });
 
