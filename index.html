@@ -39,10 +39,6 @@ body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .ib:active{color:var(--neon2)}
 .acc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:6px 6px 2px;align-items:start;overflow:visible}
 .acc{background:#12121a;border:1px solid rgba(106,106,122,.65);border-radius:12px;padding:0;min-width:0;position:relative;contain:layout style}
-#focusDim{position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:20;display:none;pointer-events:auto}
-body.focus-mode .acc.open{z-index:40}
-body.focus-mode .fab{z-index:10}
-body.focus-mode #focusDim{display:block}
 .acc.open{z-index:12;border-color:#8a8aa0;box-shadow:0 6px 18px rgba(0,0,0,.28)}
 .ahead{display:flex;align-items:center;gap:4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:2px 8px 4px;border-radius:11px}
 .ainfo{min-width:0;flex:1;overflow:hidden}
@@ -124,7 +120,6 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
   <span class="ver" role="link" tabindex="0" title="タップで最新版に更新">v0.5.44</span>
 </div>
 <div id="root"></div>
-<div id="focusDim" aria-hidden="true"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
 
 <div class="modal" id="gModal">

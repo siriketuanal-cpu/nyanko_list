@@ -105,8 +105,7 @@ function structureSig() {
 }
 
 function syncGridDim() {
-  const anyOpen = Object.keys(openAccByGame).length > 0;
-  document.body.classList.toggle('focus-mode', anyOpen);
+  // 暗転オーバーレイは廃止。開いているカード自身のz-indexだけで前面表示する。
 }
 
 function getAccountUI(key) {
@@ -400,9 +399,6 @@ document.getElementById('root').addEventListener('click', e => {
   }
 });
 
-document.getElementById('focusDim').addEventListener('click', () => {
-  closeOpenAccs();
-});
 
 // メモ編集中は枠外タップでも閉じない。保存／閉じるボタンで明示的に終了する。
 document.getElementById('nModal').addEventListener('click', e => {
