@@ -57,7 +57,7 @@ body.focus-mode #focusDim{display:block}
 .abody-foot .memo{font-size:.95rem;padding:6px 10px;opacity:.85;background:transparent;border:none;cursor:pointer;line-height:1;margin-left:auto}
 .abody-edit:active,.abody-foot .memo:active{color:var(--neon3);opacity:1}
 .badge{display:inline-flex;align-items:center;justify-content:center;height:1.5em;box-sizing:border-box;font-size:.56rem;background:var(--daily);color:#0d0d12;padding:0 5px;border-radius:4px;font-weight:800;line-height:1;flex-shrink:0}
-.badge.complete{font-size:.56rem;letter-spacing:.03em;padding:2px 5px;background:var(--done);color:#11190a;border:1px solid rgba(190,255,100,.7);box-shadow:0 0 6px rgba(190,255,100,.22)}
+.badge.complete{font-size:.56rem;letter-spacing:.03em;padding:2px 5px;background:var(--daily);color:#0a1622;border:1px solid rgba(126,176,232,.7);box-shadow:0 0 6px rgba(126,176,232,.25)}
 .badge.week{background:var(--week);color:#0d1a12}
 .badge.month{background:var(--month);color:#1a1008}
 .chip-sec{margin-bottom:0;min-width:0}
@@ -77,7 +77,10 @@ body.focus-mode #focusDim{display:block}
 .abody > .chip-sec.x .chip{width:auto;flex:0 1 auto;max-width:100%}
 .abody{display:grid;visibility:hidden;opacity:0;pointer-events:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px;background:#12121a;border:1px solid #9a9aac;border-radius:12px;position:absolute;left:0;top:calc(100% + 4px);width:calc(200% + 8px);z-index:13;box-shadow:0 8px 20px rgba(0,0,0,.4);contain:layout paint style;box-sizing:border-box}
 .acc.open .abody{visibility:visible;opacity:1;pointer-events:auto}
-.acc:nth-child(even) .abody{left:calc(-100% - 8px)}
+/* 実際にあるデイリー/ウィークリー/マンスリーの列数ぶんだけ開く（余白を作らない） */
+.abody[data-cols="1"]{width:100%;grid-template-columns:1fr}
+.abody[data-cols="2"]{width:calc(150% + 4px);grid-template-columns:repeat(2,minmax(0,1fr))}
+.acc:nth-child(even) .abody{left:auto;right:0}
 .chip{display:block;width:100%;text-align:left;border:1px solid #5a5a72;background:#14141e;color:var(--text);border-radius:8px;padding:9px 10px;font-size:.78rem;font-weight:500;line-height:1.35;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip.on{background:#242430;border-color:#4a4a5a;color:var(--text);text-decoration:line-through}
 .chip.d.on{background:#1a3145;border-color:#3a6a95;color:var(--daily);text-decoration:line-through}

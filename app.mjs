@@ -44,8 +44,8 @@ function syncGameHeader(g) {
   const bits = [];
   // 全アカウントのデイリー完了時は COMPLETE（日課OKの置き換え）
   if (gameDailyAllOk(g)) bits.push('<span class="badge complete" title="全アカウント デイリー完了">COMPLETE</span>');
-  if (gameWeeklyAllOk(g)) bits.push('<span class="badge week" title="全アカウント 週課完了">✓</span>');
-  if (gameMonthlyAllOk(g)) bits.push('<span class="badge month" title="全アカウント 月課完了">✓</span>');
+  if (gameWeeklyAllOk(g)) bits.push('<span class="badge week" title="全アカウント 週課完了">DONE</span>');
+  if (gameMonthlyAllOk(g)) bits.push('<span class="badge month" title="全アカウント 月課完了">DONE</span>');
   el.innerHTML = bits.join('');
 }
 
@@ -87,6 +87,10 @@ function prepareAccountBody(g, a, key) {
   body.className = 'abody';
   body.dataset.abody = key;
   body.dataset.ready = '1';
+  // デイリー/ウィークリー/マンスリーのうち実際に中身があるものだけ列を確保し、
+  // 余白ができないよう開く幅を絞る（その他欄は全幅の別行なので列数に含めない）
+  const cols = ['daily', 'weekly', 'monthly'].filter(f => (a[f] || []).some(c => c.label)).length || 1;
+  body.dataset.cols = String(cols);
   body.innerHTML = buildChecksHtml(g, a);
   ui.body = body;
 
@@ -210,8 +214,8 @@ function render(forceStructure = false) {
                   <span class="aname-text">${escape(a.name)}</span>
                   <span class="abadges">
                     <span class="badge" data-bdaily="${g.id}|${a.id}" hidden>デイリー完了</span>
-                    <span class="badge week" data-bweek="${g.id}|${a.id}" hidden title="週課完了">✓</span>
-                    <span class="badge month" data-bmonth="${g.id}|${a.id}" hidden title="月課完了">✓</span>
+                    <span class="badge week" data-bweek="${g.id}|${a.id}" hidden title="週課完了">DONE</span>
+                    <span class="badge month" data-bmonth="${g.id}|${a.id}" hidden title="月課完了">DONE</span>
                   </span>
                 </div>
                 <div class="anote" data-anote="${g.id}|${a.id}"></div>
@@ -501,16 +505,16 @@ function packChecks(prefix, max, existing) {
   return out;
 }
 
-// ゲーム内の先頭アカウントのデイリー/ウィークリー/マンスリーを、他の全アカウントに反映。
-// その他欄はイベント名など個別性が高いので対象外。文言が一致する項目は完了状態を引き継ぐ。
+// ゲーム内の先頭アカウントのデイリー/ウィークリー/マンスリー/その他を、他の全アカウントに反映。
+// 文言が一致する項目は完了状態を引き継ぐ（違う文言なら未完了で追加される）。
 function applyGameTemplate(gid) {
   const g = state.games.find(x => x.id === gid);
   if (!g || !g.accounts || g.accounts.length < 2) return;
   const src = g.accounts[0];
   const rest = g.accounts.slice(1);
-  const ok = confirm(`「${src.name}」のデイリー/ウィークリー/マンスリーの内容を、他の${rest.length}件のアカウントに反映します。\n（同じ文言の項目は完了状態を引き継ぎます。「その他」欄は対象外です）\nよろしいですか？`);
+  const ok = confirm(`「${src.name}」のデイリー/ウィークリー/マンスリー/その他の内容を、他の${rest.length}件のアカウントに反映します。\n（同じ文言の項目は完了状態を引き継ぎます）\nよろしいですか？`);
   if (!ok) return;
-  ['daily', 'weekly', 'monthly'].forEach(field => {
+  ['daily', 'weekly', 'monthly', 'misc'].forEach(field => {
     const template = src[field] || [];
     rest.forEach(a => {
       const existing = a[field] || [];
