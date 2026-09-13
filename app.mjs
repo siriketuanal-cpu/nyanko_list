@@ -482,6 +482,47 @@ function openG(id = null) {
   document.getElementById('gModal').classList.add('show');
 }
 
+function updateSettingSlots(prefix, max, initial = 2) {
+  const section = document.querySelector('.slot-section[data-prefix="' + prefix + '"]');
+  if (!section) return;
+  let last = 0;
+  for (let i = 1; i <= max; i++) {
+    const el = document.getElementById(prefix + i);
+    if (el && el.value.trim()) last = i;
+  }
+  const visible = Math.min(max, Math.max(initial, last + (last ? 0 : 0)));
+  for (let i = 1; i <= max; i++) {
+    const el = document.getElementById(prefix + i);
+    if (!el) continue;
+    el.classList.toggle('slot-hidden', i > visible);
+  }
+  const add = section.querySelector('[data-addslots]');
+  if (add) add.hidden = visible >= max;
+}
+
+function initSettingSlots() {
+  [['d',5,2],['w',4,2],['m',4,2],['x',5,2]].forEach(([p,max,initial]) => updateSettingSlots(p,max,initial));
+}
+
+document.querySelectorAll('[data-addslots]').forEach(btn => {
+  btn.onpointerdown = e => {
+    e.preventDefault();
+    const prefix = btn.dataset.addslots;
+    const section = btn.closest('.slot-section');
+    const max = +(section?.dataset.max || 5);
+    let next = 0;
+    for (let i = 1; i <= max; i++) {
+      const el = document.getElementById(prefix + i);
+      if (el && el.classList.contains('slot-hidden')) { next = i; break; }
+    }
+    if (!next) return;
+    const el = document.getElementById(prefix + next);
+    el.classList.remove('slot-hidden');
+    el.focus();
+    if (next >= max) btn.hidden = true;
+  };
+});
+
 function openA(gid, aid = null) {
   clearPending();
   editGid = gid;
@@ -507,6 +548,7 @@ function openA(gid, aid = null) {
     document.getElementById('x' + i).value = c && c.label ? c.label : '';
   }
   document.getElementById('aDelZone').style.display = a ? 'block' : 'none';
+  initSettingSlots();
   document.getElementById('aModal').classList.add('show');
 }
 
@@ -595,16 +637,16 @@ document.getElementById('aSave').onpointerdown = e => { e.preventDefault();
     if (a) {
       a.name = name;
       a.daily = packChecks('d', 5, a.daily);
-      a.weekly = packChecks('w', 2, a.weekly);
-      a.monthly = packChecks('m', 2, a.monthly);
+      a.weekly = packChecks('w', 4, a.weekly);
+      a.monthly = packChecks('m', 4, a.monthly);
       a.misc = packChecks('x', 5, a.misc);
     }
   } else {
     g.accounts.push({
       id: 'a' + Date.now(), name,
       daily: packChecks('d', 5, null),
-      weekly: packChecks('w', 2, null),
-      monthly: packChecks('m', 2, null),
+      weekly: packChecks('w', 4, null),
+      monthly: packChecks('m', 4, null),
       misc: packChecks('x', 5, null),
       note: ''
     });
@@ -788,7 +830,7 @@ const defer = (fn) => {
 defer(() => {
   scheduleGameResets();
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?rev=v549', { updateViaCache: 'all' }).catch(() => {});
+    navigator.serviceWorker.register('./sw.js?rev=v554', { updateViaCache: 'all' }).catch(() => {});
   }
 });
 
