@@ -52,13 +52,15 @@ function syncGameHeader(g) {
 function updateDailyBadge(bd, a) {
   if (!bd) return;
   const prog = dailyProgress(a);
-  if (!prog.total) {
+  // ウィークリー/マンスリーと同じく、完了した時だけ「DONE」が現れる方式に統一。
+  // 未完了の間は幅ゼロ(非表示)にして、デイリーのみのアカウントで余計な空白を作らない。
+  if (!prog.total || !prog.full) {
     bd.hidden = true;
     return;
   }
-  bd.textContent = prog.full ? 'デイリー完了' : `${prog.done}/${prog.total}`;
-  bd.title = prog.full ? 'デイリー完了' : `デイリー ${prog.done}/${prog.total}`;
-  bd.classList.toggle('complete', prog.full);
+  bd.textContent = 'DONE';
+  bd.title = 'デイリー完了';
+  bd.classList.add('complete');
   bd.hidden = false;
 }
 
