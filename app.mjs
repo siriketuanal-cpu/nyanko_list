@@ -379,6 +379,14 @@ document.addEventListener('pointerdown', e => {
   }
 }, { passive: true });
 document.getElementById('root').addEventListener('pointerdown', e => {
+  // アカウント外をタップしたら、まず現在のアカウントを閉じて終了。
+  // これをルート側で先に処理することで、stopPropagation の影響を受けない。
+  const openAcc = e.target.closest('.acc.open');
+  if (Object.keys(openAccByGame).length && !openAcc && !e.target.closest('.modal')) {
+    closeOpenAccs();
+    return;
+  }
+
   const chip = e.target.closest('.chip');
   if (!chip) clearPending();
   if (chip) {
@@ -403,7 +411,23 @@ document.getElementById('root').addEventListener('pointerdown', e => {
   const ea = e.target.closest('[data-ea]');
   if (ea) { e.preventDefault(); e.stopPropagation(); const [gid, aid] = ea.dataset.ea.split('|'); openA(gid, aid); return; }
   const at = e.target.closest('[data-atoggle]');
-  if (at) { e.preventDefault(); e.stopPropagation(); toggleAcc(at.dataset.atoggle); return; }
+  if (at) {
+    e.preventDefault();
+    e.stopPropagation();
+    const key = at.dataset.atoggle;
+    // 別アカウントが開いている状態での1タップ目は「閉じる」だけ。
+    // 現在開いているDOMも確認して、状態ズレがあっても確実にこの挙動にする。
+    const openedKeys = Object.keys(openAccByGame).filter(gid => openAccByGame[gid]);
+    const domOpen = document.querySelector('.acc.open[data-aid]');
+    const anotherOpen = openedKeys.some(gid => openAccByGame[gid] !== key) ||
+      (!!domOpen && domOpen.dataset.aid !== key);
+    if (anotherOpen) {
+      closeOpenAccs();
+      return;
+    }
+    toggleAcc(key);
+    return;
+  }
   const gt = e.target.closest('[data-gtools]');
   if (gt) {
     e.preventDefault(); e.stopPropagation();
