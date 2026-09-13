@@ -128,32 +128,6 @@ function cacheAccountUI(g, a, acc) {
   return ui;
 }
 
-// 本文DOMは初期描画を重くしないため、アイドル時間に少しずつ先行生成してキャッシュする。
-// タップが先に来た場合だけ、そのアカウントを即時生成する。
-let warmupQueued = false;
-function warmAccountBodies(deadline) {
-  warmupQueued = false;
-  const games = state.games;
-  for (const g of games) {
-    for (const a of (g.accounts || [])) {
-      const key = g.id + '|' + a.id;
-      if (!accountUICache.has(key)) continue;
-      if (!accountUICache.get(key).body) prepareAccountBody(g, a, key);
-      if (deadline && deadline.timeRemaining && deadline.timeRemaining() < 2) {
-        warmupQueued = true;
-        requestIdleCallback(warmAccountBodies, { timeout: 1200 });
-        return;
-      }
-    }
-  }
-}
-function queueAccountWarmup() {
-  if (warmupQueued) return;
-  warmupQueued = true;
-  if ('requestIdleCallback' in window) requestIdleCallback(warmAccountBodies, { timeout: 1200 });
-  else setTimeout(() => warmAccountBodies(null), 80);
-}
-
 function syncAccountUI(g, a) {
   const key = g.id + '|' + a.id;
   const ui = getAccountUI(key);
@@ -245,7 +219,8 @@ function render(forceStructure = false) {
       const wantOpen = !!accOpen[key];
       if (!getAccountUI(key)) cacheAccountUI(g, a, acc);
       acc.classList.toggle('open', wantOpen);
-      {
+      // 閉じたアカウントの本文DOMは作らず、開いている時だけ生成する。
+      if (wantOpen) {
         const body = prepareAccountBody(g, a, key);
         if (body && !body.parentNode) acc.appendChild(body);
       }
@@ -254,8 +229,8 @@ function render(forceStructure = false) {
     syncGameHeader(g);
   });
   syncGridDim();
-  queueAccountWarmup();
 }
+
 
 // チェックは常に「1回目タップ=保留、2回目タップ=確定」の2段階。
 // 方向(ON/OFF)を問わず一律にすることで、フィールドごとの分岐を増やさない。
@@ -330,7 +305,12 @@ function toggleAcc(key) {
     if (willOpen) {
       const g = state.games.find(x => x.id === gid);
       const a = g && g.accounts.find(x => x.id === aid);
-      if (g && a) prepareAccountBody(g, a, key);
+      if (g && a) {
+        prepareAccountBody(g, a, key);
+        const body = getAccountUI(key)?.body;
+        if (body && !body.parentNode) el.appendChild(body);
+        syncAccountUI(g, a);
+      }
     }
   }
   syncGridDim();
@@ -424,8 +404,9 @@ document.getElementById('focusDim').addEventListener('click', () => {
   closeOpenAccs();
 });
 
+// メモ編集中は枠外タップでも閉じない。保存／閉じるボタンで明示的に終了する。
 document.getElementById('nModal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeNoteModal();
+  e.stopPropagation();
 });
 
 document.getElementById('fab').onclick = () => openG();
@@ -770,7 +751,7 @@ const defer = (fn) => {
 defer(() => {
   scheduleGameResets();
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?rev=v543', { updateViaCache: 'all' }).catch(() => {});
+    navigator.serviceWorker.register('./sw.js?rev=v545', { updateViaCache: 'all' }).catch(() => {});
   }
 });
 
