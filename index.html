@@ -16,7 +16,7 @@
 :root{--bg:#0d0d12;--card:#16161f;--line:#6a6a7a;--neon:#ff2d6a;--neon2:#00f0ff;--neon3:#c9a0ff;--week:#5ee0a0;--done:#c8ff68;--text:#e8e8f0;--muted:#8888a0;--month:#ffa86b;--daily:#7eb0e8;--misc:#e8d9a8}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{overscroll-behavior:none;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
-body{padding:10px 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
+body{padding:calc(10px + env(safe-area-inset-top, 0px)) 12px 80px;max-width:480px;margin:0 auto;line-height:1.4}
 .title-row{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:8px;min-height:1.6em}
 .title-row h1{margin:0;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rgba(255,45,106,.45)}
 .ver{position:absolute;right:0;top:50%;transform:translateY(-50%);font:700 .6rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.75;padding:2px 5px;border:1px solid #3a2a4a;border-radius:5px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation;cursor:pointer}
