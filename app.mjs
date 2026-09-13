@@ -6,6 +6,8 @@ const toolsOpen = Object.create(null);
 const accOpen = Object.create(null);
 const openAccByGame = Object.create(null);
 const accountUICache = new Map();
+const gameUICache = new Map();
+let saveTimer = null;
 const progressCache = new WeakMap();
 let editG = null, editA = null, editGid = null, noteTarget = null, noteAnchor = null;
 
@@ -39,7 +41,7 @@ function gameMonthlyAllOk(g) {
   return list.length > 0 && list.every(isMonthDone);
 }
 function syncGameHeader(g) {
-  const el = document.querySelector('[data-gmeta="' + g.id + '"]');
+  const el = gameUICache.get(g.id)?.meta || document.querySelector('[data-gmeta="' + g.id + '"]');
   if (!el) return;
   const bits = [];
   // 全アカウントのデイリー完了時は COMPLETE（日課OKの置き換え）
@@ -60,6 +62,21 @@ function updateDailyBadge(bd, a) {
   bd.title = prog.full ? 'デイリー完了' : `デイリー ${prog.done}/${prog.total}`;
   bd.classList.toggle('complete', prog.full);
   bd.hidden = false;
+}
+
+function scheduleSave(delay = 120) {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    save(state);
+  }, delay);
+}
+function flushSave() {
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  save(state);
 }
 
 function buildChecksHtml(g, a) {
@@ -105,7 +122,7 @@ function structureSig() {
 }
 
 function syncGridDim() {
-  // 暗転オーバーレイは廃止。開いているカード自身のz-indexだけで前面表示する。
+  // 暗転オーバーレイは使わず、開いているカード自身のz-indexだけで前面表示する。
 }
 
 function getAccountUI(key) {
@@ -162,6 +179,8 @@ function render(forceStructure = false) {
 
   if (!state.games.length) {
     root.dataset.sig = '';
+    accountUICache.clear();
+    gameUICache.clear();
     root.innerHTML = '<div class="empty">まだゲームがないよ…<br>右下の＋から追加してね♡</div>';
     return;
   }
@@ -169,6 +188,7 @@ function render(forceStructure = false) {
   if (needStructure) {
     clearPending();
     accountUICache.clear();
+    gameUICache.clear();
     root.dataset.sig = sig;
     root.innerHTML = state.games.map(g => `
     <div class="game" data-gid="${g.id}">
@@ -205,11 +225,32 @@ function render(forceStructure = false) {
         </div>
       </div>
     </div>`).join('');
+
+    // 構造を作った直後にDOM参照を一度だけキャッシュ。
+    // 通常のrenderではゲーム/アカウントごとのquerySelectorを繰り返さない。
+    root.querySelectorAll('.game').forEach(gameEl => {
+      const gid = gameEl.dataset.gid;
+      gameUICache.set(gid, {
+        el: gameEl,
+        meta: gameEl.querySelector('[data-gmeta="' + gid + '"]'),
+        tools: gameEl.querySelector('[data-gtools-wrap="' + gid + '"]')
+      });
+      const g = state.games.find(x => x.id === gid);
+      if (!g) return;
+      gameEl.querySelectorAll('[data-aid]').forEach(acc => {
+        const key = acc.dataset.aid;
+        const sep = key.indexOf('|');
+        const aid = sep >= 0 ? key.slice(sep + 1) : '';
+        const a = g.accounts.find(x => x.id === aid);
+        if (a) cacheAccountUI(g, a, acc);
+      });
+    });
   }
 
   state.games.forEach(g => {
-    const gameEl = root.querySelector(`[data-gid="${g.id}"]`);
-    const tw = gameEl && gameEl.querySelector(`[data-gtools-wrap="${g.id}"]`);
+    const gameUI = gameUICache.get(g.id);
+    const gameEl = gameUI?.el;
+    const tw = gameUI?.tools;
     if (tw) tw.classList.toggle('open', !!toolsOpen[g.id]);
     (g.accounts || []).forEach(a => {
       const key = g.id + '|' + a.id;
@@ -218,7 +259,7 @@ function render(forceStructure = false) {
       const wantOpen = !!accOpen[key];
       if (!getAccountUI(key)) cacheAccountUI(g, a, acc);
       acc.classList.toggle('open', wantOpen);
-      // 閉じたアカウントの本文DOMは作らず、開いている時だけ生成する。
+      // 本文は開いたアカウントだけ生成。閉じたカードではDOMを作らない。
       if (wantOpen) {
         const body = prepareAccountBody(g, a, key);
         if (body && !body.parentNode) acc.appendChild(body);
@@ -229,7 +270,6 @@ function render(forceStructure = false) {
   });
   syncGridDim();
 }
-
 
 // チェックは常に「1回目タップ=保留、2回目タップ=確定」の2段階。
 // 方向(ON/OFF)を問わず一律にすることで、フィールドごとの分岐を増やさない。
@@ -269,7 +309,7 @@ function commitChip(el) {
   syncAccountUI(g, a);
   syncGameHeader(g);
   // チェックタップの体感を優先し、保存(同期I/O)は描画確定後に回す
-  requestAnimationFrame(() => setTimeout(() => save(state), 0));
+  scheduleSave();
 }
 
 function toggleAcc(key) {
@@ -305,10 +345,8 @@ function toggleAcc(key) {
       const g = state.games.find(x => x.id === gid);
       const a = g && g.accounts.find(x => x.id === aid);
       if (g && a) {
-        prepareAccountBody(g, a, key);
-        const body = getAccountUI(key)?.body;
+        const body = prepareAccountBody(g, a, key);
         if (body && !body.parentNode) el.appendChild(body);
-        syncAccountUI(g, a);
       }
     }
   }
@@ -329,21 +367,18 @@ function closeOpenAccs() {
   syncGridDim();
 }
 
-document.addEventListener('click', e => {
+document.addEventListener('pointerdown', e => {
   if (pendingKey && !e.target.closest('.chip')) clearPending();
-});
-document.getElementById('root').addEventListener('click', e => {
+}, { passive: true });
+document.getElementById('root').addEventListener('pointerdown', e => {
   const chip = e.target.closest('.chip');
   if (!chip) clearPending();
   if (chip) {
-    e.preventDefault();
-    e.stopPropagation();
-    handleChipTap(chip);
-    return;
+    e.preventDefault(); e.stopPropagation(); handleChipTap(chip); return;
   }
   const nt = e.target.closest('[data-note]');
   if (nt) {
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     const [gid, aid] = nt.dataset.note.split('|');
     const g = state.games.find(x => x.id === gid);
     const a = g && g.accounts.find(x => x.id === aid);
@@ -358,58 +393,32 @@ document.getElementById('root').addEventListener('click', e => {
     return;
   }
   const ea = e.target.closest('[data-ea]');
-  if (ea) {
-    e.stopPropagation();
-    const [gid, aid] = ea.dataset.ea.split('|');
-    openA(gid, aid);
-    return;
-  }
+  if (ea) { e.preventDefault(); e.stopPropagation(); const [gid, aid] = ea.dataset.ea.split('|'); openA(gid, aid); return; }
   const at = e.target.closest('[data-atoggle]');
-  if (at) {
-    e.stopPropagation();
-    toggleAcc(at.dataset.atoggle);
-    return;
-  }
+  if (at) { e.preventDefault(); e.stopPropagation(); toggleAcc(at.dataset.atoggle); return; }
   const gt = e.target.closest('[data-gtools]');
   if (gt) {
-    e.stopPropagation();
-    const id = gt.dataset.gtools;
-    toolsOpen[id] = !toolsOpen[id];
+    e.preventDefault(); e.stopPropagation();
+    const id = gt.dataset.gtools; toolsOpen[id] = !toolsOpen[id];
     const wrap = document.querySelector('[data-gtools-wrap="' + id + '"]');
     if (wrap) wrap.classList.toggle('open', !!toolsOpen[id]);
     return;
   }
   const eg = e.target.closest('[data-eg]');
-  if (eg) {
-    e.stopPropagation();
-    openG(eg.dataset.eg);
-    return;
-  }
+  if (eg) { e.preventDefault(); e.stopPropagation(); openG(eg.dataset.eg); return; }
   const aa = e.target.closest('[data-aa]');
-  if (aa) {
-    e.stopPropagation();
-    openA(aa.dataset.aa);
-    return;
-  }
+  if (aa) { e.preventDefault(); e.stopPropagation(); openA(aa.dataset.aa); return; }
   const sy = e.target.closest('[data-sync]');
-  if (sy) {
-    e.stopPropagation();
-    applyGameTemplate(sy.dataset.sync);
-    return;
-  }
+  if (sy) { e.preventDefault(); e.stopPropagation(); applyGameTemplate(sy.dataset.sync); return; }
 });
 
+document.getElementById('nModal').addEventListener('pointerdown', e => { e.stopPropagation(); });
 
-// メモ編集中は枠外タップでも閉じない。保存／閉じるボタンで明示的に終了する。
-document.getElementById('nModal').addEventListener('click', e => {
-  e.stopPropagation();
-});
-
-document.getElementById('fab').onclick = () => openG();
-document.getElementById('gCancel').onclick = () => document.getElementById('gModal').classList.remove('show');
-document.getElementById('aCancel').onclick = () => document.getElementById('aModal').classList.remove('show');
-document.getElementById('nCancel').onclick = closeNoteModal;
-document.getElementById('nClear').onclick = () => {
+document.getElementById('fab').onpointerdown = e => { e.preventDefault(); openG(); };
+document.getElementById('gCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('gModal').classList.remove('show'); };
+document.getElementById('aCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('aModal').classList.remove('show'); };
+document.getElementById('nCancel').onpointerdown = e => { e.preventDefault(); closeNoteModal(); };
+document.getElementById('nClear').onpointerdown = e => { e.preventDefault();
   document.getElementById('notes').value = '';
   document.getElementById('notes').focus();
 };
@@ -506,7 +515,7 @@ function applyGameTemplate(gid) {
   render(true);
 }
 
-document.getElementById('gSave').onclick = () => {
+document.getElementById('gSave').onpointerdown = e => { e.preventDefault();
   const name = (document.getElementById('gName').value || '').trim();
   if (!name) return;
   const dailyReset = document.getElementById('gDaily').value || '05:00';
@@ -535,7 +544,7 @@ document.getElementById('gSave').onclick = () => {
   scheduleGameResets();
 };
 
-document.getElementById('gDel').onclick = () => {
+document.getElementById('gDel').onpointerdown = e => { e.preventDefault();
   if (!editG || !confirm('このゲームを削除する？')) return;
   state.games = state.games.filter(g => g.id !== editG);
   save(state);
@@ -544,7 +553,7 @@ document.getElementById('gDel').onclick = () => {
   scheduleGameResets();
 };
 
-document.getElementById('aSave').onclick = () => {
+document.getElementById('aSave').onpointerdown = e => { e.preventDefault();
   const g = state.games.find(x => x.id === editGid);
   if (!g) return;
   const name = (document.getElementById('aName').value || '').trim();
@@ -582,7 +591,7 @@ document.getElementById('aSave').onclick = () => {
   scheduleGameResets();
 };
 
-document.getElementById('aDel').onclick = () => {
+document.getElementById('aDel').onpointerdown = e => { e.preventDefault();
   if (!editA || !confirm('このアカウントを削除する？')) return;
   const g = state.games.find(x => x.id === editGid);
   if (!g) return;
@@ -621,7 +630,7 @@ function positionNoteModal() {
 window.addEventListener('resize', positionNoteModal, { passive:true });
 window.addEventListener('scroll', positionNoteModal, { passive:true });
 
-document.getElementById('nSave').onclick = () => {
+document.getElementById('nSave').onpointerdown = e => { e.preventDefault();
   if (!noteTarget) return;
   const g = state.games.find(x => x.id === noteTarget.gid);
   const a = g && g.accounts.find(x => x.id === noteTarget.aid);
@@ -723,12 +732,12 @@ function onResume() {
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
-    save(state);
+    flushSave();
   } else if (document.visibilityState === 'visible') {
     onResume();
   }
 });
-window.addEventListener('pagehide', () => save(state));
+window.addEventListener('pagehide', flushSave);
 window.addEventListener('pageshow', e => {
   // bfcache 復帰時もリセット確認
   if (e.persisted) onResume();
@@ -747,7 +756,7 @@ const defer = (fn) => {
 defer(() => {
   scheduleGameResets();
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?rev=v545', { updateViaCache: 'all' }).catch(() => {});
+    navigator.serviceWorker.register('./sw.js?rev=v549', { updateViaCache: 'all' }).catch(() => {});
   }
 });
 
@@ -761,7 +770,7 @@ document.addEventListener('contextmenu', e => {
 // バージョン表示：タップで更新ページへ
 const verEl = document.querySelector('.ver');
 if (verEl) {
-  verEl.addEventListener('click', () => { location.href = 'update.html'; });
+  verEl.addEventListener('pointerdown', e => { e.preventDefault(); location.href = 'update.html'; });
   verEl.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); location.href = 'update.html'; }
   });
