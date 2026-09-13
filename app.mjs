@@ -321,16 +321,16 @@ function toggleAcc(key) {
   const willOpen = !accOpen[key];
 
   if (willOpen) {
-    // 開く対象は常に1枚だけ。別ゲームを開いたときも前のカードを閉じる。
-    Object.keys(openAccByGame).forEach(otherGid => {
+    // 別のアカウントが開いているなら、このタップでは「閉じる」だけ。
+    // もう一度タップすると次のアカウントが開く。
+    const hasOtherOpen = Object.keys(openAccByGame).some(otherGid => {
       const prevKey = openAccByGame[otherGid];
-      if (!prevKey || prevKey === key) return;
-      accOpen[prevKey] = false;
-      const otherUI = getAccountUI(prevKey);
-      const other = otherUI?.acc || document.querySelector('[data-aid="' + prevKey + '"]');
-      if (other) other.classList.remove('open');
-      delete openAccByGame[otherGid];
+      return !!prevKey && prevKey !== key;
     });
+    if (hasOtherOpen) {
+      closeOpenAccs();
+      return;
+    }
     openAccByGame[gid] = key;
   } else {
     delete openAccByGame[gid];
@@ -369,6 +369,14 @@ function closeOpenAccs() {
 
 document.addEventListener('pointerdown', e => {
   if (pendingKey && !e.target.closest('.chip')) clearPending();
+
+  // 開いているアカウントの外側をタップしたら閉じる。
+  // メモは枠外タップでは閉じないため、モーダル上は除外する。
+  if (Object.keys(openAccByGame).length &&
+      !e.target.closest('.acc.open') &&
+      !e.target.closest('.modal')) {
+    closeOpenAccs();
+  }
 }, { passive: true });
 document.getElementById('root').addEventListener('pointerdown', e => {
   const chip = e.target.closest('.chip');
