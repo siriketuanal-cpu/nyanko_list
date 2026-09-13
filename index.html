@@ -45,11 +45,11 @@ body.focus-mode #focusDim{display:block}
 .acc.open{z-index:12;border-color:#8a8aa0;box-shadow:0 6px 18px rgba(0,0,0,.28)}
 .ahead{display:flex;align-items:flex-start;gap:4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:7px 8px;border-radius:11px}
 .ainfo{min-width:0;flex:1;overflow:hidden}
-.aname{font-weight:600;color:var(--neon3);font-size:.85rem;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;width:100%;min-height:1.25em}
-.aname-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aname{font-weight:600;color:var(--neon3);font-size:.85rem;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;min-width:0;width:100%;min-height:1.5em;line-height:1}
+.aname-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.5em}
 .acc.daily-ok .aname-text{color:var(--daily);border-bottom:1px solid rgba(126,176,232,.35)}
-.abadges{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:2px;flex:0 0 auto;margin-left:auto;min-height:1.2em}
-.abadges .badge[hidden]{visibility:hidden;pointer-events:none}
+.abadges{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:2px;flex:0 0 auto;margin-left:auto;line-height:1;transform:translateY(-1px)}
+.abadges .badge[hidden]{display:none}
 .anote{font-size:.68rem;font-weight:600;color:#f4f4f7;margin-top:3px;white-space:pre-line;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;min-height:2.4em;line-height:1.2em;width:100%;max-width:100%;padding-right:4px;box-sizing:border-box}
 .anote:empty::before{content:"\00a0"}
 .abody-foot{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:6px;border-top:1px solid rgba(255,255,255,.06)}
