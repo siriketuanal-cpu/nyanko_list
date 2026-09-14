@@ -60,21 +60,31 @@ body.is-scroll-lock{
 .gbody{display:block;padding-bottom:2px;overflow:visible}
 /* .gtools padding moved into flex rule */
 /* 設定・アカウント追加などの開閉は中央付近だけ反応（誤タップ防止） */
-.gtools{display:flex;justify-content:center;padding:2px 8px 4px}
+.gtools{display:flex;flex-direction:column;align-items:center;padding:2px 6px 5px}
 .gtools-toggle{
   display:flex;align-items:center;justify-content:center;
-  width:auto;min-width:48px;max-width:72px;
-  margin:0 auto;padding:6px 14px;
+  width:48px;height:34px;min-width:48px;margin:0 auto 1px;padding:4px 8px;
   border:none;background:transparent;color:var(--muted);
-  font-size:.7rem;letter-spacing:.2em;cursor:pointer;opacity:.5;
+  font-size:.9rem;line-height:1;letter-spacing:0;cursor:pointer;opacity:.55;
   -webkit-tap-highlight-color:transparent;touch-action:manipulation;
 }
-.gtools-toggle:active{opacity:.9;color:var(--neon3)}
-.gactions{display:none;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:0;padding:4px 0 2px}
+.gtools-toggle:active{opacity:1;color:var(--neon3)}
+.gactions{
+  display:none;width:100%;grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:stretch;gap:0;padding:0;margin:0;
+}
 .gtools.open .gactions{display:grid}
-.gtools.open .gtools-toggle{opacity:.85;color:var(--neon3)}
-.gactions .ggear{justify-self:stretch;width:100%;text-align:center}
-.gactions .gaa{justify-self:stretch;width:100%;font-size:.75rem;color:var(--muted);background:none;border:none;cursor:pointer;padding:8px 2px;text-align:center}
+.gtools.open .gtools-toggle{opacity:.9;color:var(--neon3);font-size:1.15rem}
+.gactions > button{
+  min-width:0;min-height:44px;display:flex;align-items:center;justify-content:center;
+  justify-self:stretch;width:100%;margin:0;padding:8px 4px;
+  text-align:center;box-sizing:border-box;
+}
+.gactions .ggear{font-size:.95rem}
+.gactions .gaa{
+  font-size:.72rem;color:var(--muted);background:none;border:none;cursor:pointer;
+  line-height:1.25;white-space:normal;overflow-wrap:anywhere;
+}
 .gactions .gaa:active{color:var(--neon2)}
 .ib{background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;padding:4px}
 .ib:active{color:var(--neon2)}
