@@ -70,9 +70,38 @@ body.is-scroll-lock{
 .ib{background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;padding:4px}
 .ib:active{color:var(--neon2)}
 .acc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:6px 6px 2px;align-items:start;overflow:visible}
-.acc{background:#12121a;border:1px solid rgba(230,230,245,.42);border-radius:12px;padding:0;min-width:0;position:relative;contain:layout style}
-.acc.open{z-index:12;border:2px dashed #00e5c3;box-shadow:0 0 0 1px rgba(0,229,195,.18),0 6px 18px rgba(0,0,0,.28)}
-.ahead{display:flex;align-items:flex-start;gap:4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:4px 8px 5px;border-radius:11px}
+.acc{
+  background:#12121a;
+  /* 開閉で枠線の太さが変わるとカード＝ゲーム行の高さが動く → 常に2pxで幅を固定 */
+  border:2px solid rgba(230,230,245,.42);
+  border-radius:12px;padding:0;min-width:0;position:relative;contain:layout style;
+  box-sizing:border-box;
+}
+.acc.open{
+  z-index:12;
+  border:2px dashed #00e5c3;
+  box-shadow:0 0 0 1px rgba(0,229,195,.18),0 6px 18px rgba(0,0,0,.28);
+}
+.ahead{
+  display:flex;align-items:flex-start;gap:4px;
+  padding:4px 8px 2px;border-radius:11px;
+  /* ヘッダー全体はタップで開かない（誤展開防止） */
+  cursor:default;pointer-events:none;
+}
+.ahead .ainfo{pointer-events:none;}
+/* 中央の開閉ボタンだけ反応 */
+.aexpand{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;margin:0;padding:2px 0 6px;
+  border:none;background:transparent;
+  color:var(--muted);font-size:.7rem;letter-spacing:.22em;line-height:1;
+  cursor:pointer;opacity:.5;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  pointer-events:auto;
+}
+.aexpand::before{content:'···';}
+.acc.open .aexpand{opacity:.9;color:var(--neon2);}
+.aexpand:active{opacity:1;color:var(--neon3);}
 .ainfo{min-width:0;flex:1;overflow:hidden}
 .aname{font-weight:600;color:var(--neon3);font-size:.85rem;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:4px;min-width:0;width:100%;min-height:0;line-height:1.5em}
 .aname-text{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.5em}

@@ -219,7 +219,7 @@ function render(forceStructure = false) {
       <div class="gbody">
         ${(g.accounts||[]).length ? `<div class="acc-grid">${(g.accounts||[]).map(a => `
           <div class="acc" data-aid="${g.id}|${a.id}">
-            <div class="ahead" data-atoggle="${g.id}|${a.id}">
+            <div class="ahead">
               <div class="ainfo">
                 <div class="aname">
                   <span class="aname-text">${escape(a.name)}</span>
@@ -232,6 +232,7 @@ function render(forceStructure = false) {
                 <div class="anote" data-anote="${g.id}|${a.id}"></div>
               </div>
             </div>
+            <button type="button" class="aexpand" data-atoggle="${g.id}|${a.id}" aria-label="アカウントを開閉"></button>
           </div>`).join('')}</div>` : ''}
         <div class="gtools" data-gtools-wrap="${g.id}">
           <button type="button" class="gtools-toggle" data-gtools="${g.id}" title="操作">···</button>
@@ -363,12 +364,19 @@ function toggleAcc(key) {
       const g = state.games.find(x => x.id === gid);
       const a = g && g.accounts.find(x => x.id === aid);
       if (g && a) {
+        // 先に open 表示 → 中身はキャッシュ優先。未生成時も同期で付けてから文字サイズだけ次フレーム
         const body = prepareAccountBody(g, a, key);
         if (body && !body.parentNode) el.appendChild(body);
+        if (body && !body.dataset.fitted) {
+          requestAnimationFrame(() => {
+            fitChipsIn(body);
+            body.dataset.fitted = '1';
+          });
+        }
       }
     }
   }
-  syncGridDim();
+  // syncGridDim は空処理だが呼び出し自体も省略
 }
 
 function closeOpenAccs() {
