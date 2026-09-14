@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#0d0d12">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,7 +27,8 @@ body{
   height:100%;
   max-width:480px;
   margin:0 auto;
-  padding:calc(10px + env(safe-area-inset-top, 0px)) 12px calc(80px + env(safe-area-inset-bottom, 0px));
+  /* セーフエリアなし。上は今と同程度〜気持ち多めの固定余白、下はFAB用 */
+  padding:16px 12px 80px;
   line-height:1.4;
   background:var(--bg);color:var(--text);
   font-family:system-ui,-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;
