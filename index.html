@@ -58,8 +58,17 @@ body.is-scroll-lock{
 .gmeta{font-size:.62rem;color:var(--muted);text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap}
 .gmeta .badge{font-size:.55rem}
 .gbody{display:block;padding-bottom:2px;overflow:visible}
-.gtools{padding:2px 8px 4px}
-.gtools-toggle{display:block;width:100%;padding:4px 0;border:none;background:transparent;color:var(--muted);font-size:.7rem;letter-spacing:.2em;cursor:pointer;opacity:.5;-webkit-tap-highlight-color:transparent}
+/* .gtools padding moved into flex rule */
+/* 設定・アカウント追加などの開閉は中央付近だけ反応（誤タップ防止） */
+.gtools{display:flex;justify-content:center;padding:2px 8px 4px}
+.gtools-toggle{
+  display:flex;align-items:center;justify-content:center;
+  width:auto;min-width:48px;max-width:72px;
+  margin:0 auto;padding:6px 14px;
+  border:none;background:transparent;color:var(--muted);
+  font-size:.7rem;letter-spacing:.2em;cursor:pointer;opacity:.5;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
 .gtools-toggle:active{opacity:.9;color:var(--neon3)}
 .gactions{display:none;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:0;padding:4px 0 2px}
 .gtools.open .gactions{display:grid}
@@ -82,26 +91,7 @@ body.is-scroll-lock{
   border:2px dashed #00e5c3;
   box-shadow:0 0 0 1px rgba(0,229,195,.18),0 6px 18px rgba(0,0,0,.28);
 }
-.ahead{
-  display:flex;align-items:flex-start;gap:4px;
-  padding:4px 8px 2px;border-radius:11px;
-  /* ヘッダー全体はタップで開かない（誤展開防止） */
-  cursor:default;pointer-events:none;
-}
-.ahead .ainfo{pointer-events:none;}
-/* 中央の開閉ボタンだけ反応 */
-.aexpand{
-  display:flex;align-items:center;justify-content:center;
-  width:100%;margin:0;padding:2px 0 6px;
-  border:none;background:transparent;
-  color:var(--muted);font-size:.7rem;letter-spacing:.22em;line-height:1;
-  cursor:pointer;opacity:.5;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-  pointer-events:auto;
-}
-.aexpand::before{content:'···';}
-.acc.open .aexpand{opacity:.9;color:var(--neon2);}
-.aexpand:active{opacity:1;color:var(--neon3);}
+.ahead{display:flex;align-items:flex-start;gap:4px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:4px 8px 5px;border-radius:11px}
 .ainfo{min-width:0;flex:1;overflow:hidden}
 .aname{font-weight:600;color:var(--neon3);font-size:.85rem;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:4px;min-width:0;width:100%;min-height:0;line-height:1.5em}
 .aname-text{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.5em}

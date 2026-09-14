@@ -219,7 +219,7 @@ function render(forceStructure = false) {
       <div class="gbody">
         ${(g.accounts||[]).length ? `<div class="acc-grid">${(g.accounts||[]).map(a => `
           <div class="acc" data-aid="${g.id}|${a.id}">
-            <div class="ahead">
+            <div class="ahead" data-atoggle="${g.id}|${a.id}">
               <div class="ainfo">
                 <div class="aname">
                   <span class="aname-text">${escape(a.name)}</span>
@@ -232,7 +232,6 @@ function render(forceStructure = false) {
                 <div class="anote" data-anote="${g.id}|${a.id}"></div>
               </div>
             </div>
-            <button type="button" class="aexpand" data-atoggle="${g.id}|${a.id}" aria-label="アカウントを開閉"></button>
           </div>`).join('')}</div>` : ''}
         <div class="gtools" data-gtools-wrap="${g.id}">
           <button type="button" class="gtools-toggle" data-gtools="${g.id}" title="操作">···</button>
