@@ -793,27 +793,53 @@ function scheduleOneGameReset(g, now = Date.now()) {
   }, wait);
   resetTimers.set(g.id, tid);
 }
+// 復帰の二重発火（visibility + pageshow）をまとめる
+let lastResumeAt = 0;
 function onResume() {
-  // バックグラウンドから戻ったとき：リセット反映＋タイマー張り直し（操作を邪魔しないよう軽く）
+  if (document.hidden) return;
+  const now = Date.now();
+  if (now - lastResumeAt < 320) return;
+  lastResumeAt = now;
+
+  // 保留ハイライトだけ外す（構造再構築はしない）
   clearPending();
-  if (applyResets(state)) {
+
+  // 内部状態はすぐ合わせる
+  const changed = applyResets(state);
+  if (changed) {
     state.games.forEach(g => (g.accounts || []).forEach(invalidateProgress));
-    save(state);
-    render(false);
   }
-  scheduleGameResets();
+
+  const finish = () => {
+    if (document.hidden) return;
+    if (changed) {
+      // 変化があるときだけ描画。構造は維持したままバッジ等を同期（forceStructure=false）
+      render(false);
+      // 保存は描画コミット後（復帰直後の同期I/Oと描画の衝突を避ける）
+      requestAnimationFrame(() => setTimeout(() => save(state), 0));
+    }
+    // リセットタイマーは常に張り直す（内部時計の基準を合わせる）
+    scheduleGameResets();
+  };
+
+  // DOM更新は1フレームに載せる（点滅・ちらつき抑制）
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(finish);
+  else finish();
 }
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
-    flushSave();
+    // 裏移行時の保存。可能ならアイドルへ（殺される前に走らせる timeout 付き）
+    const persist = () => { try { flushSave(); } catch (_) {} };
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(persist, { timeout: 400 });
+    else setTimeout(persist, 0);
   } else if (document.visibilityState === 'visible') {
     onResume();
   }
 });
 window.addEventListener('pagehide', flushSave);
 window.addEventListener('pageshow', e => {
-  // bfcache 復帰時もリセット確認
+  // bfcache 復帰の保険（主は visibilitychange）
   if (e.persisted) onResume();
 });
 
