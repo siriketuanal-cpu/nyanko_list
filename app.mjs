@@ -95,6 +95,24 @@ function buildChecksHtml(g, a) {
   return `${checks}<div class="abody-foot"><button type="button" class="abody-edit" data-ea="${g.id}|${a.id}" title="アカウント設定">⚙️</button><button type="button" class="memo" data-note="${g.id}|${a.id}" title="メモ">📝</button></div>`;
 }
 
+
+// チップ文字：少し長いだけならフォントを下げ、それでも溢れたら ellipsis
+function fitChipText(el) {
+  if (!el) return;
+  el.style.fontSize = '';
+  const cs = getComputedStyle(el);
+  let size = parseFloat(cs.fontSize) || 12;
+  const min = Math.max(9, size * 0.78);
+  // レイアウト確定後に測る
+  while (size > min + 0.05 && el.scrollWidth > el.clientWidth + 1) {
+    size -= 0.5;
+    el.style.fontSize = size + 'px';
+  }
+}
+function fitChipsIn(root) {
+  if (!root) return;
+  root.querySelectorAll('.chip').forEach(fitChipText);
+}
 function prepareAccountBody(g, a, key) {
   let ui = accountUICache.get(key);
   if (!ui) return null;
@@ -404,8 +422,13 @@ document.getElementById('root').addEventListener('pointerdown', e => {
     document.getElementById('nTitle').textContent = a.name + ' のメモ';
     document.getElementById('notes').value = a.note || '';
     const modal = document.getElementById('nModal');
+    lockBodyScroll();
     modal.classList.add('show');
-    requestAnimationFrame(positionNoteModal);
+    requestAnimationFrame(() => {
+      positionNoteModal();
+      // キーボード等で高さが変わったあと再配置
+      requestAnimationFrame(positionNoteModal);
+    });
     return;
   }
   const ea = e.target.closest('[data-ea]');
@@ -447,8 +470,8 @@ document.getElementById('root').addEventListener('pointerdown', e => {
 document.getElementById('nModal').addEventListener('pointerdown', e => { e.stopPropagation(); });
 
 document.getElementById('fab').onpointerdown = e => { e.preventDefault(); openG(); };
-document.getElementById('gCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('gModal').classList.remove('show'); };
-document.getElementById('aCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('aModal').classList.remove('show'); };
+document.getElementById('gCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('gModal').classList.remove('show'); unlockBodyScroll(); unlockBodyScroll(); };
+document.getElementById('aCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('aModal').classList.remove('show'); unlockBodyScroll(); unlockBodyScroll(); };
 document.getElementById('nCancel').onpointerdown = e => { e.preventDefault(); closeNoteModal(); };
 document.getElementById('nClear').onpointerdown = e => { e.preventDefault();
   document.getElementById('notes').value = '';
@@ -479,7 +502,7 @@ function openG(id = null) {
   document.getElementById('gMTime').value = g ? (g.monthlyReset || '05:00') : '05:00';
   document.getElementById('gDelZone').style.display = g ? 'block' : 'none';
   setResetFieldsEnabled(g);
-  document.getElementById('gModal').classList.add('show');
+  lockBodyScroll(); document.getElementById('gModal').classList.add('show');
 }
 
 function updateSettingSlots(prefix, max, initial = 2) {
@@ -549,7 +572,7 @@ function openA(gid, aid = null) {
   }
   document.getElementById('aDelZone').style.display = a ? 'block' : 'none';
   initSettingSlots();
-  document.getElementById('aModal').classList.add('show');
+  lockBodyScroll(); document.getElementById('aModal').classList.add('show');
 }
 
 function packChecks(prefix, max, existing) {
@@ -613,7 +636,7 @@ document.getElementById('gSave').onpointerdown = e => { e.preventDefault();
     });
   }
   save(state);
-  document.getElementById('gModal').classList.remove('show');
+  document.getElementById('gModal').classList.remove('show'); unlockBodyScroll();
   render(true);
   scheduleGameResets();
 };
@@ -622,7 +645,7 @@ document.getElementById('gDel').onpointerdown = e => { e.preventDefault();
   if (!editG || !confirm('このゲームを削除する？')) return;
   state.games = state.games.filter(g => g.id !== editG);
   save(state);
-  document.getElementById('gModal').classList.remove('show');
+  document.getElementById('gModal').classList.remove('show'); unlockBodyScroll();
   render(true);
   scheduleGameResets();
 };
@@ -653,7 +676,7 @@ document.getElementById('aSave').onpointerdown = e => { e.preventDefault();
   }
   save(state);
   invalidateProgress(editA ? g.accounts.find(a => a.id === editA) : g.accounts[g.accounts.length - 1]);
-  document.getElementById('aModal').classList.remove('show');
+  document.getElementById('aModal').classList.remove('show'); unlockBodyScroll();
   const savedAcc = g.accounts.find(a => a.id === editA);
   if (savedAcc) {
     const savedKey = g.id + '|' + savedAcc.id;
@@ -671,14 +694,29 @@ document.getElementById('aDel').onpointerdown = e => { e.preventDefault();
   if (!g) return;
   g.accounts = g.accounts.filter(a => a.id !== editA);
   save(state);
-  document.getElementById('aModal').classList.remove('show');
+  document.getElementById('aModal').classList.remove('show'); unlockBodyScroll();
   render(true);
   scheduleGameResets();
 };
 
+
+let scrollLockY = 0;
+function lockBodyScroll() {
+  if (document.body.classList.contains('is-scroll-lock')) return;
+  scrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
+  document.body.classList.add('is-scroll-lock');
+  document.body.style.top = '-' + scrollLockY + 'px';
+}
+function unlockBodyScroll() {
+  if (!document.body.classList.contains('is-scroll-lock')) return;
+  document.body.classList.remove('is-scroll-lock');
+  document.body.style.top = '';
+  window.scrollTo(0, scrollLockY);
+}
 function closeNoteModal() {
   document.getElementById('nModal').classList.remove('show');
   noteAnchor = null;
+  unlockBodyScroll();
 }
 
 function positionNoteModal() {
@@ -690,19 +728,33 @@ function positionNoteModal() {
   const r = noteAnchor.getBoundingClientRect();
   const gap = 8;
   const margin = 8;
-  const pw = Math.min(window.innerWidth * .92, 420);
-  const ph = Math.min(window.innerHeight * .70, 520);
+  // visualViewport があればキーボード表示時も実画面に合わせる
+  const vv = window.visualViewport;
+  const viewW = vv ? vv.width : window.innerWidth;
+  const viewH = vv ? vv.height : window.innerHeight;
+  const offsetLeft = vv ? vv.offsetLeft : 0;
+  const offsetTop = vv ? vv.offsetTop : 0;
+  const pw = Math.min(viewW * 0.92, 420);
+  // 実測のパネル高さを優先（未計測時は上限）
+  const measured = panel.offsetHeight || 0;
+  const ph = measured > 0 ? measured : Math.min(viewH * 0.70, 520);
   let left = r.left;
-  if (left + pw > window.innerWidth - margin) left = window.innerWidth - pw - margin;
-  if (left < margin) left = margin;
+  if (left + pw > offsetLeft + viewW - margin) left = offsetLeft + viewW - pw - margin;
+  if (left < offsetLeft + margin) left = offsetLeft + margin;
   let top = r.bottom + gap;
-  if (top + ph > window.innerHeight - margin) top = Math.max(margin, r.top - ph - gap);
-  modal.style.setProperty('--note-left', left + 'px');
-  modal.style.setProperty('--note-top', top + 'px');
+  if (top + ph > offsetTop + viewH - margin) {
+    top = Math.max(offsetTop + margin, r.top - ph - gap);
+  }
+  modal.style.setProperty('--note-left', Math.round(left) + 'px');
+  modal.style.setProperty('--note-top', Math.round(top) + 'px');
 }
 
 window.addEventListener('resize', positionNoteModal, { passive:true });
 window.addEventListener('scroll', positionNoteModal, { passive:true });
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', positionNoteModal, { passive:true });
+  window.visualViewport.addEventListener('scroll', positionNoteModal, { passive:true });
+}
 
 document.getElementById('nSave').onpointerdown = e => { e.preventDefault();
   if (!noteTarget) return;
