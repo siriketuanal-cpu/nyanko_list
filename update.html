@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#0d0d12">
+<meta name="robots" content="noindex">
 <title>更新 — にゃんこチェック</title>
 <style>
 html,body{margin:0;min-height:100%;background:#0d0d12;color:#e8e8f0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;display:flex;align-items:center;justify-content:center}
@@ -22,7 +23,20 @@ a{color:#c9a0ff}
   <p><a href="./index.html">戻る</a></p>
 </div>
 <script>
-const APP = 'nyanko-split-v543';
+const CACHE = 'nyanko-split-v555';
+const SHELL = [
+  './',
+  './index.html',
+  './app.mjs',
+  './update.html',
+  './core.mjs',
+  './store.mjs',
+  './manifest.json',
+  './icon.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-maskable-512.png'
+];
 const st = document.getElementById('st');
 (async () => {
   try {
@@ -36,9 +50,23 @@ const st = document.getElementById('st');
       const keys = await caches.keys();
       await Promise.all(keys.map(k => caches.delete(k)));
     }
+    st.textContent = '最新ファイルを取得中…';
+    // 更新時だけシェルをまとめて取り直す（通常起動の SW install では取らない）
+    if ('caches' in window) {
+      const c = await caches.open(CACHE);
+      await Promise.all(SHELL.map(async u => {
+        try {
+          const res = await fetch(u, { cache: 'no-store' });
+          if (res && res.ok) await c.put(u, res.clone());
+        } catch (_) {}
+      }));
+    }
+    st.textContent = 'Service Worker を登録中…';
+    if ('serviceWorker' in navigator) {
+      await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'all' }).catch(() => {});
+    }
     st.textContent = '最新版へ移動します…';
-    // hard reload target
-    location.replace('./index.html?rev=' + APP + '&t=' + Date.now());
+    location.replace('./index.html?t=' + Date.now());
   } catch (e) {
     st.textContent = '失敗したかも…「戻る」から開き直してね';
   }

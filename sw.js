@@ -1,6 +1,8 @@
-/* 完全キャッシュ優先・通常時はネットワークに出ない */
+/* キャッシュ名固定。通常起動ではネットに出ない。
+ * install では addAll しない（TWA更新バー・起動時通信を抑える）。
+ * 初回取得は fetch ミス時のみ。まとめた取り直しは update.html。 */
 const C = 'nyanko-split-v555';
-const A = [
+const SHELL = [
   './',
   './index.html',
   './app.mjs',
@@ -14,34 +16,35 @@ const A = [
   './icon-maskable-512.png'
 ];
 
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(C).then(c => c.addAll(A)).then(() => self.skipWaiting())
-  );
+self.addEventListener('install', event => {
+  // ネット取得しない。すぐ待機解除のみ。
+  event.waitUntil(self.skipWaiting());
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
+self.addEventListener('activate', event => {
+  event.waitUntil(
     caches.keys()
-      .then(ks => Promise.all(ks.filter(k => k !== C).map(k => caches.delete(k))))
+      .then(keys => Promise.all(
+        keys.filter(k => k !== C).map(k => caches.delete(k))
+      ))
       .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request, { ignoreSearch: true }).then(hit => {
-      // キャッシュにあれば絶対にネットワークへ出ない
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  event.respondWith(
+    caches.match(event.request, { ignoreSearch: true }).then(hit => {
       if (hit) return hit;
-      // 初回インストール時など、キャッシュにない場合のみ取得して保存
-      return fetch(e.request).then(res => {
+      return fetch(event.request).then(res => {
         if (res && res.ok && res.type === 'basic') {
           const copy = res.clone();
-          caches.open(C).then(c => c.put(e.request, copy)).catch(() => {});
+          caches.open(C).then(c => c.put(event.request, copy)).catch(() => {});
         }
         return res;
-      }).catch(() => caches.match('./index.html').then(hit => hit || caches.match('./')));
+      }).catch(() =>
+        caches.match('./index.html').then(h => h || caches.match('./'))
+      );
     })
   );
 });

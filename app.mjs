@@ -234,7 +234,7 @@ function render(forceStructure = false) {
             </div>
           </div>`).join('')}</div>` : ''}
         <div class="gtools" data-gtools-wrap="${g.id}">
-          <button type="button" class="gtools-toggle" data-gtools="${g.id}" title="操作" aria-label="操作を開く">···</button>
+          <button type="button" class="gtools-toggle" data-gtools="${g.id}" title="操作">···</button>
           <div class="gactions">
             <button type="button" class="ib ggear" data-eg="${g.id}" title="ゲーム設定">⚙️</button>
             <button type="button" class="gaa" data-aa="${g.id}" title="アカウント追加">＋ アカウント</button>
@@ -463,11 +463,7 @@ document.getElementById('root').addEventListener('pointerdown', e => {
     e.preventDefault(); e.stopPropagation();
     const id = gt.dataset.gtools; toolsOpen[id] = !toolsOpen[id];
     const wrap = document.querySelector('[data-gtools-wrap="' + id + '"]');
-    if (wrap) {
-      wrap.classList.toggle('open', !!toolsOpen[id]);
-      gt.textContent = toolsOpen[id] ? '×' : '···';
-      gt.setAttribute('aria-label', toolsOpen[id] ? '操作を閉じる' : '操作を開く');
-    }
+    if (wrap) wrap.classList.toggle('open', !!toolsOpen[id]);
     return;
   }
   const eg = e.target.closest('[data-eg]');
@@ -918,8 +914,12 @@ const defer = (fn) => {
 };
 defer(() => {
   scheduleGameResets();
+  // TWA: 既存登録があれば触らない。update() は呼ばない（更新バー抑制）
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?rev=v555', { updateViaCache: 'all' }).catch(() => {});
+    navigator.serviceWorker.getRegistration('./').then(reg => {
+      if (reg) return;
+      return navigator.serviceWorker.register('./sw.js', { updateViaCache: 'all' });
+    }).catch(() => {});
   }
 });
 
