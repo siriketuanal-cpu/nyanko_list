@@ -11,6 +11,17 @@ let saveTimer = null;
 const progressCache = new WeakMap();
 let editG = null, editA = null, editGid = null, noteTarget = null, noteAnchor = null;
 
+// 高速テキスト幅計算用の共通オフスクリーキャンバス (Layout Thrashing 対策)
+let textMeasureCanvas = null;
+let textMeasureCtx = null;
+function getCanvasCtx() {
+  if (!textMeasureCtx) {
+    textMeasureCanvas = document.createElement('canvas');
+    textMeasureCtx = textMeasureCanvas.getContext('2d');
+  }
+  return textMeasureCtx;
+}
+
 function getProgress(a, field) {
   let cached = progressCache.get(a);
   if (!cached) { cached = Object.create(null); progressCache.set(a, cached); }
@@ -21,13 +32,16 @@ function getProgress(a, field) {
   cached[field] = result;
   return result;
 }
+
 function invalidateProgress(a) {
   progressCache.delete(a);
 }
+
 function dailyProgress(a) { return getProgress(a, 'daily'); }
 function isDone(a) { return dailyProgress(a).full; }
 function isWeekDone(a) { return getProgress(a, 'weekly').full; }
 function isMonthDone(a) { return getProgress(a, 'monthly').full; }
+
 function gameDailyAllOk(g) {
   const list = (g.accounts || []).filter(a => (a.daily || []).some(c => c.label));
   return list.length > 0 && list.every(isDone);
@@ -40,11 +54,11 @@ function gameMonthlyAllOk(g) {
   const list = (g.accounts || []).filter(a => (a.monthly || []).some(c => c.label));
   return list.length > 0 && list.every(isMonthDone);
 }
+
 function syncGameHeader(g) {
   const el = gameUICache.get(g.id)?.meta || document.querySelector('[data-gmeta="' + g.id + '"]');
   if (!el) return;
   const bits = [];
-  // 全アカウントのデイリー完了時は COMPLETE（日課OKの置き換え）
   if (gameDailyAllOk(g)) bits.push('<span class="badge complete" title="全アカウント デイリー完了">COMPLETE</span>');
   if (gameWeeklyAllOk(g)) bits.push('<span class="badge week" title="全アカウント 週課完了">DONE</span>');
   if (gameMonthlyAllOk(g)) bits.push('<span class="badge month" title="全アカウント 月課完了">DONE</span>');
@@ -71,6 +85,7 @@ function scheduleSave(delay = 120) {
     save(state);
   }, delay);
 }
+
 function flushSave() {
   if (saveTimer) {
     clearTimeout(saveTimer);
@@ -95,24 +110,40 @@ function buildChecksHtml(g, a) {
   return `${checks}<div class="abody-foot"><button type="button" class="abody-edit" data-ea="${g.id}|${a.id}" title="アカウント設定">⚙️</button><button type="button" class="memo" data-note="${g.id}|${a.id}" title="メモ">📝</button></div>`;
 }
 
-
-// チップ文字：少し長いだけならフォントを下げ、それでも溢れたら ellipsis
+/**
+ * Layout Thrashing (Forced Reflow) の完全解消
+ * DOM読み取りとスタイルの変更を分離し、一回だけ設定を行う
+ */
 function fitChipText(el) {
-  if (!el) return;
-  el.style.fontSize = '';
-  const cs = getComputedStyle(el);
-  let size = parseFloat(cs.fontSize) || 12;
-  const min = Math.max(9, size * 0.78);
-  // レイアウト確定後に測る
-  while (size > min + 0.05 && el.scrollWidth > el.clientWidth + 1) {
-    size -= 0.5;
-    el.style.fontSize = size + 'px';
+  if (!el || !el.textContent) return;
+  const text = el.textContent;
+  const clientW = el.clientWidth;
+  if (!clientW) return;
+
+  const ctx = getCanvasCtx();
+  if (ctx) {
+    ctx.font = '500 12px system-ui,-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif';
+    const textWidth = ctx.measureText(text).width;
+    const paddingAndBorder = 16;
+    const available = clientW - paddingAndBorder;
+
+    if (textWidth > available && available > 0) {
+      const ratio = available / textWidth;
+      const targetSize = Math.max(9.3, Math.floor(12 * ratio * 10) / 10);
+      if (targetSize < 12) {
+        el.style.fontSize = targetSize + 'px';
+        return;
+      }
+    }
   }
+  el.style.fontSize = '';
 }
+
 function fitChipsIn(root) {
   if (!root) return;
   root.querySelectorAll('.chip').forEach(fitChipText);
 }
+
 function prepareAccountBody(g, a, key) {
   let ui = accountUICache.get(key);
   if (!ui) return null;
@@ -122,8 +153,6 @@ function prepareAccountBody(g, a, key) {
   body.className = 'abody';
   body.dataset.abody = key;
   body.dataset.ready = '1';
-  // デイリー/ウィークリー/マンスリーのうち実際に中身があるものだけ列を確保し、
-  // 余白ができないよう開く幅を絞る（その他欄は全幅の別行なので列数に含めない）
   const cols = ['daily', 'weekly', 'monthly'].filter(f => (a[f] || []).some(c => c.label)).length || 1;
   body.dataset.cols = String(cols);
   body.innerHTML = buildChecksHtml(g, a);
@@ -135,17 +164,13 @@ function prepareAccountBody(g, a, key) {
 }
 
 function structureSig() {
-  // ゲーム／アカウントの増減だけを見る（ラベル変更は render(true) で強制再構築）
   return state.games.map(g => g.id + ':' + (g.accounts || []).map(a => a.id).join(',')).join('|');
-}
-
-function syncGridDim() {
-  // 暗転オーバーレイは使わず、開いているカード自身のz-indexだけで前面表示する。
 }
 
 function getAccountUI(key) {
   return accountUICache.get(key) || null;
 }
+
 function cacheAccountUI(g, a, acc) {
   const key = g.id + '|' + a.id;
   const ui = {
@@ -174,7 +199,6 @@ function syncAccountUI(g, a) {
   if (ui.week) ui.week.hidden = !isWeekDone(a);
   if (ui.month) ui.month.hidden = !isMonthDone(a);
 
-  // 改行はそのまま活かし、通常の空白だけ畳む。折り返し(pre-line)と2段クランプはCSS側で処理。
   const noteHead = (a.note || '').trim().replace(/[ \t]+/g, ' ').replace(/\n{2,}/g, '\n');
   if (ui.note) ui.note.textContent = noteHead ? ('📝 ' + noteHead) : '';
 
@@ -203,6 +227,7 @@ function render(forceStructure = false) {
     return;
   }
 
+  // 構造再構築が必要な場合のみ HTML を破棄して組み立て（チラツキ防止）
   if (needStructure) {
     clearPending();
     accountUICache.clear();
@@ -244,8 +269,6 @@ function render(forceStructure = false) {
       </div>
     </div>`).join('');
 
-    // 構造を作った直後にDOM参照を一度だけキャッシュ。
-    // 通常のrenderではゲーム/アカウントごとのquerySelectorを繰り返さない。
     root.querySelectorAll('.game').forEach(gameEl => {
       const gid = gameEl.dataset.gid;
       gameUICache.set(gid, {
@@ -265,6 +288,7 @@ function render(forceStructure = false) {
     });
   }
 
+  // 構造再構築を行わない軽量な状態同期のみ（チラツキが起きない）
   state.games.forEach(g => {
     const gameUI = gameUICache.get(g.id);
     const gameEl = gameUI?.el;
@@ -272,12 +296,12 @@ function render(forceStructure = false) {
     if (tw) tw.classList.toggle('open', !!toolsOpen[g.id]);
     (g.accounts || []).forEach(a => {
       const key = g.id + '|' + a.id;
-      const acc = gameEl && gameEl.querySelector(`[data-aid="${key}"]`);
+      const ui = getAccountUI(key);
+      const acc = ui?.acc || (gameEl && gameEl.querySelector(`[data-aid="${key}"]`));
       if (!acc) return;
       const wantOpen = !!accOpen[key];
-      if (!getAccountUI(key)) cacheAccountUI(g, a, acc);
+      if (!ui) cacheAccountUI(g, a, acc);
       acc.classList.toggle('open', wantOpen);
-      // 本文は開いたアカウントだけ生成。閉じたカードではDOMを作らない。
       if (wantOpen) {
         const body = prepareAccountBody(g, a, key);
         if (body && !body.parentNode) acc.appendChild(body);
@@ -286,16 +310,14 @@ function render(forceStructure = false) {
     });
     syncGameHeader(g);
   });
-  syncGridDim();
 }
 
-// チェックは常に「1回目タップ=保留、2回目タップ=確定」の2段階。
-// 方向(ON/OFF)を問わず一律にすることで、フィールドごとの分岐を増やさない。
 let pendingKey = null, pendingEl = null;
 function clearPending() {
   if (pendingEl) pendingEl.classList.remove('pending');
   pendingKey = null; pendingEl = null;
 }
+
 function handleChipTap(el) {
   const t = el.dataset.t; if (!t) return;
   if (pendingKey === t) {
@@ -308,6 +330,7 @@ function handleChipTap(el) {
     el.classList.add('pending');
   }
 }
+
 function commitChip(el) {
   const t = el.dataset.t; if (!t) return;
   const [gid, aid, type, idx] = t.split('|');
@@ -326,7 +349,6 @@ function commitChip(el) {
   invalidateProgress(a);
   syncAccountUI(g, a);
   syncGameHeader(g);
-  // チェックタップの体感を優先し、保存(同期I/O)は描画確定後に回す
   scheduleSave();
 }
 
@@ -339,8 +361,6 @@ function toggleAcc(key) {
   const willOpen = !accOpen[key];
 
   if (willOpen) {
-    // 別のアカウントが開いているなら、このタップでは「閉じる」だけ。
-    // もう一度タップすると次のアカウントが開く。
     const hasOtherOpen = Object.keys(openAccByGame).some(otherGid => {
       const prevKey = openAccByGame[otherGid];
       return !!prevKey && prevKey !== key;
@@ -356,14 +376,13 @@ function toggleAcc(key) {
 
   accOpen[key] = willOpen;
   const ui = getAccountUI(key);
-  const el = ui?.acc || document.querySelector('[data-aid="' + key + '"]');
+  const el = ui?.acc;
   if (el) {
     el.classList.toggle('open', willOpen);
     if (willOpen) {
       const g = state.games.find(x => x.id === gid);
       const a = g && g.accounts.find(x => x.id === aid);
       if (g && a) {
-        // 先に open 表示 → 中身はキャッシュ優先。未生成時も同期で付けてから文字サイズだけ次フレーム
         const body = prepareAccountBody(g, a, key);
         if (body && !body.parentNode) el.appendChild(body);
         if (body && !body.dataset.fitted) {
@@ -375,7 +394,6 @@ function toggleAcc(key) {
       }
     }
   }
-  // syncGridDim は空処理だが呼び出し自体も省略
 }
 
 function closeOpenAccs() {
@@ -386,26 +404,21 @@ function closeOpenAccs() {
     accOpen[k] = false;
     delete openAccByGame[gid];
     const ui = getAccountUI(k);
-    const el = ui?.acc || document.querySelector('[data-aid="' + k + '"]');
-    if (el) el.classList.remove('open');
+    if (ui?.acc) ui.acc.classList.remove('open');
   });
-  syncGridDim();
 }
 
 document.addEventListener('pointerdown', e => {
   if (pendingKey && !e.target.closest('.chip')) clearPending();
 
-  // 開いているアカウントの外側をタップしたら閉じる。
-  // メモは枠外タップでは閉じないため、モーダル上は除外する。
   if (Object.keys(openAccByGame).length &&
       !e.target.closest('.acc.open') &&
       !e.target.closest('.modal')) {
     closeOpenAccs();
   }
 }, { passive: true });
+
 document.getElementById('root').addEventListener('pointerdown', e => {
-  // アカウント外をタップしたら、まず現在のアカウントを閉じて終了。
-  // これをルート側で先に処理することで、stopPropagation の影響を受けない。
   const openAcc = e.target.closest('.acc.open');
   if (Object.keys(openAccByGame).length && !openAcc && !e.target.closest('.modal')) {
     closeOpenAccs();
@@ -433,7 +446,6 @@ document.getElementById('root').addEventListener('pointerdown', e => {
     modal.classList.add('show');
     requestAnimationFrame(() => {
       positionNoteModal();
-      // キーボード等で高さが変わったあと再配置
       requestAnimationFrame(positionNoteModal);
     });
     return;
@@ -445,10 +457,9 @@ document.getElementById('root').addEventListener('pointerdown', e => {
     e.preventDefault();
     e.stopPropagation();
     const key = at.dataset.atoggle;
-    // 別アカウントが開いている状態での1タップ目は「閉じる」だけ。
-    // 現在開いているDOMも確認して、状態ズレがあっても確実にこの挙動にする。
     const openedKeys = Object.keys(openAccByGame).filter(gid => openAccByGame[gid]);
-    const domOpen = document.querySelector('.acc.open[data-aid]');
+    const ui = getAccountUI(key);
+    const domOpen = ui?.acc?.classList.contains('open') ? ui.acc : null;
     const anotherOpen = openedKeys.some(gid => openAccByGame[gid] !== key) ||
       (!!domOpen && domOpen.dataset.aid !== key);
     if (anotherOpen) {
@@ -462,8 +473,8 @@ document.getElementById('root').addEventListener('pointerdown', e => {
   if (gt) {
     e.preventDefault(); e.stopPropagation();
     const id = gt.dataset.gtools; toolsOpen[id] = !toolsOpen[id];
-    const wrap = document.querySelector('[data-gtools-wrap="' + id + '"]');
-    if (wrap) wrap.classList.toggle('open', !!toolsOpen[id]);
+    const gameUI = gameUICache.get(id);
+    if (gameUI?.tools) gameUI.tools.classList.toggle('open', !!toolsOpen[id]);
     return;
   }
   const eg = e.target.closest('[data-eg]');
@@ -475,10 +486,9 @@ document.getElementById('root').addEventListener('pointerdown', e => {
 });
 
 document.getElementById('nModal').addEventListener('pointerdown', e => { e.stopPropagation(); });
-
 document.getElementById('fab').onpointerdown = e => { e.preventDefault(); openG(); };
-document.getElementById('gCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('gModal').classList.remove('show'); unlockBodyScroll(); unlockBodyScroll(); };
-document.getElementById('aCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('aModal').classList.remove('show'); unlockBodyScroll(); unlockBodyScroll(); };
+document.getElementById('gCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('gModal').classList.remove('show'); unlockBodyScroll(); };
+document.getElementById('aCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('aModal').classList.remove('show'); unlockBodyScroll(); };
 document.getElementById('nCancel').onpointerdown = e => { e.preventDefault(); closeNoteModal(); };
 document.getElementById('nClear').onpointerdown = e => { e.preventDefault();
   document.getElementById('notes').value = '';
@@ -520,7 +530,7 @@ function updateSettingSlots(prefix, max, initial = 2) {
     const el = document.getElementById(prefix + i);
     if (el && el.value.trim()) last = i;
   }
-  const visible = Math.min(max, Math.max(initial, last + (last ? 0 : 0)));
+  const visible = Math.min(max, Math.max(initial, last));
   for (let i = 1; i <= max; i++) {
     const el = document.getElementById(prefix + i);
     if (!el) continue;
@@ -587,7 +597,6 @@ function packChecks(prefix, max, existing) {
   for (let i = 1; i <= max; i++) {
     const label = (document.getElementById(prefix + i).value || '').trim();
     if (!label) continue;
-    // 同じ文言なら優先、なければ同じ枠番号の完了状態を引き継ぐ（改名時の誤リセット防止）
     let prev = existing && existing.find(c => c.label === label);
     if (!prev && existing && existing[i - 1] && existing[i - 1].label) prev = existing[i - 1];
     out.push({ label, done: prev ? !!prev.done : false });
@@ -595,8 +604,6 @@ function packChecks(prefix, max, existing) {
   return out;
 }
 
-// ゲーム内の先頭アカウントのデイリー/ウィークリー/マンスリー/その他を、他の全アカウントに反映。
-// 文言が一致する項目は完了状態を引き継ぐ（違う文言なら未完了で追加される）。
 function applyGameTemplate(gid) {
   const g = state.games.find(x => x.id === gid);
   if (!g || !g.accounts || g.accounts.length < 2) return;
@@ -706,7 +713,6 @@ document.getElementById('aDel').onpointerdown = e => { e.preventDefault();
   scheduleGameResets();
 };
 
-
 let scrollLockY = 0;
 function lockBodyScroll() {
   if (document.body.classList.contains('is-scroll-lock')) return;
@@ -735,14 +741,12 @@ function positionNoteModal() {
   const r = noteAnchor.getBoundingClientRect();
   const gap = 8;
   const margin = 8;
-  // visualViewport があればキーボード表示時も実画面に合わせる
   const vv = window.visualViewport;
   const viewW = vv ? vv.width : window.innerWidth;
   const viewH = vv ? vv.height : window.innerHeight;
   const offsetLeft = vv ? vv.offsetLeft : 0;
   const offsetTop = vv ? vv.offsetTop : 0;
   const pw = Math.min(viewW * 0.92, 420);
-  // 実測のパネル高さを優先（未計測時は上限）
   const measured = panel.offsetHeight || 0;
   const ph = measured > 0 ? measured : Math.min(viewH * 0.70, 520);
   let left = r.left;
@@ -777,10 +781,12 @@ document.getElementById('nSave').onpointerdown = e => { e.preventDefault();
 const resetTimers = new Map();
 const MAX_TIMEOUT = 2147483647;
 const RECHECK_TIMEOUT = MAX_TIMEOUT - 60000;
+
 function parseHM(s, defH = 5) {
   const [h, m] = String(s || '').split(':').map(Number);
   return [Number.isFinite(h) ? h : defH, Number.isFinite(m) ? m : 0];
 }
+
 function msUntilDaily(g, now = Date.now()) {
   const [h, m] = parseHM(g.dailyReset);
   const d = new Date(now);
@@ -789,6 +795,7 @@ function msUntilDaily(g, now = Date.now()) {
   if (next <= d) next.setDate(next.getDate() + 1);
   return next - d;
 }
+
 function msUntilWeekly(g, now = Date.now()) {
   const [h, m] = parseHM(g.weeklyReset);
   const day = g.weeklyDay ?? 1;
@@ -800,10 +807,9 @@ function msUntilWeekly(g, now = Date.now()) {
   next.setDate(next.getDate() + add);
   return next - d;
 }
+
 function msUntilMonthly(g, now = Date.now()) {
   const [h, m] = parseHM(g.monthlyReset);
-  // core.mjs の monthlyKey と同じ「月の実日数でクランプ」に合わせる。
-  // ここだけ28固定だと29〜31日設定時にタイマーが本来のリセット日を飛び越えてしまう。
   const rawDom = Math.max(1, g.monthlyDay ?? 1);
   const d = new Date(now);
   let y = d.getFullYear(), mo = d.getMonth();
@@ -817,24 +823,27 @@ function msUntilMonthly(g, now = Date.now()) {
   }
   return next - d;
 }
+
 function nextResetMs(g, now = Date.now()) {
   let ms = msUntilDaily(g, now);
   if (gameHasWeekly(g)) ms = Math.min(ms, msUntilWeekly(g, now));
   if (gameHasMonthly(g)) ms = Math.min(ms, msUntilMonthly(g, now));
   return ms;
 }
+
 function clearResetTimers() {
   resetTimers.forEach(id => clearTimeout(id));
   resetTimers.clear();
 }
+
 function scheduleGameResets() {
   clearResetTimers();
   const now = Date.now();
   state.games.forEach(g => scheduleOneGameReset(g, now));
 }
+
 function scheduleOneGameReset(g, now = Date.now()) {
   const ms = Math.max(0, nextResetMs(g, now));
-  // 月課などが遠い場合は、リセット処理をせず「次回時刻の再計算」だけ行う。
   const wait = Math.min(Math.max(50, ms), RECHECK_TIMEOUT);
   const tid = setTimeout(() => {
     const current = state.games.find(x => x.id === g.id);
@@ -852,69 +861,76 @@ function scheduleOneGameReset(g, now = Date.now()) {
   }, wait);
   resetTimers.set(g.id, tid);
 }
-// 復帰の二重発火（visibility + pageshow）をまとめる
-let lastResumeAt = 0;
-function onResume() {
-  if (document.hidden) return;
-  const now = Date.now();
-  if (now - lastResumeAt < 320) return;
-  lastResumeAt = now;
 
-  // 保留ハイライトだけ外す（構造再構築はしない）
+/**
+ * 【復帰チラツキゼロ化】タスク復帰・画面復帰（onResume）の完全最適化
+ */
+let lastResumeAt = 0;
+let isResuming = false;
+
+function onResume() {
+  if (document.hidden || isResuming) return;
+  const now = Date.now();
+  if (now - lastResumeAt < 300) return;
+  lastResumeAt = now;
+  isResuming = true;
+
   clearPending();
 
-  // 内部状態はすぐ合わせる
+  // 1. 日付・時刻跨ぎでのリセットが必要かどうかをチェック
   const changed = applyResets(state);
   if (changed) {
     state.games.forEach(g => (g.accounts || []).forEach(invalidateProgress));
   }
 
-  const finish = () => {
-    if (document.hidden) return;
-    if (changed) {
-      // 変化があるときだけ描画。構造は維持したままバッジ等を同期（forceStructure=false）
-      render(false);
-      // 保存は描画コミット後（復帰直後の同期I/Oと描画の衝突を避ける）
-      requestAnimationFrame(() => setTimeout(() => save(state), 0));
-    }
-    // リセットタイマーは常に張り直す（内部時計の基準を合わせる）
+  // 2. 変更がない場合はDOM操作を「一切行わない」ことでチラツキを0に抑える！
+  if (!changed) {
     scheduleGameResets();
-  };
+    isResuming = false;
+    return;
+  }
 
-  // DOM更新は1フレームに載せる（点滅・ちらつき抑制）
-  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(finish);
-  else finish();
+  // 3. 変更があった場合（日付跨ぎ時のみ）：ペイントフレームと同期して差分更新（render(false)）
+  requestAnimationFrame(() => {
+    if (document.hidden) {
+      isResuming = false;
+      return;
+    }
+    render(false);
+    scheduleGameResets();
+    isResuming = false;
+  });
 }
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
-    // 裏移行時の保存。可能ならアイドルへ（殺される前に走らせる timeout 付き）
     const persist = () => { try { flushSave(); } catch (_) {} };
-    if (typeof requestIdleCallback === 'function') requestIdleCallback(persist, { timeout: 400 });
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(persist, { timeout: 300 });
     else setTimeout(persist, 0);
   } else if (document.visibilityState === 'visible') {
     onResume();
   }
 });
+
 window.addEventListener('pagehide', flushSave);
 window.addEventListener('pageshow', e => {
-  // bfcache 復帰の保険（主は visibilitychange）
   if (e.persisted) onResume();
 });
 
-// 起動：まず画面を出してから、後回しでタイマーと SW
+// アプリ起動時の初期描画
 if (applyResets(state)) {
   state.games.forEach(g => (g.accounts || []).forEach(invalidateProgress));
   save(state);
 }
 render(true);
+
 const defer = (fn) => {
-  if (typeof requestIdleCallback === 'function') requestIdleCallback(fn, { timeout: 1200 });
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(fn, { timeout: 1000 });
   else setTimeout(fn, 0);
 };
+
 defer(() => {
   scheduleGameResets();
-  // TWA: 既存登録があれば触らない。update() は呼ばない（更新バー抑制）
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistration('./').then(reg => {
       if (reg) return;
@@ -923,14 +939,12 @@ defer(() => {
   }
 });
 
-// 長押しでブラウザの検索バナー／コンテキストメニューを出さない（入力欄は除外）
 document.addEventListener('contextmenu', e => {
   const t = e.target;
   if (t && (t.closest('input, textarea, select'))) return;
   e.preventDefault();
 });
 
-// バージョン表示：タップで更新ページへ
 const verEl = document.querySelector('.ver');
 if (verEl) {
   verEl.addEventListener('pointerdown', e => { e.preventDefault(); location.href = 'update.html'; });

@@ -7,7 +7,6 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <title>にゃんこチェック</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -15,7 +14,6 @@
 <style>
 :root{--bg:#0d0d12;--card:#16161f;--line:#a8a8bc;--neon:#ff2d6a;--neon2:#00f0ff;--neon3:#c9a0ff;--week:#5ee0a0;--done:#c8ff68;--text:#e8e8f0;--muted:#8888a0;--month:#ffa86b;--daily:#7eb0e8;--misc:#e8d9a8}
 *{box-sizing:border-box;margin:0;padding:0}
-/* 文書全体は固定。スクロールは body 内だけで、中身が画面より長いときだけ動く */
 html{
   height:100%;
   overflow:hidden;
@@ -27,7 +25,6 @@ body{
   height:100%;
   max-width:480px;
   margin:0 auto;
-  /* セーフエリアなし。上は今と同程度〜気持ち多めの固定余白、下はFAB用 */
   padding:16px 12px 80px;
   line-height:1.4;
   background:var(--bg);color:var(--text);
@@ -35,31 +32,29 @@ body{
   -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
   -webkit-tap-highlight-color:transparent;
   overflow-x:hidden;
-  overflow-y:auto; /* コンテンツがはみ出したときだけ縦スクロール */
-  overscroll-behavior:none; /* 余白での空スクロール／バウンド抑制 */
+  overflow-y:auto;
+  overscroll-behavior:none;
   -webkit-overflow-scrolling:touch;
   touch-action:pan-y;
+  text-rendering:optimizeLegibility;
 }
 body.is-scroll-lock{
   overflow:hidden;
   position:fixed;
   left:0;right:0;
   width:100%;
-  /* top は JS で scrollY を保持 */
 }
 .title-row{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:8px;min-height:1.6em}
 .title-row h1{margin:0;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rgba(255,45,106,.45)}
 .ver{position:absolute;right:0;top:50%;transform:translateY(-50%);font:700 .6rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.75;padding:2px 5px;border:1px solid #3a2a4a;border-radius:5px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation;cursor:pointer}
 .ver:active{color:var(--neon2);border-color:var(--neon2)}
-.game{background:var(--card);border:1px solid rgba(230,230,245,.38);border-radius:12px;margin-bottom:10px;overflow:visible}
+.game{background:var(--card);border:1px solid rgba(230,230,245,.38);border-radius:12px;margin-bottom:10px;overflow:visible;contain:layout style}
 .ghead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid rgba(230,230,245,.30);border-radius:12px 12px 0 0}
 .gname{font-weight:700;color:var(--neon);font-size:.95rem;flex-shrink:0;max-width:48%;padding:6px 4px 6px 0}
 .gexpand{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:40px;min-width:48px;padding:6px 2px;user-select:none}
 .gmeta{font-size:.62rem;color:var(--muted);text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap}
 .gmeta .badge{font-size:.55rem}
 .gbody{display:block;padding-bottom:2px;overflow:visible}
-/* .gtools padding moved into flex rule */
-/* 設定・アカウント追加などの開閉は中央付近だけ反応（誤タップ防止） */
 .gtools{display:flex;justify-content:center;padding:2px 8px 4px}
 .gtools-toggle{
   display:flex;align-items:center;justify-content:center;
@@ -81,10 +76,10 @@ body.is-scroll-lock{
 .acc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:6px 6px 2px;align-items:start;overflow:visible}
 .acc{
   background:#12121a;
-  /* 開閉で枠線の太さが変わるとカード＝ゲーム行の高さが動く → 常に2pxで幅を固定 */
   border:2px solid rgba(230,230,245,.42);
   border-radius:12px;padding:0;min-width:0;position:relative;contain:layout style;
   box-sizing:border-box;
+  backface-visibility:hidden;
 }
 .acc.open{
   z-index:12;
@@ -119,7 +114,6 @@ body.is-scroll-lock{
 .abody > .chip-sec .chip-label{flex:0 0 auto}
 .abody > .chip-sec .chip-row{display:flex;flex-direction:column;gap:6px;min-width:0}
 .abody > .chip-sec{min-height:0}
-/* D/W/M列は均等幅。縦線は列の境界のみ（片側だけ幅を食わない） */
 .abody > .chip-sec:not(.x){
   min-width:0;
   padding:0 4px;
@@ -128,13 +122,11 @@ body.is-scroll-lock{
 .abody > .chip-sec:not(.x) + .chip-sec:not(.x){
   border-left:1px solid rgba(230,230,245,.24);
 }
-/* その他チェック：3列グリッドの下に横幅いっぱいの独立した折り返し行として配置 */
 .abody > .chip-sec.x{grid-column:1/-1;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(230,230,245,.28)}
 .abody > .chip-sec.x .chip-row{flex-direction:row;flex-wrap:wrap}
 .abody > .chip-sec.x .chip{width:auto;flex:0 1 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .abody{display:grid;visibility:hidden;opacity:0;pointer-events:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:8px 6px;background:#12121a;border:1.5px solid #c4c4d6;border-radius:12px;position:absolute;left:0;top:calc(100% + 4px);width:calc(200% + 8px);z-index:13;box-shadow:0 8px 20px rgba(0,0,0,.4);contain:layout paint style;box-sizing:border-box}
 .acc.open .abody{visibility:visible;opacity:1;pointer-events:auto}
-/* 実際にあるデイリー/ウィークリー/マンスリーの列数ぶんだけ開く（余白を作らない） */
 .abody[data-cols="1"]{width:100%;grid-template-columns:1fr}
 .abody[data-cols="2"]{width:calc(150% + 4px);grid-template-columns:repeat(2,minmax(0,1fr))}
 .acc:nth-child(even) .abody{left:auto;right:0}
@@ -164,7 +156,6 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
 .danger{background:#3a1520;color:#ff6b8a;width:100%;padding:10px;border:1px solid #5a2030;border-radius:8px;cursor:pointer}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:5px}.g2 label.s{grid-column:1/-1}
 .hint{font-size:.65rem;color:var(--muted);margin:-4px 0 8px}
-/* 設定画面：必要な枠だけ見せ、残りは＋で展開 */
 .setting-section{margin-top:10px;padding:10px 10px 8px;background:#101018;border:1px solid rgba(200,200,220,.22);border-radius:10px}
 .setting-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
 .setting-head .s{margin:0;flex:1}
@@ -190,7 +181,7 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
 
 <div class="title-row">
   <h1>♡ にゃんこチェック ♡</h1>
-  <span class="ver" role="link" tabindex="0" title="タップで最新版に更新">v0.5.55</span>
+  <span class="ver" role="link" tabindex="0" title="タップで最新版に更新">v0.5.56</span>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>

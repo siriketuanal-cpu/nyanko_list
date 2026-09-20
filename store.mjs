@@ -1,11 +1,13 @@
 import { dailyKey, weeklyKey, monthlyKey, gameHasWeekly, gameHasMonthly } from './core.mjs';
 
 const KEY = 'nyanko_split_v3';
+let lastSavedSerialized = null;
 
 export function load() {
   try {
     const raw = localStorage.getItem(KEY) || localStorage.getItem('nyanko_split_v2');
     if (!raw) return empty();
+    lastSavedSerialized = raw;
     const data = JSON.parse(raw);
     if (!Array.isArray(data.games)) return empty();
     if (!data.lastMonthly) data.lastMonthly = {};
@@ -17,7 +19,13 @@ export function load() {
 }
 
 export function save(state) {
-  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) {}
+  try {
+    const str = JSON.stringify(state);
+    // 状態が変わっていない場合の無駄な localStorage I/O を即座にガード
+    if (str === lastSavedSerialized) return;
+    lastSavedSerialized = str;
+    localStorage.setItem(KEY, str);
+  } catch (_) {}
 }
 
 function empty() {
@@ -42,7 +50,6 @@ export function applyResets(state) {
   state.games.forEach(g => {
     const [dh, dm] = hm(g.dailyReset);
     const dKey = dailyKey(now, dh, dm);
-    // キー未記録は「いまの周期」を覚えるだけ（チェックを消さない）
     if (state.lastDaily[g.id] == null) {
       state.lastDaily[g.id] = dKey;
       changed = true;

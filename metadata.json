@@ -1,0 +1,6 @@
+{
+  "name": "チェックアプリ",
+  "description": "軽量・高速で使いやすいチェックリスト＆点検管理アプリ",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

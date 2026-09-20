@@ -1,7 +1,4 @@
-/* キャッシュ名固定。通常起動ではネットに出ない。
- * install では addAll しない（TWA更新バー・起動時通信を抑える）。
- * 初回取得は fetch ミス時のみ。まとめた取り直しは update.html。 */
-const C = 'nyanko-split-v555';
+const C = 'nyanko-split-v556';
 const SHELL = [
   './',
   './index.html',
@@ -17,7 +14,6 @@ const SHELL = [
 ];
 
 self.addEventListener('install', event => {
-  // ネット取得しない。すぐ待機解除のみ。
   event.waitUntil(self.skipWaiting());
 });
 
@@ -33,6 +29,24 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+  const hasBypassQuery = url.searchParams.has('t');
+
+  // update.html からの強制取得クエリ(?t=...)が付いている場合はネットから取得
+  if (hasBypassQuery) {
+    event.respondWith(
+      fetch(event.request).then(res => {
+        if (res && res.ok && res.type === 'basic') {
+          const copy = res.clone();
+          caches.open(C).then(c => c.put(event.request, copy)).catch(() => {});
+        }
+        return res;
+      }).catch(() => caches.match(event.request, { ignoreSearch: true }))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request, { ignoreSearch: true }).then(hit => {
       if (hit) return hit;

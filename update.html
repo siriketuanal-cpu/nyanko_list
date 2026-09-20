@@ -23,7 +23,7 @@ a{color:#c9a0ff}
   <p><a href="./index.html">戻る</a></p>
 </div>
 <script>
-const CACHE = 'nyanko-split-v555';
+const CACHE = 'nyanko-split-v556';
 const SHELL = [
   './',
   './index.html',
@@ -51,7 +51,6 @@ const st = document.getElementById('st');
       await Promise.all(keys.map(k => caches.delete(k)));
     }
     st.textContent = '最新ファイルを取得中…';
-    // 更新時だけシェルをまとめて取り直す（通常起動の SW install では取らない）
     if ('caches' in window) {
       const c = await caches.open(CACHE);
       await Promise.all(SHELL.map(async u => {
