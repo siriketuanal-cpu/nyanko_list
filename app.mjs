@@ -11,9 +11,11 @@ let saveTimer = null;
 const progressCache = new WeakMap();
 let editG = null, editA = null, editGid = null, noteTarget = null, noteAnchor = null;
 
-// 高速テキスト幅計算用の共通オフスクリーキャンバス (Layout Thrashing 対策)
+// 高速テキスト幅計算用の共通オフスクリーンキャンバス & サイズキャッシュ
 let textMeasureCanvas = null;
 let textMeasureCtx = null;
+const chipTextSizeCache = new Map();
+
 function getCanvasCtx() {
   if (!textMeasureCtx) {
     textMeasureCanvas = document.createElement('canvas');
@@ -56,7 +58,8 @@ function gameMonthlyAllOk(g) {
 }
 
 function syncGameHeader(g) {
-  const el = gameUICache.get(g.id)?.meta || document.querySelector('[data-gmeta="' + g.id + '"]');
+  const gameUI = gameUICache.get(g.id);
+  const el = gameUI?.meta || document.querySelector('[data-gmeta="' + g.id + '"]');
   if (!el) return;
   const bits = [];
   if (gameDailyAllOk(g)) bits.push('<span class="badge complete" title="全アカウント デイリー完了">COMPLETE</span>');
@@ -111,14 +114,21 @@ function buildChecksHtml(g, a) {
 }
 
 /**
- * Layout Thrashing (Forced Reflow) の完全解消
- * DOM読み取りとスタイルの変更を分離し、一回だけ設定を行う
+ * チップテキスト自動リサイズ (メモ化＋Layout Thrashingの完全防止)
  */
 function fitChipText(el) {
   if (!el || !el.textContent) return;
   const text = el.textContent;
   const clientW = el.clientWidth;
   if (!clientW) return;
+
+  const cacheKey = text + '|' + clientW;
+  if (chipTextSizeCache.has(cacheKey)) {
+    const cachedSize = chipTextSizeCache.get(cacheKey);
+    if (cachedSize) el.style.fontSize = cachedSize;
+    else el.style.fontSize = '';
+    return;
+  }
 
   const ctx = getCanvasCtx();
   if (ctx) {
@@ -131,11 +141,14 @@ function fitChipText(el) {
       const ratio = available / textWidth;
       const targetSize = Math.max(9.3, Math.floor(12 * ratio * 10) / 10);
       if (targetSize < 12) {
-        el.style.fontSize = targetSize + 'px';
+        const val = targetSize + 'px';
+        chipTextSizeCache.set(cacheKey, val);
+        el.style.fontSize = val;
         return;
       }
     }
   }
+  chipTextSizeCache.set(cacheKey, '');
   el.style.fontSize = '';
 }
 
@@ -227,7 +240,6 @@ function render(forceStructure = false) {
     return;
   }
 
-  // 構造再構築が必要な場合のみ HTML を破棄して組み立て（チラツキ防止）
   if (needStructure) {
     clearPending();
     accountUICache.clear();
@@ -288,18 +300,21 @@ function render(forceStructure = false) {
     });
   }
 
-  // 構造再構築を行わない軽量な状態同期のみ（チラツキが起きない）
   state.games.forEach(g => {
     const gameUI = gameUICache.get(g.id);
     const gameEl = gameUI?.el;
     const tw = gameUI?.tools;
     if (tw) tw.classList.toggle('open', !!toolsOpen[g.id]);
+
+    let gameHasOpenAcc = false;
     (g.accounts || []).forEach(a => {
       const key = g.id + '|' + a.id;
       const ui = getAccountUI(key);
       const acc = ui?.acc || (gameEl && gameEl.querySelector(`[data-aid="${key}"]`));
       if (!acc) return;
       const wantOpen = !!accOpen[key];
+      if (wantOpen) gameHasOpenAcc = true;
+
       if (!ui) cacheAccountUI(g, a, acc);
       acc.classList.toggle('open', wantOpen);
       if (wantOpen) {
@@ -308,6 +323,10 @@ function render(forceStructure = false) {
       }
       syncAccountUI(g, a);
     });
+
+    if (gameEl) {
+      gameEl.classList.toggle('has-open', gameHasOpenAcc);
+    }
     syncGameHeader(g);
   });
 }
@@ -377,8 +396,14 @@ function toggleAcc(key) {
   accOpen[key] = willOpen;
   const ui = getAccountUI(key);
   const el = ui?.acc;
+  const gameUI = gameUICache.get(gid);
+
   if (el) {
     el.classList.toggle('open', willOpen);
+    if (gameUI?.el) {
+      gameUI.el.classList.toggle('has-open', willOpen);
+    }
+
     if (willOpen) {
       const g = state.games.find(x => x.id === gid);
       const a = g && g.accounts.find(x => x.id === aid);
@@ -405,6 +430,8 @@ function closeOpenAccs() {
     delete openAccByGame[gid];
     const ui = getAccountUI(k);
     if (ui?.acc) ui.acc.classList.remove('open');
+    const gameUI = gameUICache.get(gid);
+    if (gameUI?.el) gameUI.el.classList.remove('has-open');
   });
 }
 
@@ -422,7 +449,6 @@ document.getElementById('root').addEventListener('pointerdown', e => {
   const openAcc = e.target.closest('.acc.open');
   if (Object.keys(openAccByGame).length && !openAcc && !e.target.closest('.modal')) {
     closeOpenAccs();
-    return;
   }
 
   const chip = e.target.closest('.chip');
@@ -486,6 +512,7 @@ document.getElementById('root').addEventListener('pointerdown', e => {
 });
 
 document.getElementById('nModal').addEventListener('pointerdown', e => { e.stopPropagation(); });
+document.getElementById('cModal').addEventListener('pointerdown', e => { e.stopPropagation(); });
 document.getElementById('fab').onpointerdown = e => { e.preventDefault(); openG(); };
 document.getElementById('gCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('gModal').classList.remove('show'); unlockBodyScroll(); };
 document.getElementById('aCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('aModal').classList.remove('show'); unlockBodyScroll(); };
@@ -493,6 +520,35 @@ document.getElementById('nCancel').onpointerdown = e => { e.preventDefault(); cl
 document.getElementById('nClear').onpointerdown = e => { e.preventDefault();
   document.getElementById('notes').value = '';
   document.getElementById('notes').focus();
+};
+
+/* カスタム確認ダイアログ制御 (ネイティブconfirmが動かない環境の完全対策) */
+let confirmCallback = null;
+function showConfirm(title, msg, onOk, hideCancel = false) {
+  confirmCallback = onOk;
+  document.getElementById('cTitle').textContent = title;
+  document.getElementById('cMsg').textContent = msg;
+  const cancelBtn = document.getElementById('cCancel');
+  if (cancelBtn) cancelBtn.hidden = hideCancel;
+  lockBodyScroll();
+  document.getElementById('cModal').classList.add('show');
+}
+
+function closeConfirm() {
+  document.getElementById('cModal').classList.remove('show');
+  unlockBodyScroll();
+  confirmCallback = null;
+}
+
+document.getElementById('cCancel').onpointerdown = e => {
+  e.preventDefault();
+  closeConfirm();
+};
+document.getElementById('cOk').onpointerdown = e => {
+  e.preventDefault();
+  const cb = confirmCallback;
+  closeConfirm();
+  if (cb) cb();
 };
 
 function setResetFieldsEnabled(g) {
@@ -575,11 +631,11 @@ function openA(gid, aid = null) {
     const c = a && a.daily && a.daily[i - 1];
     document.getElementById('d' + i).value = c && c.label ? c.label : '';
   }
-  for (let i = 1; i <= 2; i++) {
+  for (let i = 1; i <= 4; i++) {
     const c = a && a.weekly && a.weekly[i - 1];
     document.getElementById('w' + i).value = c && c.label ? c.label : '';
   }
-  for (let i = 1; i <= 2; i++) {
+  for (let i = 1; i <= 4; i++) {
     const c = a && a.monthly && a.monthly[i - 1];
     document.getElementById('m' + i).value = c && c.label ? c.label : '';
   }
@@ -588,6 +644,11 @@ function openA(gid, aid = null) {
     document.getElementById('x' + i).value = c && c.label ? c.label : '';
   }
   document.getElementById('aDelZone').style.display = a ? 'block' : 'none';
+  const syncBtn = document.getElementById('aSync');
+  if (syncBtn) {
+    const otherCount = g ? (g.accounts.length - (a ? 1 : 0)) : 0;
+    syncBtn.style.display = otherCount >= 1 ? 'block' : 'none';
+  }
   initSettingSlots();
   lockBodyScroll(); document.getElementById('aModal').classList.add('show');
 }
@@ -595,35 +656,50 @@ function openA(gid, aid = null) {
 function packChecks(prefix, max, existing) {
   const out = [];
   for (let i = 1; i <= max; i++) {
-    const label = (document.getElementById(prefix + i).value || '').trim();
+    const el = document.getElementById(prefix + i);
+    const label = el ? (el.value || '').trim() : '';
     if (!label) continue;
-    let prev = existing && existing.find(c => c.label === label);
-    if (!prev && existing && existing[i - 1] && existing[i - 1].label) prev = existing[i - 1];
+    const prev = existing && existing.find(c => c.label === label);
     out.push({ label, done: prev ? !!prev.done : false });
   }
   return out;
 }
 
-function applyGameTemplate(gid) {
+function applyGameTemplate(gid, sourceAid = null) {
   const g = state.games.find(x => x.id === gid);
   if (!g || !g.accounts || g.accounts.length < 2) return;
-  const src = g.accounts[0];
-  const rest = g.accounts.slice(1);
-  const ok = confirm(`「${src.name}」のデイリー/ウィークリー/マンスリー/その他の内容を、他の${rest.length}件のアカウントに反映します。\n（同じ文言の項目は完了状態を引き継ぎます）\nよろしいですか？`);
-  if (!ok) return;
-  ['daily', 'weekly', 'monthly', 'misc'].forEach(field => {
-    const template = src[field] || [];
-    rest.forEach(a => {
-      const existing = a[field] || [];
-      a[field] = template.map(t => {
-        const prev = existing.find(c => c.label === t.label);
-        return { label: t.label, done: prev ? !!prev.done : false };
+  const src = (sourceAid && g.accounts.find(a => a.id === sourceAid)) || g.accounts[0];
+  if (!src) return;
+  const rest = g.accounts.filter(a => a.id !== src.id);
+  if (!rest.length) return;
+
+  showConfirm(
+    '全員に一括反映',
+    `「${src.name}」の設定項目（デイリー/ウィークリー/マンスリー/その他）を、他の${rest.length}件のアカウントに一括反映します。\n\n（同じ文言の項目は完了状態を引き継ぎます）\n実行しますか？`,
+    () => {
+      ['daily', 'weekly', 'monthly', 'misc'].forEach(field => {
+        const template = src[field] || [];
+        rest.forEach(a => {
+          const existing = a[field] || [];
+          a[field] = template.map(t => {
+            const prev = existing.find(c => c.label === t.label);
+            return { label: t.label, done: prev ? !!prev.done : false };
+          });
+          invalidateProgress(a);
+        });
       });
-      invalidateProgress(a);
-    });
-  });
-  save(state);
-  render(true);
+      g.accounts.forEach(a => {
+        const key = g.id + '|' + a.id;
+        const oldUI = getAccountUI(key);
+        if (oldUI?.body?.parentNode === oldUI.acc) {
+          oldUI.acc.removeChild(oldUI.body);
+        }
+        accountUICache.delete(key);
+      });
+      save(state);
+      render(true);
+    }
+  );
 }
 
 document.getElementById('gSave').onpointerdown = e => { e.preventDefault();
@@ -656,12 +732,14 @@ document.getElementById('gSave').onpointerdown = e => { e.preventDefault();
 };
 
 document.getElementById('gDel').onpointerdown = e => { e.preventDefault();
-  if (!editG || !confirm('このゲームを削除する？')) return;
-  state.games = state.games.filter(g => g.id !== editG);
-  save(state);
-  document.getElementById('gModal').classList.remove('show'); unlockBodyScroll();
-  render(true);
-  scheduleGameResets();
+  if (!editG) return;
+  showConfirm('ゲームの削除', 'このゲームを削除してもよろしいですか？', () => {
+    state.games = state.games.filter(g => g.id !== editG);
+    save(state);
+    document.getElementById('gModal').classList.remove('show'); unlockBodyScroll();
+    render(true);
+    scheduleGameResets();
+  });
 };
 
 document.getElementById('aSave').onpointerdown = e => { e.preventDefault();
@@ -702,15 +780,51 @@ document.getElementById('aSave').onpointerdown = e => { e.preventDefault();
   scheduleGameResets();
 };
 
-document.getElementById('aDel').onpointerdown = e => { e.preventDefault();
-  if (!editA || !confirm('このアカウントを削除する？')) return;
+document.getElementById('aSync').onpointerdown = e => { e.preventDefault();
   const g = state.games.find(x => x.id === editGid);
   if (!g) return;
-  g.accounts = g.accounts.filter(a => a.id !== editA);
+  const name = (document.getElementById('aName').value || '').trim();
+  if (!name) return;
+
+  let targetA = null;
+  if (editA) {
+    targetA = g.accounts.find(x => x.id === editA);
+    if (targetA) {
+      targetA.name = name;
+      targetA.daily = packChecks('d', 5, targetA.daily);
+      targetA.weekly = packChecks('w', 4, targetA.weekly);
+      targetA.monthly = packChecks('m', 4, targetA.monthly);
+      targetA.misc = packChecks('x', 5, targetA.misc);
+    }
+  } else {
+    targetA = {
+      id: 'a' + Date.now(), name,
+      daily: packChecks('d', 5, null),
+      weekly: packChecks('w', 4, null),
+      monthly: packChecks('m', 4, null),
+      misc: packChecks('x', 5, null),
+      note: ''
+    };
+    g.accounts.push(targetA);
+  }
+  if (!targetA) return;
   save(state);
+  invalidateProgress(targetA);
   document.getElementById('aModal').classList.remove('show'); unlockBodyScroll();
-  render(true);
-  scheduleGameResets();
+  applyGameTemplate(editGid, targetA.id);
+};
+
+document.getElementById('aDel').onpointerdown = e => { e.preventDefault();
+  if (!editA) return;
+  const g = state.games.find(x => x.id === editGid);
+  if (!g) return;
+  showConfirm('アカウントの削除', 'このアカウントを削除してもよろしいですか？', () => {
+    g.accounts = g.accounts.filter(a => a.id !== editA);
+    save(state);
+    document.getElementById('aModal').classList.remove('show'); unlockBodyScroll();
+    render(true);
+    scheduleGameResets();
+  });
 };
 
 let scrollLockY = 0;
@@ -863,7 +977,7 @@ function scheduleOneGameReset(g, now = Date.now()) {
 }
 
 /**
- * 【復帰チラツキゼロ化】タスク復帰・画面復帰（onResume）の完全最適化
+ * タスク復帰・画面復帰（onResume）の最適化
  */
 let lastResumeAt = 0;
 let isResuming = false;
@@ -877,20 +991,17 @@ function onResume() {
 
   clearPending();
 
-  // 1. 日付・時刻跨ぎでのリセットが必要かどうかをチェック
   const changed = applyResets(state);
   if (changed) {
     state.games.forEach(g => (g.accounts || []).forEach(invalidateProgress));
   }
 
-  // 2. 変更がない場合はDOM操作を「一切行わない」ことでチラツキを0に抑える！
   if (!changed) {
     scheduleGameResets();
     isResuming = false;
     return;
   }
 
-  // 3. 変更があった場合（日付跨ぎ時のみ）：ペイントフレームと同期して差分更新（render(false)）
   requestAnimationFrame(() => {
     if (document.hidden) {
       isResuming = false;
@@ -917,7 +1028,6 @@ window.addEventListener('pageshow', e => {
   if (e.persisted) onResume();
 });
 
-// アプリ起動時の初期描画
 if (applyResets(state)) {
   state.games.forEach(g => (g.accounts || []).forEach(invalidateProgress));
   save(state);

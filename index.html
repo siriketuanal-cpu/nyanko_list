@@ -48,7 +48,22 @@ body.is-scroll-lock{
 .title-row h1{margin:0;font-size:1.15rem;color:var(--neon);text-shadow:0 0 10px rgba(255,45,106,.45)}
 .ver{position:absolute;right:0;top:50%;transform:translateY(-50%);font:700 .6rem/1 ui-monospace,monospace;color:var(--neon3);text-decoration:none;opacity:.75;padding:2px 5px;border:1px solid #3a2a4a;border-radius:5px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation;cursor:pointer}
 .ver:active{color:var(--neon2);border-color:var(--neon2)}
-.game{background:var(--card);border:1px solid rgba(230,230,245,.38);border-radius:12px;margin-bottom:10px;overflow:visible;contain:layout style}
+
+/* ゲームカードの重ね合わせ文脈 (Stacking Context) 設定 */
+.game{
+  position:relative;
+  z-index:1;
+  background:var(--card);
+  border:1px solid rgba(230,230,245,.38);
+  border-radius:12px;
+  margin-bottom:10px;
+  overflow:visible;
+}
+/* 開いているアカウントがあるゲームカードを最前面（z-index:30）に引っ張り上げる */
+.game.has-open{
+  z-index:30;
+}
+
 .ghead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid rgba(230,230,245,.30);border-radius:12px 12px 0 0}
 .gname{font-weight:700;color:var(--neon);font-size:.95rem;flex-shrink:0;max-width:48%;padding:6px 4px 6px 0}
 .gexpand{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:40px;min-width:48px;padding:6px 2px;user-select:none}
@@ -77,12 +92,12 @@ body.is-scroll-lock{
 .acc{
   background:#12121a;
   border:2px solid rgba(230,230,245,.42);
-  border-radius:12px;padding:0;min-width:0;position:relative;contain:layout style;
+  border-radius:12px;padding:0;min-width:0;position:relative;
   box-sizing:border-box;
   backface-visibility:hidden;
 }
 .acc.open{
-  z-index:12;
+  z-index:40;
   border:2px dashed #00e5c3;
   box-shadow:0 0 0 1px rgba(0,229,195,.18),0 6px 18px rgba(0,0,0,.28);
 }
@@ -125,7 +140,7 @@ body.is-scroll-lock{
 .abody > .chip-sec.x{grid-column:1/-1;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(230,230,245,.28)}
 .abody > .chip-sec.x .chip-row{flex-direction:row;flex-wrap:wrap}
 .abody > .chip-sec.x .chip{width:auto;flex:0 1 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.abody{display:grid;visibility:hidden;opacity:0;pointer-events:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:8px 6px;background:#12121a;border:1.5px solid #c4c4d6;border-radius:12px;position:absolute;left:0;top:calc(100% + 4px);width:calc(200% + 8px);z-index:13;box-shadow:0 8px 20px rgba(0,0,0,.4);contain:layout paint style;box-sizing:border-box}
+.abody{display:grid;visibility:hidden;opacity:0;pointer-events:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:8px 6px;background:#12121a;border:1.5px solid #c4c4d6;border-radius:12px;position:absolute;left:0;top:calc(100% + 4px);width:calc(200% + 8px);z-index:50;box-shadow:0 8px 20px rgba(0,0,0,.4);contain:layout paint style;box-sizing:border-box}
 .acc.open .abody{visibility:visible;opacity:1;pointer-events:auto}
 .abody[data-cols="1"]{width:100%;grid-template-columns:1fr}
 .abody[data-cols="2"]{width:calc(150% + 4px);grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -144,14 +159,17 @@ body.is-scroll-lock{
 .modal.show{display:flex}
 .mb{background:#14141e;width:100%;max-width:480px;border-radius:14px 14px 0 0;padding:14px;max-height:90vh;overflow-y:auto;border-top:1px solid var(--neon)}
 .mb h2{color:var(--neon);font-size:1rem;margin-bottom:8px}
+.confirm-msg{font-size:.85rem;color:var(--text);line-height:1.5;margin:12px 0 16px;white-space:pre-wrap}
 input[type=text],input[type=time],input[type=number],select,textarea{width:100%;padding:8px;border:1px solid #2a2a3a;border-radius:8px;background:#0d0d14;color:var(--text);font-size:.9rem;margin-bottom:7px;font-family:inherit;-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 input:disabled,select:disabled{opacity:.4}
 textarea{min-height:160px;resize:vertical}
 label.s{font-size:.7rem;color:var(--muted);display:block;margin-bottom:2px}
 .row{display:flex;gap:6px;margin-bottom:7px}.row>*{flex:1}
 .btns{display:flex;gap:6px;margin-top:10px}
-button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font-size:.9rem;cursor:pointer}
+button.save,button.cancel,.sync-acc{flex:1;padding:10px;border:none;border-radius:8px;font-size:.82rem;cursor:pointer;line-height:1.2}
 .save{background:var(--neon);color:#fff}.cancel{background:#222230;color:var(--text)}
+.sync-acc{background:#1e1a30;color:var(--neon3);border:1px solid #3a2e50;flex:1.2}
+.sync-acc:active{background:#2a2245;color:var(--neon2);border-color:var(--neon2)}
 .danger-zone{margin-top:12px;padding-top:12px;border-top:1px solid #3a2030}
 .danger{background:#3a1520;color:#ff6b8a;width:100%;padding:10px;border:1px solid #5a2030;border-radius:8px;cursor:pointer}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:5px}.g2 label.s{grid-column:1/-1}
@@ -181,7 +199,7 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
 
 <div class="title-row">
   <h1>♡ にゃんこチェック ♡</h1>
-  <span class="ver" role="link" tabindex="0" title="タップで最新版に更新">v0.5.56</span>
+  <span class="ver" role="link" tabindex="0" title="タップで最新版に更新">v0.5.58</span>
 </div>
 <div id="root"></div>
 <button class="fab" id="fab" title="ゲームを追加">＋</button>
@@ -260,6 +278,7 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
     </div>
     <div class="btns">
       <button class="cancel" id="aCancel">キャンセル</button>
+      <button type="button" class="sync-acc" id="aSync" style="display:none">全員に反映</button>
       <button class="save" id="aSave">保存</button>
     </div>
     <div class="danger-zone" id="aDelZone" style="display:none">
@@ -278,6 +297,18 @@ button.save,button.cancel{flex:1;padding:10px;border:none;border-radius:8px;font
     <div class="btns">
       <button class="cancel" id="nCancel">閉じる</button>
       <button class="save" id="nSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- カスタム確認ダイアログ (confirmダイアログがブロックされるプレビュー/PWA環境対策) -->
+<div class="modal" id="cModal">
+  <div class="mb">
+    <h2 id="cTitle">確認</h2>
+    <p class="confirm-msg" id="cMsg"></p>
+    <div class="btns">
+      <button class="cancel" id="cCancel">キャンセル</button>
+      <button class="save" id="cOk">実行する</button>
     </div>
   </div>
 </div>
