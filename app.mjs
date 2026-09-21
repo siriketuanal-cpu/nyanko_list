@@ -271,7 +271,7 @@ function render(forceStructure = false) {
             </div>
           </div>`).join('')}</div>` : ''}
         <div class="gtools" data-gtools-wrap="${g.id}">
-          <button type="button" class="gtools-toggle" data-gtools="${g.id}" title="操作">···</button>
+          <button type="button" class="gtools-toggle" data-gtools="${g.id}" title="操作"></button>
           <div class="gactions">
             <button type="button" class="ib ggear" data-eg="${g.id}" title="ゲーム設定">⚙️</button>
             <button type="button" class="gaa" data-aa="${g.id}" title="アカウント追加">＋ アカウント</button>
@@ -435,6 +435,16 @@ function closeOpenAccs() {
   });
 }
 
+function closeOpenGtools() {
+  Object.keys(toolsOpen).forEach(id => {
+    if (toolsOpen[id]) {
+      toolsOpen[id] = false;
+      const gameUI = gameUICache.get(id);
+      if (gameUI?.tools) gameUI.tools.classList.remove('open');
+    }
+  });
+}
+
 document.addEventListener('pointerdown', e => {
   if (pendingKey && !e.target.closest('.chip')) clearPending();
 
@@ -442,6 +452,12 @@ document.addEventListener('pointerdown', e => {
       !e.target.closest('.acc.open') &&
       !e.target.closest('.modal')) {
     closeOpenAccs();
+  }
+
+  if (Object.keys(toolsOpen).some(id => toolsOpen[id]) &&
+      !e.target.closest('.gtools') &&
+      !e.target.closest('.modal')) {
+    closeOpenGtools();
   }
 }, { passive: true });
 
@@ -498,9 +514,12 @@ document.getElementById('root').addEventListener('pointerdown', e => {
   const gt = e.target.closest('[data-gtools]');
   if (gt) {
     e.preventDefault(); e.stopPropagation();
-    const id = gt.dataset.gtools; toolsOpen[id] = !toolsOpen[id];
+    const id = gt.dataset.gtools;
+    const nextState = !toolsOpen[id];
+    closeOpenGtools();
+    toolsOpen[id] = nextState;
     const gameUI = gameUICache.get(id);
-    if (gameUI?.tools) gameUI.tools.classList.toggle('open', !!toolsOpen[id]);
+    if (gameUI?.tools) gameUI.tools.classList.toggle('open', nextState);
     return;
   }
   const eg = e.target.closest('[data-eg]');
@@ -1055,7 +1074,7 @@ document.addEventListener('contextmenu', e => {
   e.preventDefault();
 });
 
-const verEl = document.querySelector('.ver');
+const verEl = document.getElementById('updateBtn') || document.querySelector('.ver-btn') || document.querySelector('.ver');
 if (verEl) {
   verEl.addEventListener('pointerdown', e => { e.preventDefault(); location.href = 'update.html'; });
   verEl.addEventListener('keydown', e => {
