@@ -132,6 +132,21 @@ body.is-scroll-lock{
 .aname-text{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .acc.daily-ok .aname-text{color:var(--daily);border-bottom:1px solid rgba(126,176,232,.35)}
 .abadges{display:inline-flex;align-items:center;justify-content:flex-end;gap:3px;flex-shrink:0;line-height:1}
+.abadges .badge.week,.abadges .badge.month{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:1.5em;
+  height:1.5em;
+  min-height:0;
+  padding:0;
+  border-radius:50%;
+  font-size:.55rem;
+  font-weight:700;
+  line-height:1;
+}
+.abadges .badge.week{background:var(--week);color:#0d1a12}
+.abadges .badge.month{background:var(--month);color:#1a1008}
 .abadges .badge[hidden]{display:none}
 /* 進捗リングバッジ: conic-gradient の --p% で塗り率を表現。GPU合成のみ・DOM増なしで軽量 */
 @property --p{syntax:'<number>';inherits:true;initial-value:0}

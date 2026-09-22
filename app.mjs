@@ -229,8 +229,8 @@ function syncAccountUI(g, a) {
   acc.classList.toggle('daily-ok', isDone(a));
   if (ui.name) ui.name.textContent = a.name || '';
   updateDailyBadge(ui.daily, a);
-  updateRingBadge(ui.week, getProgress(a, 'weekly'), '週課');
-  updateRingBadge(ui.month, getProgress(a, 'monthly'), '月課');
+  if (ui.week) ui.week.hidden = !isWeekDone(a);
+  if (ui.month) ui.month.hidden = !isMonthDone(a);
 
   const noteHead = (a.note || '').trim().replace(/[ \t]+/g, ' ').replace(/\n{2,}/g, '\n');
   if (ui.note) ui.note.textContent = noteHead ? ('📝 ' + noteHead) : '';
@@ -282,8 +282,8 @@ function render(forceStructure = false, onlyKeys = null) {
                   <span class="aname-text">${escape(a.name)}</span>
                   <span class="abadges">
                     <span class="badge ring" data-bdaily="${g.id}|${a.id}" hidden></span>
-                    <span class="badge ring week" data-bweek="${g.id}|${a.id}" hidden></span>
-                    <span class="badge ring month" data-bmonth="${g.id}|${a.id}" hidden></span>
+                    <span class="badge week" data-bweek="${g.id}|${a.id}" hidden>W</span>
+                    <span class="badge month" data-bmonth="${g.id}|${a.id}" hidden>M</span>
                   </span>
                 </div>
                 <div class="anote" data-anote="${g.id}|${a.id}"></div>
