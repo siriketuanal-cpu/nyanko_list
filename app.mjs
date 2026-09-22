@@ -854,10 +854,7 @@ function positionNoteModal() {
   const panel = modal.querySelector('.mb');
   if (!panel) return;
   if (!noteAnchor) {
-    // noteAnchor がない場合は中央表示
-    panel.style.top = '50%';
-    panel.style.left = '50%';
-    panel.style.transform = 'translate(-50%, -50%)';
+    // noteAnchor がない場合は中央表示（CSSで制御）
     return;
   }
   const r = noteAnchor.getBoundingClientRect();
