@@ -86,7 +86,7 @@ body.is-scroll-lock{
 .gmeta .badge.complete{background:rgba(126,176,232,.18);color:var(--daily);border:1px solid rgba(126,176,232,.6)}
 .gmeta .badge.week{background:rgba(94,224,160,.15);color:var(--week);border:1px solid rgba(94,224,160,.55)}
 .gmeta .badge.month{background:rgba(255,168,107,.15);color:var(--month);border:1px solid rgba(255,168,107,.55)}
-.gname{text-align:center;flex:1;max-width:none;padding:6px 0}
+.gname{text-align:left;flex:1;max-width:none;padding:6px 0}
 .gbody{display:block;padding-bottom:2px;overflow:visible}
 .gtools{display:flex;flex-direction:column;align-items:center;padding:0 8px 4px;width:100%}
 .gtools.open{padding:2px 8px 6px}
@@ -159,9 +159,10 @@ body.is-scroll-lock{
   inset:.18em;
   border-radius:50%;
   background:#12121a;
-  z-index:-1;
+  z-index:0;
 }
 .abadges .badge.ring{isolation:isolate}
+.abadges .badge.ring > span{position:relative;z-index:1}
 .abadges .badge.ring.week{--ringc:var(--week)}
 .abadges .badge.ring.month{--ringc:var(--month)}
 .abadges .badge.ring.complete{

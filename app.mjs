@@ -90,7 +90,7 @@ function updateRingBadge(bd, prog, typeLabel) {
   const label = full ? '✓' : String(prog.done);
   if (bd.__lbl !== label) {
     bd.__lbl = label;
-    bd.textContent = label;
+    bd.innerHTML = '<span>' + label + '</span>';
   }
   const tip = typeLabel + (full ? ' 完了' : ` ${prog.done}/${prog.total}`);
   if (bd.__tip !== tip) {
