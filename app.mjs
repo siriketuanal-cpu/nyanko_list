@@ -9,7 +9,7 @@ const accountUICache = new Map();
 const gameUICache = new Map();
 let saveTimer = null;
 const progressCache = new WeakMap();
-let editG = null, editA = null, editGid = null, noteTarget = null, noteAnchor = null;
+let editG = null, editA = null, editGid = null, noteAnchor = null;
 
 // 高速テキスト幅計算用の共通オフスクリーンキャンバス & サイズキャッシュ
 let textMeasureCanvas = null;
@@ -130,7 +130,7 @@ function buildChecksHtml(g, a) {
   if (wChips) checks += `<div class="chip-sec"><div class="chip-label w">ウィークリー</div><div class="chip-row">${wChips}</div></div>`;
   if (mChips) checks += `<div class="chip-sec"><div class="chip-label m">マンスリー</div><div class="chip-row">${mChips}</div></div>`;
   if (xChips) checks += `<div class="chip-sec x"><div class="chip-label x">その他</div><div class="chip-row">${xChips}</div></div>`;
-  return `${checks}<div class="abody-foot"><button type="button" class="abody-edit" data-ea="${g.id}|${a.id}" title="アカウント設定">⚙️</button><button type="button" class="memo" data-note="${g.id}|${a.id}" title="メモ">📝</button></div>`;
+  return `${checks}<div class="abody-foot"><button type="button" class="abody-edit" data-ea="${g.id}|${a.id}" title="アカウント設定">⚙️</button></div>`;
 }
 
 /**
@@ -231,9 +231,6 @@ function syncAccountUI(g, a) {
   updateDailyBadge(ui.daily, a);
   if (ui.week) ui.week.hidden = !isWeekDone(a);
   if (ui.month) ui.month.hidden = !isMonthDone(a);
-
-  const noteHead = (a.note || '').trim().replace(/[ \t]+/g, ' ').replace(/\n{2,}/g, '\n');
-  if (ui.note) ui.note.textContent = noteHead ? ('📝 ' + noteHead) : '';
 
   [['daily', 'd'], ['weekly', 'w'], ['monthly', 'm'], ['misc', 'x']].forEach(([field, prefix]) => {
     (a[field] || []).forEach((c, i) => {
@@ -493,26 +490,6 @@ document.getElementById('root').addEventListener('pointerdown', e => {
   if (chip) {
     e.preventDefault(); e.stopPropagation(); handleChipTap(chip); return;
   }
-  const nt = e.target.closest('[data-note]');
-  if (nt) {
-    e.preventDefault(); e.stopPropagation();
-    const [gid, aid] = nt.dataset.note.split('|');
-    const g = state.games.find(x => x.id === gid);
-    const a = g && g.accounts.find(x => x.id === aid);
-    if (!a) return;
-    noteTarget = { gid, aid };
-    noteAnchor = nt.closest('.acc') || nt;
-    document.getElementById('nTitle').textContent = a.name + ' のメモ';
-    document.getElementById('notes').value = a.note || '';
-    const modal = document.getElementById('nModal');
-    lockBodyScroll();
-    modal.classList.add('show');
-    requestAnimationFrame(() => {
-      positionNoteModal();
-      requestAnimationFrame(positionNoteModal);
-    });
-    return;
-  }
   const ea = e.target.closest('[data-ea]');
   if (ea) { e.preventDefault(); e.stopPropagation(); const [gid, aid] = ea.dataset.ea.split('|'); openA(gid, aid); return; }
   const at = e.target.closest('[data-atoggle]');
@@ -659,6 +636,14 @@ document.querySelectorAll('[data-addslots]').forEach(btn => {
   };
 });
 
+/** アカウント設定のフィールド定義（共通利用） */
+const ACC_FIELDS = [
+  { prefix: 'd', field: 'daily', max: 5 },
+  { prefix: 'w', field: 'weekly', max: 4 },
+  { prefix: 'm', field: 'monthly', max: 4 },
+  { prefix: 'x', field: 'misc', max: 5 }
+];
+
 function openA(gid, aid = null) {
   clearPending();
   editGid = gid;
@@ -667,22 +652,12 @@ function openA(gid, aid = null) {
   const a = aid && g ? g.accounts.find(x => x.id === aid) : null;
   document.getElementById('aTitle').textContent = a ? 'アカウント設定' : 'アカウントを追加';
   document.getElementById('aName').value = a ? a.name : '';
-  for (let i = 1; i <= 5; i++) {
-    const c = a && a.daily && a.daily[i - 1];
-    document.getElementById('d' + i).value = c && c.label ? c.label : '';
-  }
-  for (let i = 1; i <= 4; i++) {
-    const c = a && a.weekly && a.weekly[i - 1];
-    document.getElementById('w' + i).value = c && c.label ? c.label : '';
-  }
-  for (let i = 1; i <= 4; i++) {
-    const c = a && a.monthly && a.monthly[i - 1];
-    document.getElementById('m' + i).value = c && c.label ? c.label : '';
-  }
-  for (let i = 1; i <= 5; i++) {
-    const c = a && a.misc && a.misc[i - 1];
-    document.getElementById('x' + i).value = c && c.label ? c.label : '';
-  }
+  ACC_FIELDS.forEach(({ prefix, field, max }) => {
+    for (let i = 1; i <= max; i++) {
+      const c = a && a[field] && a[field][i - 1];
+      document.getElementById(prefix + i).value = c && c.label ? c.label : '';
+    }
+  });
   document.getElementById('aDelZone').style.display = a ? 'block' : 'none';
   const syncBtn = document.getElementById('aSync');
   if (syncBtn) {
@@ -791,20 +766,16 @@ document.getElementById('aSave').onpointerdown = e => { e.preventDefault();
     const a = g.accounts.find(x => x.id === editA);
     if (a) {
       a.name = name;
-      a.daily = packChecks('d', 5, a.daily);
-      a.weekly = packChecks('w', 4, a.weekly);
-      a.monthly = packChecks('m', 4, a.monthly);
-      a.misc = packChecks('x', 5, a.misc);
+      ACC_FIELDS.forEach(({ prefix, field, max }) => {
+        a[field] = packChecks(prefix, max, a[field]);
+      });
     }
   } else {
-    g.accounts.push({
-      id: 'a' + Date.now(), name,
-      daily: packChecks('d', 5, null),
-      weekly: packChecks('w', 4, null),
-      monthly: packChecks('m', 4, null),
-      misc: packChecks('x', 5, null),
-      note: ''
+    const newAcc = { id: 'a' + Date.now(), name, note: '' };
+    ACC_FIELDS.forEach(({ prefix, field, max }) => {
+      newAcc[field] = packChecks(prefix, max, null);
     });
+    g.accounts.push(newAcc);
   }
   save(state);
   invalidateProgress(editA ? g.accounts.find(a => a.id === editA) : g.accounts[g.accounts.length - 1]);
@@ -831,20 +802,15 @@ document.getElementById('aSync').onpointerdown = e => { e.preventDefault();
     targetA = g.accounts.find(x => x.id === editA);
     if (targetA) {
       targetA.name = name;
-      targetA.daily = packChecks('d', 5, targetA.daily);
-      targetA.weekly = packChecks('w', 4, targetA.weekly);
-      targetA.monthly = packChecks('m', 4, targetA.monthly);
-      targetA.misc = packChecks('x', 5, targetA.misc);
+      ACC_FIELDS.forEach(({ prefix, field, max }) => {
+        targetA[field] = packChecks(prefix, max, targetA[field]);
+      });
     }
   } else {
-    targetA = {
-      id: 'a' + Date.now(), name,
-      daily: packChecks('d', 5, null),
-      weekly: packChecks('w', 4, null),
-      monthly: packChecks('m', 4, null),
-      misc: packChecks('x', 5, null),
-      note: ''
-    };
+    targetA = { id: 'a' + Date.now(), name, note: '' };
+    ACC_FIELDS.forEach(({ prefix, field, max }) => {
+      targetA[field] = packChecks(prefix, max, null);
+    });
     g.accounts.push(targetA);
   }
   if (!targetA) return;
@@ -918,19 +884,38 @@ function positionNoteModal() {
 window.addEventListener('resize', positionNoteModal, { passive:true });
 window.addEventListener('scroll', positionNoteModal, { passive:true });
 if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', positionNoteModal, { passive:true });
+  window.visualViewport.addEventListener('resize', () => {
+    positionNoteModal();
+    adjustModalForKeyboard();
+  }, { passive:true });
   window.visualViewport.addEventListener('scroll', positionNoteModal, { passive:true });
 }
 
+/** キーボード開閉時にモーダルの位置と高さを調整（スロットル付き） */
+let kbAdjustTimer = null;
+function adjustModalForKeyboard() {
+  if (kbAdjustTimer) return;
+  kbAdjustTimer = setTimeout(() => {
+    kbAdjustTimer = null;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const openModal = document.querySelector('.modal.show .mb');
+    if (!openModal) return;
+    const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
+    if (keyboardHeight > 100) {
+      openModal.style.maxHeight = (vv.height * 0.7) + 'px';
+      openModal.style.transform = 'translateY(' + (-keyboardHeight * 0.3) + 'px)';
+    } else {
+      openModal.style.maxHeight = '';
+      openModal.style.transform = '';
+    }
+  }, 50);
+}
+
 document.getElementById('nSave').onpointerdown = e => { e.preventDefault();
-  if (!noteTarget) return;
-  const g = state.games.find(x => x.id === noteTarget.gid);
-  const a = g && g.accounts.find(x => x.id === noteTarget.aid);
-  if (!a) return;
-  a.note = document.getElementById('notes').value;
+  state.memo = document.getElementById('notes').value;
   save(state);
   closeNoteModal();
-  syncAccountUI(g, a);
 };
 
 const resetTimers = new Map();
@@ -1104,6 +1089,20 @@ if (isFirstBoot) {
   // 2回目以降: 即座に描画（キャッシュからの復元なので速い）
   render(true);
 }
+
+// 全体メモFAB
+document.getElementById('memoFab').onpointerdown = e => { e.preventDefault();
+  document.getElementById('nTitle').textContent = 'メモ';
+  document.getElementById('notes').value = state.memo || '';
+  noteAnchor = e.currentTarget;
+  const modal = document.getElementById('nModal');
+  lockBodyScroll();
+  modal.classList.add('show');
+  requestAnimationFrame(() => {
+    positionNoteModal();
+    requestAnimationFrame(positionNoteModal);
+  });
+};
 
 const defer = (fn) => {
   if (typeof requestIdleCallback === 'function') requestIdleCallback(fn, { timeout: 1000 });
