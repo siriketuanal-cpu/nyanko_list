@@ -150,7 +150,6 @@ body.is-scroll-lock{
   font-variant-numeric:tabular-nums;
   background:conic-gradient(from 180deg,var(--ringc) calc(var(--p)*1%),rgba(232,232,240,.12) 0);
   color:var(--text);
-  transition:--p .45s cubic-bezier(.4,0,.2,1);
 }
 /* 中央の穴: 文字の背後に常に暗い背景を確保して読みやすさを向上 */
 .abadges .badge.ring::before{
@@ -162,18 +161,8 @@ body.is-scroll-lock{
   z-index:0;
 }
 .abadges .badge.ring{isolation:isolate}
-.abadges .badge.ring > span{position:relative;z-index:1}
-.abadges .badge.ring.complete::after{
-  content:'✓';
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:.85em;
-  font-weight:700;
-  z-index:1;
-}
+.abadges .badge.ring > span{position:relative;z-index:2}
+
 .abadges .badge.ring.week{--ringc:var(--week)}
 .abadges .badge.ring.month{--ringc:var(--month)}
 .abadges .badge.ring.complete{
