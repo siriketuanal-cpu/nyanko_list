@@ -58,8 +58,7 @@ function gameMonthlyAllOk(g) {
 }
 
 function syncGameHeader(g) {
-  const gameUI = gameUICache.get(g.id);
-  const el = gameUI?.meta || document.querySelector('[data-gmeta="' + g.id + '"]');
+  const el = gameUICache.get(g.id)?.meta;
   if (!el) return;
   const bits = [];
   if (gameDailyAllOk(g)) bits.push('<span class="badge complete" title="全アカウント デイリー完了">COMPLETE</span>');
@@ -88,7 +87,7 @@ function updateRingBadge(bd, prog, typeLabel) {
     bd.__pct = pct;
     bd.style.setProperty('--p', pct);
   }
-  const label = full ? '✓' : (prog.done + '/' + prog.total);
+  const label = full ? '✓' : String(prog.done);
   if (bd.__lbl !== label) {
     bd.__lbl = label;
     bd.textContent = label;
@@ -248,7 +247,7 @@ function syncAccountUI(g, a) {
   });
 }
 
-function render(forceStructure = false) {
+function render(forceStructure = false, onlyKeys = null) {
   const root = document.getElementById('root');
   const sig = structureSig();
   const needStructure = forceStructure || root.dataset.sig !== sig || !state.games.length;
@@ -330,6 +329,7 @@ function render(forceStructure = false) {
     let gameHasOpenAcc = false;
     (g.accounts || []).forEach(a => {
       const key = g.id + '|' + a.id;
+      if (onlyKeys && !onlyKeys.has(key)) return;
       const ui = getAccountUI(key);
       const acc = ui?.acc || (gameEl && gameEl.querySelector(`[data-aid="${key}"]`));
       if (!acc) return;
@@ -860,6 +860,7 @@ document.getElementById('aDel').onpointerdown = e => { e.preventDefault();
   if (!g) return;
   showConfirm('アカウントの削除', 'このアカウントを削除してもよろしいですか？', () => {
     g.accounts = g.accounts.filter(a => a.id !== editA);
+    accountUICache.delete(editGid + '|' + editA);
     save(state);
     document.getElementById('aModal').classList.remove('show'); unlockBodyScroll();
     render(true);
@@ -1022,6 +1023,24 @@ function scheduleOneGameReset(g, now = Date.now()) {
 let lastResumeAt = 0;
 let isResuming = false;
 
+/** リセット対象だったアカウントのキーを収集（差分更新用） */
+function collectResetTargets() {
+  const targets = new Set();
+  const now = Date.now();
+  state.games.forEach(g => {
+    const dKey = state.lastDaily[g.id];
+    const wKey = state.lastWeekly[g.id];
+    const mKey = state.lastMonthly[g.id];
+    (g.accounts || []).forEach(a => {
+      const key = g.id + '|' + a.id;
+      if (a.daily && a.daily.length) targets.add(key);
+      if (a.weekly && a.weekly.length && wKey) targets.add(key);
+      if (a.monthly && a.monthly.length && mKey) targets.add(key);
+    });
+  });
+  return targets;
+}
+
 function onResume() {
   if (document.hidden || isResuming) return;
   const now = Date.now();
@@ -1032,24 +1051,26 @@ function onResume() {
   clearPending();
 
   const changed = applyResets(state);
-  if (changed) {
-    state.games.forEach(g => (g.accounts || []).forEach(invalidateProgress));
-  }
-
   if (!changed) {
     scheduleGameResets();
     isResuming = false;
     return;
   }
 
+  // リセット対象アカウントの進捗キャッシュだけ無効化
+  state.games.forEach(g => (g.accounts || []).forEach(invalidateProgress));
+
+  // 二重rAF + 遅延開始: 復帰直後のブランクフレーム・点滅を防止
   requestAnimationFrame(() => {
-    if (document.hidden) {
+    requestAnimationFrame(() => {
+      if (document.hidden) {
+        isResuming = false;
+        return;
+      }
+      render(false, collectResetTargets());
+      scheduleGameResets();
       isResuming = false;
-      return;
-    }
-    render(false);
-    scheduleGameResets();
-    isResuming = false;
+    });
   });
 }
 
@@ -1068,25 +1089,37 @@ window.addEventListener('pageshow', e => {
   if (e.persisted) onResume();
 });
 
+// 初回起動判定（localStorage に前回値がなければ初回）
+const isFirstBoot = !localStorage.getItem('nyanko_split_v3');
+
 if (applyResets(state)) {
   state.games.forEach(g => (g.accounts || []).forEach(invalidateProgress));
   save(state);
 }
-render(true);
+
+if (isFirstBoot) {
+  // 初回起動: 描画を1フレーム遅延して白画面を防止
+  requestAnimationFrame(() => render(true));
+} else {
+  // 2回目以降: 即座に描画（キャッシュからの復元なので速い）
+  render(true);
+}
 
 const defer = (fn) => {
   if (typeof requestIdleCallback === 'function') requestIdleCallback(fn, { timeout: 1000 });
   else setTimeout(fn, 0);
 };
 
+// Service Worker 登録は即座に実行（オフライン対応のため優先度高）
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistration('./').then(reg => {
+    if (reg) return;
+    return navigator.serviceWorker.register('./sw.js', { updateViaCache: 'all' });
+  }).catch(() => {});
+}
+
 defer(() => {
   scheduleGameResets();
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistration('./').then(reg => {
-      if (reg) return;
-      return navigator.serviceWorker.register('./sw.js', { updateViaCache: 'all' });
-    }).catch(() => {});
-  }
 });
 
 document.addEventListener('contextmenu', e => {
