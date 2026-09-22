@@ -1,20 +1,15 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# チェックアプリ
 
-# Run and deploy your AI Studio app
+Vanilla JavaScript の分割構成で動作するWebアプリです。
 
-This contains everything you need to run your app locally.
+## 構成
 
-View your app in AI Studio: https://ai.studio/apps/d9fdeab1-b699-4c38-b289-5cf054a3e209
+- `index.html` — 画面
+- `app.mjs` — アプリ処理
+- `core.mjs` — 共通処理
+- `store.mjs` — 保存・リセット処理
+- `update.html` — 更新処理
+- `sw.js` — Service Worker
+- `manifest.json` — Web App Manifest
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+`index.html` から `app.mjs` を直接読み込む構成なので、ReactやViteは必要ありません。
