@@ -148,7 +148,7 @@ body.is-scroll-lock{
   letter-spacing:0;
   font-size:.6rem;
   font-variant-numeric:tabular-nums;
-  background:conic-gradient(from 180deg,var(--ringc) calc(var(--p)*1%),rgba(232,232,240,.12) 0);
+  background:conic-gradient(var(--ringc) calc(var(--p)*1%),rgba(232,232,240,.12) 0);
   color:var(--text);
 }
 /* 中央の穴: 文字の背後に常に暗い背景を確保して読みやすさを向上 */
@@ -173,7 +173,10 @@ body.is-scroll-lock{
 /* ゲームヘッダーの COMPLETE バッジ: リングスタイルで統一 */
 
 /* デイリー完了アカウントの輪郭を完了色に */
-.acc.daily-ok{border-color:rgba(126,176,232,.55)}
+.acc.daily-ok{
+  border-color:#7eb0e8;
+  box-shadow:0 0 0 1px #7eb0e8,0 0 10px rgba(126,176,232,.5);
+}
 
 .anote{font-size:.68rem;font-weight:500;color:var(--muted);margin-top:3px;white-space:pre-line;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;min-height:2.4em;line-height:1.2em;width:100%;max-width:100%;padding-right:4px;box-sizing:border-box}
 .anote:empty::before{content:"\00a0"}
