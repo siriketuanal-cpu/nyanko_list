@@ -534,11 +534,6 @@ document.getElementById('fab').onpointerdown = e => { e.preventDefault(); openG(
 document.getElementById('gCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('gModal').classList.remove('show'); unlockBodyScroll(); };
 document.getElementById('aCancel').onpointerdown = e => { e.preventDefault(); document.getElementById('aModal').classList.remove('show'); unlockBodyScroll(); };
 document.getElementById('nCancel').onpointerdown = e => { e.preventDefault(); closeNoteModal(); };
-document.getElementById('nClear').onpointerdown = e => { e.preventDefault();
-  document.getElementById('notes').value = '';
-  document.getElementById('notes').focus();
-};
-
 /* カスタム確認ダイアログ制御 (ネイティブconfirmが動かない環境の完全対策) */
 let confirmCallback = null;
 function showConfirm(title, msg, onOk, hideCancel = false) {
