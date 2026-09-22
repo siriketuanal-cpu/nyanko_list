@@ -62,24 +62,45 @@ function syncGameHeader(g) {
   const el = gameUI?.meta || document.querySelector('[data-gmeta="' + g.id + '"]');
   if (!el) return;
   const bits = [];
-  if (gameDailyAllOk(g)) bits.push('<span class="badge complete" title="全アカウント デイリー完了">DONE</span>');
-  if (gameWeeklyAllOk(g)) bits.push('<span class="badge week" title="全アカウント 週課完了">DONE</span>');
-  if (gameMonthlyAllOk(g)) bits.push('<span class="badge month" title="全アカウント 月課完了">DONE</span>');
+  if (gameDailyAllOk(g)) bits.push('<span class="badge complete" title="全アカウント デイリー完了">COMPLETE</span>');
+  if (gameWeeklyAllOk(g)) bits.push('<span class="badge week" title="全アカウント 週課完了">COMPLETE</span>');
+  if (gameMonthlyAllOk(g)) bits.push('<span class="badge month" title="全アカウント 月課完了">COMPLETE</span>');
   el.innerHTML = bits.join('');
 }
 
-function updateDailyBadge(bd, a) {
+/**
+ * 進捗リングバッジの更新。
+ * 前回値(要素の expando)と比較して差分がある書き込みのみ行い、
+ * レイアウト読取りは一切しない(再フロー誘発ゼロ)。
+ */
+function updateRingBadge(bd, prog, typeLabel) {
   if (!bd) return;
-  const prog = dailyProgress(a);
   if (!prog.total) {
-    bd.hidden = true;
+    if (!bd.hidden) bd.hidden = true;
+    bd.__pct = null;
     return;
   }
-  bd.textContent = prog.full ? 'DONE' : `${prog.done}/${prog.total}`;
-  bd.title = prog.full ? 'デイリー完了' : `デイリー ${prog.done}/${prog.total}`;
-  bd.classList.toggle('complete', prog.full);
-  bd.hidden = false;
+  if (bd.hidden) bd.hidden = false;
+  const full = prog.full;
+  bd.classList.toggle('complete', full);
+  const pct = Math.round(prog.done * 100 / prog.total);
+  if (bd.__pct !== pct) {
+    bd.__pct = pct;
+    bd.style.setProperty('--p', pct);
+  }
+  const label = full ? '✓' : (prog.done + '/' + prog.total);
+  if (bd.__lbl !== label) {
+    bd.__lbl = label;
+    bd.textContent = label;
+  }
+  const tip = typeLabel + (full ? ' 完了' : ` ${prog.done}/${prog.total}`);
+  if (bd.__tip !== tip) {
+    bd.__tip = tip;
+    bd.title = tip;
+  }
 }
+
+function updateDailyBadge(bd, a) { updateRingBadge(bd, dailyProgress(a), 'デイリー'); }
 
 function scheduleSave(delay = 120) {
   if (saveTimer) clearTimeout(saveTimer);
@@ -209,8 +230,8 @@ function syncAccountUI(g, a) {
   acc.classList.toggle('daily-ok', isDone(a));
   if (ui.name) ui.name.textContent = a.name || '';
   updateDailyBadge(ui.daily, a);
-  if (ui.week) ui.week.hidden = !isWeekDone(a);
-  if (ui.month) ui.month.hidden = !isMonthDone(a);
+  updateRingBadge(ui.week, getProgress(a, 'weekly'), '週課');
+  updateRingBadge(ui.month, getProgress(a, 'monthly'), '月課');
 
   const noteHead = (a.note || '').trim().replace(/[ \t]+/g, ' ').replace(/\n{2,}/g, '\n');
   if (ui.note) ui.note.textContent = noteHead ? ('📝 ' + noteHead) : '';
@@ -261,9 +282,9 @@ function render(forceStructure = false) {
                 <div class="aname">
                   <span class="aname-text">${escape(a.name)}</span>
                   <span class="abadges">
-                    <span class="badge" data-bdaily="${g.id}|${a.id}" hidden>デイリー完了</span>
-                    <span class="badge week" data-bweek="${g.id}|${a.id}" hidden title="週課完了">DONE</span>
-                    <span class="badge month" data-bmonth="${g.id}|${a.id}" hidden title="月課完了">DONE</span>
+                    <span class="badge ring" data-bdaily="${g.id}|${a.id}" hidden></span>
+                    <span class="badge ring week" data-bweek="${g.id}|${a.id}" hidden></span>
+                    <span class="badge ring month" data-bmonth="${g.id}|${a.id}" hidden></span>
                   </span>
                 </div>
                 <div class="anote" data-anote="${g.id}|${a.id}"></div>
