@@ -879,16 +879,6 @@ function positionNoteModal() {
   modal.style.setProperty('--note-top', Math.round(top) + 'px');
 }
 
-window.addEventListener('resize', positionNoteModal, { passive:true });
-window.addEventListener('scroll', positionNoteModal, { passive:true });
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', () => {
-    positionNoteModal();
-    adjustModalForKeyboard();
-  }, { passive:true });
-  window.visualViewport.addEventListener('scroll', positionNoteModal, { passive:true });
-}
-
 /** キーボード開閉時にモーダルの位置と高さを調整（スロットル付き） */
 let kbAdjustTimer = null;
 let wasKeyboardOpen = false;
@@ -917,6 +907,16 @@ function adjustModalForKeyboard() {
       }
     }
   }, 50);
+}
+
+window.addEventListener('resize', positionNoteModal, { passive:true });
+window.addEventListener('scroll', positionNoteModal, { passive:true });
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    positionNoteModal();
+    adjustModalForKeyboard();
+  }, { passive:true });
+  window.visualViewport.addEventListener('scroll', positionNoteModal, { passive:true });
 }
 
 document.getElementById('nSave').onpointerdown = e => { e.preventDefault();
