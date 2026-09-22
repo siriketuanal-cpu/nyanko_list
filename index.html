@@ -80,8 +80,13 @@ body.is-scroll-lock{
 .ghead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid rgba(230,230,245,.30);border-radius:12px 12px 0 0}
 .gname{font-weight:700;color:var(--neon);font-size:.95rem;flex-shrink:0;max-width:48%;padding:6px 4px 6px 0}
 .gexpand{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:40px;min-width:48px;padding:6px 2px;user-select:none}
-.gmeta{font-size:.62rem;color:var(--muted);text-align:right;display:flex;align-items:flex-start;justify-content:flex-end;gap:4px;flex-wrap:wrap;line-height:1}
-.gmeta .badge{font-size:.56rem;display:inline-flex;align-items:center;justify-content:center;line-height:1;height:1.5em;padding:0 6px}
+.gmeta{display:flex;align-items:center;justify-content:flex-end;gap:4px;font-size:.56rem;line-height:1}
+.gmeta:empty{display:none}
+.gmeta .badge{display:inline-flex;align-items:center;justify-content:center;height:1.4em;padding:0 6px;border-radius:999px;font-size:.52rem;font-weight:700;letter-spacing:.04em;line-height:1;white-space:nowrap}
+.gmeta .badge.complete{background:rgba(126,176,232,.18);color:var(--daily);border:1px solid rgba(126,176,232,.6)}
+.gmeta .badge.week{background:rgba(94,224,160,.15);color:var(--week);border:1px solid rgba(94,224,160,.55)}
+.gmeta .badge.month{background:rgba(255,168,107,.15);color:var(--month);border:1px solid rgba(255,168,107,.55)}
+.gname{text-align:center;flex:1;max-width:none;padding:6px 0}
 .gbody{display:block;padding-bottom:2px;overflow:visible}
 .gtools{display:flex;flex-direction:column;align-items:center;padding:0 8px 4px;width:100%}
 .gtools.open{padding:2px 8px 6px}
@@ -164,37 +169,20 @@ body.is-scroll-lock{
   box-shadow:0 0 6px 0 color-mix(in srgb,var(--ringc) 45%,transparent);
   color:#0d0d12;
 }
-@media (prefers-reduced-motion:reduce){.abadges .badge.ring{transition:none}}
-/* ゲームヘッダーの COMPLETE バッジ: リングスタイルで統一 */
-.gmeta .badge.complete,
-.gmeta .badge.week,
-.gmeta .badge.month{
-  display:inline-flex;
+.abadges .badge.ring.complete::after{
+  content:'✓';
+  position:absolute;
+  inset:0;
+  display:flex;
   align-items:center;
   justify-content:center;
-  height:1.4em;
-  padding:0 7px;
-  border-radius:999px;
-  font-size:.55rem;
+  font-size:.85em;
   font-weight:700;
-  letter-spacing:.05em;
-  line-height:1;
+  z-index:1;
 }
-.gmeta .badge.complete{
-  background:rgba(126,176,232,.15);
-  color:var(--daily);
-  border:1px solid var(--daily);
-}
-.gmeta .badge.week{
-  background:rgba(94,224,160,.12);
-  color:var(--week);
-  border:1px solid var(--week);
-}
-.gmeta .badge.month{
-  background:rgba(255,168,107,.12);
-  color:var(--month);
-  border:1px solid var(--month);
-}
+@media (prefers-reduced-motion:reduce){.abadges .badge.ring{transition:none}}
+/* ゲームヘッダーの COMPLETE バッジ: リングスタイルで統一 */
+
 /* デイリー完了アカウントの輪郭を完了色に */
 .acc.daily-ok{border-color:rgba(126,176,232,.55)}
 
