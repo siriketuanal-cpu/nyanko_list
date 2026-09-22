@@ -849,11 +849,17 @@ function closeNoteModal() {
 }
 
 function positionNoteModal() {
-  if (!noteAnchor) return;
   const modal = document.getElementById('nModal');
   if (!modal.classList.contains('show')) return;
   const panel = modal.querySelector('.mb');
   if (!panel) return;
+  if (!noteAnchor) {
+    // noteAnchor がない場合は中央表示
+    panel.style.top = '50%';
+    panel.style.left = '50%';
+    panel.style.transform = 'translate(-50%, -50%)';
+    return;
+  }
   const r = noteAnchor.getBoundingClientRect();
   const gap = 8;
   const margin = 8;
@@ -888,6 +894,7 @@ if (window.visualViewport) {
 
 /** キーボード開閉時にモーダルの位置と高さを調整（スロットル付き） */
 let kbAdjustTimer = null;
+let wasKeyboardOpen = false;
 function adjustModalForKeyboard() {
   if (kbAdjustTimer) return;
   kbAdjustTimer = setTimeout(() => {
@@ -898,11 +905,19 @@ function adjustModalForKeyboard() {
     if (!openModal) return;
     const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
     if (keyboardHeight > 100) {
+      wasKeyboardOpen = true;
       openModal.style.maxHeight = (vv.height * 0.7) + 'px';
       openModal.style.transform = 'translateY(' + (-keyboardHeight * 0.3) + 'px)';
     } else {
       openModal.style.maxHeight = '';
       openModal.style.transform = '';
+      // キーボードが閉じたらフォーカスを外す
+      if (wasKeyboardOpen) {
+        wasKeyboardOpen = false;
+        if (document.activeElement && document.activeElement.blur) {
+          document.activeElement.blur();
+        }
+      }
     }
   }, 50);
 }
