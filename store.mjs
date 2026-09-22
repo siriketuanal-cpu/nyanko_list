@@ -11,6 +11,7 @@ export function load() {
     const data = JSON.parse(raw);
     if (!Array.isArray(data.games)) return empty();
     if (!data.lastMonthly) data.lastMonthly = {};
+    if (typeof data.memo !== 'string') data.memo = '';
     delete data.expanded;
     return data;
   } catch {
@@ -33,7 +34,8 @@ function empty() {
     games: [],
     lastDaily: {},
     lastWeekly: {},
-    lastMonthly: {}
+    lastMonthly: {},
+    memo: ''
   };
 }
 
