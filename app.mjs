@@ -1099,7 +1099,6 @@ if (isFirstBoot) {
 
 // 全体メモFAB
 document.getElementById('memoFab').onpointerdown = e => { e.preventDefault();
-  document.getElementById('nTitle').textContent = 'メモ';
   document.getElementById('notes').value = state.memo || '';
   noteAnchor = e.currentTarget;
   const modal = document.getElementById('nModal');
