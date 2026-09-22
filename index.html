@@ -80,8 +80,8 @@ body.is-scroll-lock{
 .ghead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:linear-gradient(90deg,#1a1220,#12121a);border-bottom:1px solid rgba(230,230,245,.30);border-radius:12px 12px 0 0}
 .gname{font-weight:700;color:var(--neon);font-size:.95rem;flex-shrink:0;max-width:48%;padding:6px 4px 6px 0}
 .gexpand{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:40px;min-width:48px;padding:6px 2px;user-select:none}
-.gmeta{font-size:.62rem;color:var(--muted);text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap}
-.gmeta .badge{font-size:.56rem}
+.gmeta{font-size:.62rem;color:var(--muted);text-align:right;display:flex;align-items:flex-start;justify-content:flex-end;gap:4px;flex-wrap:wrap;line-height:1}
+.gmeta .badge{font-size:.56rem;display:inline-flex;align-items:center;justify-content:center;line-height:1;height:1.5em;padding:0 6px}
 .gbody{display:block;padding-bottom:2px;overflow:visible}
 .gtools{display:flex;flex-direction:column;align-items:center;padding:0 8px 4px;width:100%}
 .gtools.open{padding:2px 8px 6px}
@@ -133,6 +133,7 @@ body.is-scroll-lock{
 .abadges .badge.ring{
   --p:0;
   --ringc:var(--daily);
+  position:relative;
   width:2.3em;
   height:2.3em;
   min-height:0;
@@ -143,10 +144,19 @@ body.is-scroll-lock{
   font-size:.6rem;
   font-variant-numeric:tabular-nums;
   background:conic-gradient(from 180deg,var(--ringc) calc(var(--p)*1%),rgba(232,232,240,.12) 0);
-  box-shadow:inset 0 0 0 .18em #12121a;
   color:var(--text);
   transition:--p .45s cubic-bezier(.4,0,.2,1);
 }
+/* 中央の穴: 文字の背後に常に暗い背景を確保して読みやすさを向上 */
+.abadges .badge.ring::before{
+  content:'';
+  position:absolute;
+  inset:.18em;
+  border-radius:50%;
+  background:#12121a;
+  z-index:-1;
+}
+.abadges .badge.ring{isolation:isolate}
 .abadges .badge.ring.week{--ringc:var(--week)}
 .abadges .badge.ring.month{--ringc:var(--month)}
 .abadges .badge.ring.complete{
