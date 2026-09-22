@@ -60,7 +60,7 @@ body.is-scroll-lock{
   -webkit-tap-highlight-color:transparent;touch-action:manipulation;
   box-shadow:0 2px 6px rgba(0,0,0,.25);
 }
-.ver-btn:active{color:var(--neon2);border-color:var(--neon2);background:#1f1b33}
+.ver-btn:active{background:#161422}
 
 /* ゲームカードの重ね合わせ文脈 (Stacking Context) 設定 */
 .game{
@@ -142,7 +142,7 @@ body.is-scroll-lock{
   letter-spacing:0;
   font-size:.6rem;
   font-variant-numeric:tabular-nums;
-  background:conic-gradient(var(--ringc) calc(var(--p)*1%),rgba(232,232,240,.12) 0);
+  background:conic-gradient(from 180deg,var(--ringc) calc(var(--p)*1%),rgba(232,232,240,.12) 0);
   box-shadow:inset 0 0 0 .18em #12121a;
   color:var(--text);
   transition:--p .45s cubic-bezier(.4,0,.2,1);
@@ -157,10 +157,40 @@ body.is-scroll-lock{
 }
 @keyframes ringpop{0%{transform:scale(.55)}55%{transform:scale(1.18)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.abadges .badge.ring{transition:none}.abadges .badge.ring.complete{animation:none}}
-/* ゲームヘッダーの COMPLETE バッジに控えめな発光 */
-.gmeta .badge.complete{box-shadow:0 0 7px rgba(126,176,232,.5)}
-.gmeta .badge.week{box-shadow:0 0 7px rgba(94,224,160,.45)}
-.gmeta .badge.month{box-shadow:0 0 7px rgba(255,168,107,.45)}
+/* ゲームヘッダーの COMPLETE バッジ: リングスタイルで統一 */
+.gmeta .badge.complete{
+  background:transparent;
+  color:var(--daily);
+  border:1.5px solid var(--daily);
+  border-radius:999px;
+  padding:2px 8px;
+  font-size:.55rem;
+  letter-spacing:.06em;
+  line-height:1;
+  box-shadow:0 0 6px rgba(126,176,232,.35);
+}
+.gmeta .badge.week{
+  background:transparent;
+  color:var(--week);
+  border:1.5px solid var(--week);
+  border-radius:999px;
+  padding:2px 8px;
+  font-size:.55rem;
+  letter-spacing:.06em;
+  line-height:1;
+  box-shadow:0 0 6px rgba(94,224,160,.3);
+}
+.gmeta .badge.month{
+  background:transparent;
+  color:var(--month);
+  border:1.5px solid var(--month);
+  border-radius:999px;
+  padding:2px 8px;
+  font-size:.55rem;
+  letter-spacing:.06em;
+  line-height:1;
+  box-shadow:0 0 6px rgba(255,168,107,.3);
+}
 /* デイリー完了アカウントの輪郭を完了色に */
 .acc.daily-ok{border-color:rgba(126,176,232,.55)}
 

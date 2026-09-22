@@ -1010,7 +1010,7 @@ function scheduleOneGameReset(g, now = Date.now()) {
     if (applyResets(state)) {
       state.games.forEach(g => (g.accounts || []).forEach(invalidateProgress));
       save(state);
-      render(false);
+      render(false, collectResetTargets());
     }
     scheduleOneGameReset(current);
   }, wait);
