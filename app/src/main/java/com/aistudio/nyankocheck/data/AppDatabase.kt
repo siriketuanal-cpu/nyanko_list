@@ -5,7 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [GameEntity::class, AccountEntity::class, CheckItemEntity::class], version = 1)
+@Database(
+    entities = [GameEntity::class, AccountEntity::class, CheckItemEntity::class],
+    version = 2,
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun gameDao(): GameDao
     abstract fun accountDao(): AccountDao
@@ -21,7 +25,10 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "nyankocheck_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING) // High performance WAL mode
+                    .build()
                 INSTANCE = instance
                 instance
             }

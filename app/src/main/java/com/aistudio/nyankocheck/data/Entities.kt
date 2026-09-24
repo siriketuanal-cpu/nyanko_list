@@ -1,9 +1,12 @@
 package com.aistudio.nyankocheck.data
 
+import androidx.compose.runtime.Immutable
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.PrimaryKey
 
+@Immutable
 @Entity(tableName = "games")
 data class GameEntity(
     @PrimaryKey val id: String,
@@ -15,7 +18,21 @@ data class GameEntity(
     val monthlyReset: String = "05:00"
 )
 
-@Entity(tableName = "accounts", foreignKeys = [ForeignKey(entity = GameEntity::class, parentColumns = ["id"], childColumns = ["gameId"], onDelete = ForeignKey.CASCADE)])
+@Immutable
+@Entity(
+    tableName = "accounts",
+    foreignKeys = [
+        ForeignKey(
+            entity = GameEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["gameId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [
+        Index(value = ["gameId"])
+    ]
+)
 data class AccountEntity(
     @PrimaryKey val id: String,
     val gameId: String,
@@ -23,7 +40,22 @@ data class AccountEntity(
     val note: String = ""
 )
 
-@Entity(tableName = "check_items", foreignKeys = [ForeignKey(entity = AccountEntity::class, parentColumns = ["id"], childColumns = ["accountId"], onDelete = ForeignKey.CASCADE)])
+@Immutable
+@Entity(
+    tableName = "check_items",
+    foreignKeys = [
+        ForeignKey(
+            entity = AccountEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["accountId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [
+        Index(value = ["accountId"]),
+        Index(value = ["accountId", "type"])
+    ]
+)
 data class CheckItemEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val accountId: String,
